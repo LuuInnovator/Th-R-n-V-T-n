@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { Material, Equipment, EquipmentType, MaterialType, Rarity } from '../types';
 import { generateId } from '../utils';
@@ -5,10 +6,15 @@ import { generateId } from '../utils';
 export const useInventory = (addLog: (msg: string) => void) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
+  
+  // Khởi tạo equipped với đầy đủ các slot mới
   const [equipped, setEquipped] = useState<Record<EquipmentType, Equipment | null>>({
     [EquipmentType.Weapon]: null,
     [EquipmentType.Armor]: null,
-    [EquipmentType.Accessory]: null
+    [EquipmentType.Accessory]: null,
+    [EquipmentType.Helmet]: null,
+    [EquipmentType.Gloves]: null,
+    [EquipmentType.Boots]: null
   });
 
   const addMaterial = useCallback((type: MaterialType, qty: number, rarity: Rarity) => {
@@ -70,7 +76,10 @@ export const useInventory = (addLog: (msg: string) => void) => {
     setEquipped({
       [EquipmentType.Weapon]: null,
       [EquipmentType.Armor]: null,
-      [EquipmentType.Accessory]: null
+      [EquipmentType.Accessory]: null,
+      [EquipmentType.Helmet]: null,
+      [EquipmentType.Gloves]: null,
+      [EquipmentType.Boots]: null
     });
   }, []);
 
@@ -82,7 +91,18 @@ export const useInventory = (addLog: (msg: string) => void) => {
   ) => {
     setMaterials(savedMaterials);
     setEquipments(savedEquipments);
-    setEquipped(savedEquipped);
+    
+    // Đảm bảo load đủ key cho equipped (phòng trường hợp save cũ thiếu key mới)
+    const defaultEquipped = {
+      [EquipmentType.Weapon]: null,
+      [EquipmentType.Armor]: null,
+      [EquipmentType.Accessory]: null,
+      [EquipmentType.Helmet]: null,
+      [EquipmentType.Gloves]: null,
+      [EquipmentType.Boots]: null
+    };
+    
+    setEquipped({...defaultEquipped, ...savedEquipped});
   }, []);
 
   return { 

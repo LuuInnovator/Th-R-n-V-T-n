@@ -4,40 +4,50 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Thợ Rèn Vô Tận</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Cấu hình Tailwind trước khi load script để đảm bảo áp dụng đúng lúc -->
     <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              rarity: {
-                common: '#9ca3af',
-                rare: '#3b82f6',
-                epic: '#a855f7',
-                legendary: '#eab308',
-                mythic: '#ef4444'
-              }
-            },
-            animation: {
-              'fade-in': 'fadeIn 0.5s ease-out',
-              'slide-up': 'slideUp 0.3s ease-out',
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            },
-            keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
+      window.tailwind = {
+        config: {
+          theme: {
+            extend: {
+              colors: {
+                rarity: {
+                  common: '#9ca3af',
+                  rare: '#3b82f6',
+                  epic: '#a855f7',
+                  legendary: '#eab308',
+                  mythic: '#ef4444'
+                }
               },
-              slideUp: {
-                '0%': { transform: 'translateY(10px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
+              animation: {
+                'fade-in': 'fadeIn 0.5s ease-out',
+                'slide-up': 'slideUp 0.3s ease-out',
+                'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              },
+              keyframes: {
+                fadeIn: {
+                  '0%': { opacity: '0' },
+                  '100%': { opacity: '1' },
+                },
+                slideUp: {
+                  '0%': { transform: 'translateY(10px)', opacity: '0' },
+                  '100%': { transform: 'translateY(0)', opacity: '1' },
+                }
               }
             }
           }
         }
       }
     </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
     <style>
+      /* Fallback background color */
+      body {
+        background-color: #020617; /* slate-950 */
+        color: #f1f5f9; /* slate-100 */
+      }
       /* Custom Scrollbar */
       ::-webkit-scrollbar {
         width: 6px;

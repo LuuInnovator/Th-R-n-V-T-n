@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Zone, Enemy, Blueprint, EquipmentType, Equipment } from './types';
+import { Zone, Enemy, Blueprint, EquipmentType, Equipment, SetId } from './types';
 import { ZONES, ENEMIES_DB, INITIAL_BLUEPRINTS, RARITY_MULTIPLIER } from './constants';
 import { randomInt, rollRarity, generateId, formatNumber } from './utils';
 
@@ -13,14 +14,15 @@ import { InventoryView } from './components/InventoryView';
 import { BattleView } from './components/BattleView';
 import { CraftingView } from './components/CraftingView';
 import { RebirthView } from './components/RebirthView';
-import { User, Shield, Sword, Hammer, RefreshCw, Save, Upload } from 'lucide-react';
+import { SkillTreeView } from './components/SkillTreeView';
+import { User, Shield, Sword, Hammer, RefreshCw, Save, Upload, Zap } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'battle' | 'craft' | 'inventory' | 'rebirth'>('battle');
+  const [activeTab, setActiveTab] = useState<'battle' | 'craft' | 'inventory' | 'rebirth' | 'skills'>('battle');
   
   // Game State Hooks
   const { logs, addLog, clearLogs } = useGameLog();
-  const { player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp } = usePlayer(addLog);
+  const { player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill } = usePlayer(addLog);
   const { 
     materials, equipments, equipped, 
     addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, resetInventory, loadInventory 
@@ -30,8 +32,21 @@ export default function App() {
   const [currentZone, setCurrentZone] = useState<Zone>(ZONES[0]);
   const [currentEnemy, setCurrentEnemy] = useState<Enemy | null>(null);
   const [isAutoAttacking, setIsAutoAttacking] = useState(false);
+  // Set bonus state
+  const [hasRevivedInBattle, setHasRevivedInBattle] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // --- HELPERS: CALCULATE STATS & BONUSES ---
+  const getActiveSets = useCallback(() => {
+    const activeSets: Record<SetId, number> = {} as any;
+    Object.values(equipped).forEach(item => {
+      if (item && item.setId) {
+        activeSets[item.setId] = (activeSets[item.setId] || 0) + 1;
+      }
+    });
+    return activeSets;
+  }, [equipped]);
+
   // --- ACTIONS ---
 
   const handleExplore = useCallback(() => {
@@ -39,24 +54,56 @@ export default function App() {
     if (enemiesInZone && enemiesInZone.length > 0) {
       const randIdx = randomInt(0, enemiesInZone.length - 1);
       setCurrentEnemy({ ...enemiesInZone[randIdx] });
+      setHasRevivedInBattle(false); // Reset revive status per fight
       addLog(`⚔️ Bạn đã tìm thấy ${enemiesInZone[randIdx].name}!`);
     } else {
       addLog("Khu vực này có vẻ trống trải...");
-      setIsAutoAttacking(false); // Dừng auto nếu không có quái
+      setIsAutoAttacking(false);
     }
   }, [currentZone.id, addLog]);
 
   const handleAttack = useCallback(() => {
     if (!currentEnemy) return;
 
-    // Player Attack
-    const weaponAtk = equipped[EquipmentType.Weapon]?.stats.attack || 0;
-    const armorAtk = equipped[EquipmentType.Armor]?.stats.attack || 0;
-    const totalAtk = player.attack + weaponAtk + armorAtk;
-    
-    // Critical hit chance (base 5%)
-    const isCrit = Math.random() < 0.05;
-    const finalDmg = Math.max(1, Math.floor((totalAtk - currentEnemy.defense) * (isCrit ? 1.5 : 1)));
+    // 1. Calculate Player Stats (Base + Equipment + Skills)
+    let totalAtk = player.attack;
+    let totalDef = player.defense;
+
+    // Equipment Stats
+    Object.values(equipped).forEach(item => {
+        if(item) {
+            totalAtk += (item.stats.attack || 0);
+            totalDef += (item.stats.defense || 0);
+        }
+    });
+
+    // Skill Bonuses
+    const weaponMasteryLevel = player.skills['wp_mastery'] || 0;
+    const armorMasteryLevel = player.skills['ar_mastery'] || 0;
+    totalAtk += weaponMasteryLevel * 2; // +2 dmg per level
+    totalDef += armorMasteryLevel * 2; // +2 def per level
+
+    // 2. Set Bonuses Logic
+    const activeSets = getActiveSets();
+    const forgeSpiritCount = activeSets[SetId.ForgeSpirit] || 0;
+    const primalHunterCount = activeSets[SetId.PrimalHunter] || 0;
+
+    // Primal Hunter (2): +15% Dmg vs Boss
+    let damageMultiplier = 1;
+    if (primalHunterCount >= 2 && currentEnemy.isBoss) {
+        damageMultiplier += 0.15;
+    }
+
+    // Forge Spirit (4): Ignore Defense
+    const ignoreDefense = forgeSpiritCount >= 4 ? 0.2 : 0; // 20%
+
+    // 3. Player Attack Calculation
+    const isCrit = Math.random() < 0.05 + (player.skills['wp_crit'] || 0) * 0.01;
+    const critMult = 1.5 + (primalHunterCount >= 6 ? 0.3 : 0); // Primal Hunter (6): +30% Crit Dmg
+
+    const effectiveEnemyDef = currentEnemy.defense * (1 - ignoreDefense);
+    const rawDmg = Math.max(1, (totalAtk - effectiveEnemyDef));
+    const finalDmg = Math.floor(rawDmg * damageMultiplier * (isCrit ? critMult : 1));
     
     let newEnemyHp = currentEnemy.hp - finalDmg;
     addLog(`Bạn chém ${currentEnemy.name} gây ${finalDmg} sát thương! ${isCrit ? '(CHÍ MẠNG!)' : ''}`);
@@ -69,64 +116,62 @@ export default function App() {
       gainExp(currentEnemy.expReward);
       addGold(currentEnemy.goldReward);
       
-      // Drops
       currentEnemy.dropTable.forEach(drop => {
         if (Math.random() <= drop.chance) {
           const qty = randomInt(drop.minQty, drop.maxQty);
-          const rarityBonus = player.rebirthCount * 0.05; 
+          // Bonus Drop Rarity from Rebirth
+          const rarityBonus = player.rebirthCount * 0.05 + (activeSets[SetId.ForgeSpirit] >= 2 ? 0.05 : 0);
           addMaterial(drop.materialType, qty, rollRarity(rarityBonus));
         }
       });
 
       setCurrentEnemy(null);
-      // Logic Auto sẽ tiếp tục ở useEffect
     } else {
       // Enemy Counter-attack
-      const armorDef = equipped[EquipmentType.Armor]?.stats.defense || 0;
-      const weaponDef = equipped[EquipmentType.Weapon]?.stats.defense || 0;
-      const totalDef = player.defense + armorDef + weaponDef;
-      
       const dmgToPlayer = Math.max(1, currentEnemy.attack - totalDef);
-      const newPlayerHp = player.hp - dmgToPlayer;
+      let newPlayerHp = player.hp - dmgToPlayer;
       
-      updateHp(newPlayerHp);
       addLog(`${currentEnemy.name} phản đòn gây ${dmgToPlayer} sát thương!`);
-      
-      setCurrentEnemy({ ...currentEnemy, hp: newEnemyHp });
+
+      // Forge Spirit (6): Revive Mechanic
+      if (newPlayerHp <= 0 && forgeSpiritCount >= 6 && !hasRevivedInBattle) {
+        newPlayerHp = Math.floor(player.maxHp * 0.5);
+        setHasRevivedInBattle(true);
+        addLog("✨ Tinh Thần Lò Rèn trỗi dậy! Bạn đã được hồi sinh!");
+      }
 
       if (newPlayerHp <= 0) {
+        updateHp(0);
         addLog("☠️ BẠN ĐÃ BỊ ĐÁNH BẠI! Hồi sinh tại thị trấn...");
         setFullHp();
         setCurrentEnemy(null);
-        setIsAutoAttacking(false); // Tắt auto khi chết
+        setIsAutoAttacking(false);
+      } else {
+        updateHp(newPlayerHp);
+        setCurrentEnemy({ ...currentEnemy, hp: newEnemyHp });
       }
     }
-  }, [currentEnemy, player, equipped, addLog, gainExp, addGold, addMaterial, updateHp, setFullHp]);
+  }, [currentEnemy, player, equipped, addLog, gainExp, addGold, addMaterial, updateHp, setFullHp, getActiveSets, hasRevivedInBattle]);
 
   // --- AUTOMATION & SAVE SYSTEM ---
-
-  // 1. Auto Loop Logic (Find -> Fight -> Find)
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     
     if (isAutoAttacking && player.hp > 0) {
+      const activeSets = getActiveSets();
+      // Primal Hunter (4): Attack Speed / Cooldown reduction
+      const cooldownRed = (activeSets[SetId.PrimalHunter] || 0) >= 4 ? 0.8 : 1; 
+      const attackSpeed = 1000 * cooldownRed;
+
       if (currentEnemy) {
-        // Có quái -> Đánh
-        timer = setTimeout(() => {
-          handleAttack();
-        }, 1000); // Tốc độ đánh
+        timer = setTimeout(() => handleAttack(), attackSpeed);
       } else {
-        // Không có quái -> Tìm
-        timer = setTimeout(() => {
-          handleExplore();
-        }, 1500); // Tốc độ tìm quái
+        timer = setTimeout(() => handleExplore(), 1500);
       }
     }
-
     return () => clearTimeout(timer);
-  }, [isAutoAttacking, currentEnemy, player.hp, handleAttack, handleExplore]);
+  }, [isAutoAttacking, currentEnemy, player.hp, handleAttack, handleExplore, getActiveSets]);
 
-  // 2. Save Game Function (Local Storage)
   const saveGame = useCallback(() => {
     const saveData = {
       player,
@@ -140,7 +185,6 @@ export default function App() {
     return saveData;
   }, [player, materials, equipments, equipped, currentZone.id]);
 
-  // Helper to apply save data (used by both Load and Import)
   const applySaveData = (saveData: any) => {
       setPlayer(saveData.player);
       loadInventory(saveData.materials, saveData.equipments, saveData.equipped);
@@ -151,12 +195,9 @@ export default function App() {
       clearLogs();
   };
 
-  // 3. Export to File (and Save Local)
   const handleSaveAndExport = () => {
-    const saveData = saveGame(); // Save to local first
+    const saveData = saveGame(); 
     addLog("💾 Đã lưu dữ liệu!");
-
-    // Then export to file
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(saveData));
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
@@ -166,7 +207,6 @@ export default function App() {
     downloadAnchorNode.remove();
   };
 
-  // 4. Import from File
   const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const fileReader = new FileReader();
     if (event.target.files && event.target.files.length > 0) {
@@ -185,22 +225,41 @@ export default function App() {
     }
   };
 
-  // 5. Auto Save Interval (30s)
   useEffect(() => {
-    const autoSaveTimer = setInterval(() => {
-      saveGame();
-    }, 30000);
+    const autoSaveTimer = setInterval(() => saveGame(), 30000);
     return () => clearInterval(autoSaveTimer);
   }, [saveGame]);
 
 
   // --- HANDLERS ---
-  const handleCraft = (bp: Blueprint) => {
-    consumeMaterials(bp.requiredMaterials);
+  const handleCraft = (bp: Blueprint, useOverheat: boolean) => {
+    // Check Skill: Alchemy refund chance
+    const refundChance = (player.skills['al_efficiency'] || 0) * 0.05;
+    const shouldRefund = Math.random() < refundChance;
 
-    const rarity = rollRarity(player.rebirthCount * 0.1); 
+    if (!shouldRefund) {
+        consumeMaterials(bp.requiredMaterials);
+    } else {
+        addLog("⚗️ Luyện kim thuật: Đã tiết kiệm nguyên liệu!");
+    }
+
+    // Overheat Logic
+    if (useOverheat) {
+        // Check Skill: Overheat control
+        const safetyBonus = (player.skills['en_overheat'] || 0) * 0.05;
+        const failChance = Math.max(0.05, 0.30 - safetyBonus); // Min 5% fail
+        
+        if (Math.random() < failChance) {
+            addLog("🔥 LÒ RÈN QUÁ NHIỆT! Thất bại và mất nguyên liệu.");
+            return;
+        }
+    }
+
+    const rarityBonus = (player.rebirthCount * 0.1) + (useOverheat ? 0.3 : 0);
+    const rarity = rollRarity(rarityBonus); 
     const multiplier = RARITY_MULTIPLIER[rarity];
     
+    // Base Crafting logic
     const atkBase = bp.baseStats.maxAtk > 0 ? randomInt(bp.baseStats.minAtk, bp.baseStats.maxAtk) : 0;
     const defBase = bp.baseStats.maxDef > 0 ? randomInt(bp.baseStats.minDef, bp.baseStats.maxDef) : 0;
 
@@ -214,10 +273,12 @@ export default function App() {
       rarity: rarity,
       isEquipped: false,
       value: (finalAtk + finalDef) * 10,
-      stats: { attack: finalAtk, defense: finalDef }
+      stats: { attack: finalAtk, defense: finalDef },
+      setId: bp.setId
     };
 
     addEquipment(newItem);
+    if (useOverheat) addLog(`🔥 RÈN CỰC HẠN THÀNH CÔNG! Tạo ra ${newItem.name}`);
   };
 
   const handleSell = (item: Equipment) => {
@@ -303,12 +364,13 @@ export default function App() {
           <SidebarButton id="battle" icon={Sword} label="Chiến Đấu" />
           <SidebarButton id="inventory" icon={User} label="Túi Đồ" />
           <SidebarButton id="craft" icon={Hammer} label="Chế Tạo" />
+          <SidebarButton id="skills" icon={Zap} label="Kỹ Năng" />
           <div className="my-4 border-t border-slate-800/50 mx-2"></div>
           <SidebarButton id="rebirth" icon={RefreshCw} label="Tái Sinh" colorClass="text-purple-400 hover:text-purple-300" />
         </nav>
 
         <div className="p-4 text-[10px] text-slate-600 text-center border-t border-slate-800 bg-slate-950">
-          Eternal Blacksmith v1.1.7
+          Eternal Blacksmith v1.2.0 - Sets & Skills
         </div>
       </aside>
 
@@ -319,10 +381,10 @@ export default function App() {
             {activeTab === 'battle' && <><span className="text-blue-500">◈</span> THÁM HIỂM</>}
             {activeTab === 'inventory' && <><span className="text-green-500">◈</span> KHO ĐỒ</>}
             {activeTab === 'craft' && <><span className="text-amber-500">◈</span> XƯỞNG RÈN</>}
+            {activeTab === 'skills' && <><span className="text-red-500">◈</span> CÂY KỸ NĂNG</>}
             {activeTab === 'rebirth' && <><span className="text-purple-500">◈</span> CỔNG TÁI SINH</>}
           </h2>
 
-          {/* New Save/Load Design */}
           <div className="flex items-center bg-slate-800/80 p-1 rounded-lg border border-slate-700 backdrop-blur-sm">
             <button 
                 onClick={handleSaveAndExport}
@@ -382,6 +444,13 @@ export default function App() {
               materials={materials}
               onCraft={handleCraft}
               craftingSkill={1 + player.rebirthCount}
+            />
+          )}
+
+          {activeTab === 'skills' && (
+            <SkillTreeView 
+              player={player} 
+              onUpgrade={upgradeSkill}
             />
           )}
 

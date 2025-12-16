@@ -1,3 +1,4 @@
+
 // Các loại độ hiếm của vật phẩm
 export enum Rarity {
   Common = 'Thường',
@@ -29,7 +30,16 @@ export interface Material {
 export enum EquipmentType {
   Weapon = 'Vũ Khí',
   Armor = 'Giáp',
-  Accessory = 'Phụ Kiện'
+  Accessory = 'Phụ Kiện',
+  Helmet = 'Mũ',      // Mới: Để đủ bộ set 6 món
+  Boots = 'Giày',     // Mới
+  Gloves = 'Găng Tay' // Mới
+}
+
+// Định danh Set đồ
+export enum SetId {
+  ForgeSpirit = 'forge_spirit', // Tinh Thần Lò Rèn
+  PrimalHunter = 'primal_hunter' // Kẻ Săn Mồi Viễn Cổ
 }
 
 // Cấu trúc trang bị
@@ -44,7 +54,8 @@ export interface Equipment {
     hpBonus?: number;
   };
   isEquipped: boolean;
-  value: number; // Giá trị bán
+  value: number;
+  setId?: SetId; // Thuộc set nào
 }
 
 // Công thức chế tạo (Bản thiết kế)
@@ -63,6 +74,7 @@ export interface Blueprint {
     maxDef: number;
   };
   unlocked: boolean;
+  setId?: SetId;
 }
 
 // Kẻ thù
@@ -91,8 +103,26 @@ export interface Zone {
   name: string;
   description: string;
   recommendedLevel: number;
-  enemies: Enemy[]; // Danh sách kẻ thù có thể gặp
-  materials: MaterialType[]; // Nguyên liệu đặc trưng
+  enemies: Enemy[];
+  materials: MaterialType[];
+}
+
+// Kỹ năng
+export enum SkillBranch {
+  Alchemy = 'Luyện Kim',
+  WeaponSmith = 'Rèn Vũ Khí',
+  ArmorSmith = 'May Vá Giáp',
+  Enchanting = 'Bùa Chú'
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  description: string;
+  branch: SkillBranch;
+  maxLevel: number;
+  cost: number; // SP cost per level
+  effectValue: number; // Giá trị hiệu ứng mỗi cấp
 }
 
 // Trạng thái người chơi
@@ -105,8 +135,10 @@ export interface Player {
   attack: number;
   defense: number;
   gold: number;
-  eternalPoints: number; // Điểm tái sinh
+  eternalPoints: number;
   rebirthCount: number;
+  skillPoints: number; // Điểm kỹ năng
+  skills: Record<string, number>; // ID skill -> Level hiện tại
 }
 
 // Nhật ký game

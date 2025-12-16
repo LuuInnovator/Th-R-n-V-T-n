@@ -6,7 +6,7 @@ import { CraftingDetail } from './crafting/CraftingDetail';
 interface CraftingViewProps {
   blueprints: Blueprint[];
   materials: Material[];
-  onCraft: (blueprint: Blueprint) => void;
+  onCraft: (blueprint: Blueprint, useOverheat: boolean) => void;
   craftingSkill: number;
 }
 

@@ -1,4 +1,5 @@
-import { Blueprint, Enemy, EquipmentType, MaterialType, Rarity, Zone } from './types';
+
+import { Blueprint, Enemy, EquipmentType, MaterialType, Rarity, Zone, Skill, SkillBranch, SetId } from './types';
 
 // Danh sách khu vực
 export const ZONES: Zone[] = [
@@ -8,7 +9,7 @@ export const ZONES: Zone[] = [
     description: 'Nơi sinh sống của loài sói ma và cây ăn thịt. Nguồn cung cấp Gỗ và Da.',
     recommendedLevel: 1,
     materials: [MaterialType.Wood, MaterialType.Leather],
-    enemies: [] // Sẽ được điền bên dưới để tránh lỗi vòng tròn (nhưng trong file này ta định nghĩa enemy riêng)
+    enemies: [] 
   },
   {
     id: 'z2',
@@ -28,7 +29,7 @@ export const ZONES: Zone[] = [
   }
 ];
 
-// Danh sách quái vật mẫu
+// Danh sách quái vật mẫu (như cũ, giữ nguyên logic import)
 export const ENEMIES_DB: Record<string, Enemy[]> = {
   'z1': [
     {
@@ -76,17 +77,89 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
   ]
 };
 
-// Bản thiết kế cơ bản
+// --- DATA MỚI ---
+
+// Định nghĩa Set
+export const SETS: Record<SetId, { name: string, bonuses: Record<number, string> }> = {
+  [SetId.ForgeSpirit]: {
+    name: "Tinh Thần Lò Rèn",
+    bonuses: {
+      2: "Tập Trung: Tăng 5% cơ hội Chế tạo Đồ hiếm.",
+      4: "Đòn Thấu Quang: Đòn đánh bỏ qua 20% Giáp đối thủ.",
+      6: "Hồi Sinh Vô Tận: 1 lần hồi sinh/trận với 50% HP."
+    }
+  },
+  [SetId.PrimalHunter]: {
+    name: "Kẻ Săn Mồi Viễn Cổ",
+    bonuses: {
+      2: "Sức Mạnh Tàn Bạo: +15% Sát thương lên Boss.",
+      4: "Săn Đuổi: Giảm 20% thời gian hồi đòn đánh.",
+      6: "Phản Ứng Nguyên Tố: Tăng 30% Sát thương Chí mạng."
+    }
+  }
+};
+
+// Định nghĩa Kỹ Năng
+export const SKILLS: Skill[] = [
+  // Nhánh Rèn Vũ Khí
+  {
+    id: 'wp_mastery',
+    name: 'Bậc Thầy Vũ Khí',
+    description: 'Tăng sát thương cho mọi vũ khí bạn chế tạo.',
+    branch: SkillBranch.WeaponSmith,
+    maxLevel: 10,
+    cost: 1,
+    effectValue: 2 // +2 Damage per level
+  },
+  {
+    id: 'wp_crit',
+    name: 'Điểm Yếu Tinh Xảo',
+    description: 'Tăng cơ hội chí mạng khi sử dụng vũ khí.',
+    branch: SkillBranch.WeaponSmith,
+    maxLevel: 5,
+    cost: 2,
+    effectValue: 1 // +1% Crit chance per level
+  },
+  // Nhánh May Vá
+  {
+    id: 'ar_mastery',
+    name: 'Lớp Giáp Hoàn Hảo',
+    description: 'Tăng chỉ số phòng thủ cho giáp bạn chế tạo.',
+    branch: SkillBranch.ArmorSmith,
+    maxLevel: 10,
+    cost: 1,
+    effectValue: 2 // +2 Defense per level
+  },
+  // Nhánh Luyện Kim
+  {
+    id: 'al_efficiency',
+    name: 'Tiết Kiệm Nguyên Liệu',
+    description: 'Giảm lượng nguyên liệu cần thiết (mô phỏng bằng cách hoàn trả).',
+    branch: SkillBranch.Alchemy,
+    maxLevel: 5,
+    cost: 3,
+    effectValue: 5 // 5% chance to refund mats
+  },
+  // Nhánh Bùa Chú
+  {
+    id: 'en_overheat',
+    name: 'Kiểm Soát Nhiệt',
+    description: 'Giảm rủi ro thất bại khi Tăng Nhiệt Lò Rèn.',
+    branch: SkillBranch.Enchanting,
+    maxLevel: 5,
+    cost: 2,
+    effectValue: 5 // -5% failure chance per level
+  }
+];
+
+// Bản thiết kế mở rộng
 export const INITIAL_BLUEPRINTS: Blueprint[] = [
   {
     id: 'bp_sword_1',
     name: 'Kiếm Sắt',
     resultType: EquipmentType.Weapon,
     unlocked: true,
-    requiredMaterials: [
-      { type: MaterialType.Ore, amount: 3 },
-      { type: MaterialType.Wood, amount: 1 }
-    ],
+    requiredMaterials: [{ type: MaterialType.Ore, amount: 3 }, { type: MaterialType.Wood, amount: 1 }],
     baseStats: { minAtk: 5, maxAtk: 10, minDef: 0, maxDef: 0 }
   },
   {
@@ -94,21 +167,36 @@ export const INITIAL_BLUEPRINTS: Blueprint[] = [
     name: 'Áo Giáp Da',
     resultType: EquipmentType.Armor,
     unlocked: true,
-    requiredMaterials: [
-      { type: MaterialType.Leather, amount: 5 }
-    ],
+    requiredMaterials: [{ type: MaterialType.Leather, amount: 5 }],
     baseStats: { minAtk: 0, maxAtk: 0, minDef: 3, maxDef: 8 }
   },
+  // Set Tinh Thần Lò Rèn
   {
-    id: 'bp_sword_2',
-    name: 'Đại Đao Tinh Thể',
+    id: 'bp_set1_helm',
+    name: 'Mũ Tinh Thần',
+    resultType: EquipmentType.Helmet,
+    unlocked: true,
+    setId: SetId.ForgeSpirit,
+    requiredMaterials: [{ type: MaterialType.Ore, amount: 10 }, { type: MaterialType.Gem, amount: 1 }],
+    baseStats: { minAtk: 2, maxAtk: 5, minDef: 5, maxDef: 10 }
+  },
+  {
+    id: 'bp_set1_glove',
+    name: 'Găng Tay Tinh Thần',
+    resultType: EquipmentType.Gloves,
+    unlocked: true,
+    setId: SetId.ForgeSpirit,
+    requiredMaterials: [{ type: MaterialType.Leather, amount: 8 }, { type: MaterialType.Ore, amount: 5 }],
+    baseStats: { minAtk: 3, maxAtk: 6, minDef: 3, maxDef: 6 }
+  },
+  {
+    id: 'bp_set1_sword',
+    name: 'Kiếm Tinh Thần',
     resultType: EquipmentType.Weapon,
-    unlocked: false, // Cần đánh boss hoặc mua để mở
-    requiredMaterials: [
-      { type: MaterialType.Ore, amount: 10 },
-      { type: MaterialType.Gem, amount: 2 }
-    ],
-    baseStats: { minAtk: 25, maxAtk: 40, minDef: 0, maxDef: 5 }
+    unlocked: false, // Drop from boss
+    setId: SetId.ForgeSpirit,
+    requiredMaterials: [{ type: MaterialType.Ore, amount: 20 }, { type: MaterialType.Gem, amount: 3 }],
+    baseStats: { minAtk: 30, maxAtk: 50, minDef: 0, maxDef: 5 }
   }
 ];
 
