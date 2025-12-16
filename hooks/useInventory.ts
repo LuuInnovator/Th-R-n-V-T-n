@@ -27,8 +27,6 @@ export const useInventory = (addLog: (msg: string) => void) => {
       let newMaterials = [...prev];
       requirements.forEach(req => {
         let remainingNeeded = req.amount;
-        // Ưu tiên dùng nguyên liệu chất lượng thấp trước (đơn giản hóa)
-        // Trong thực tế có thể cho người chơi chọn. Ở đây ta lọc tìm type đó
         for (let i = 0; i < newMaterials.length; i++) {
             if (newMaterials[i].type === req.type) {
                 const take = Math.min(newMaterials[i].quantity, remainingNeeded);
@@ -37,8 +35,7 @@ export const useInventory = (addLog: (msg: string) => void) => {
                 if (remainingNeeded <= 0) break;
             }
         }
-        // Xóa các slot = 0
-        newMaterials = newMaterials.filter(m => m.quantity > 0);
+        return newMaterials.filter(m => m.quantity > 0);
       });
       return newMaterials;
     });
@@ -55,14 +52,12 @@ export const useInventory = (addLog: (msg: string) => void) => {
 
   const equipItem = useCallback((item: Equipment) => {
     setEquipped(prev => {
-        // Gỡ đồ cũ ra (chỉnh flag isEquipped trong list)
-        const currentItem = prev[item.type];
         return { ...prev, [item.type]: item };
     });
     
     setEquipments(prev => prev.map(e => {
         if (e.id === item.id) return { ...e, isEquipped: true };
-        if (equipped[item.type]?.id === e.id) return { ...e, isEquipped: false }; // Đồ cũ
+        if (equipped[item.type]?.id === e.id) return { ...e, isEquipped: false };
         return e;
     }));
     
@@ -79,8 +74,20 @@ export const useInventory = (addLog: (msg: string) => void) => {
     });
   }, []);
 
+  // Hàm mới để load dữ liệu từ file save
+  const loadInventory = useCallback((
+    savedMaterials: Material[], 
+    savedEquipments: Equipment[], 
+    savedEquipped: Record<EquipmentType, Equipment | null>
+  ) => {
+    setMaterials(savedMaterials);
+    setEquipments(savedEquipments);
+    setEquipped(savedEquipped);
+  }, []);
+
   return { 
     materials, equipments, equipped, 
-    addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, resetInventory 
+    addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, resetInventory,
+    loadInventory 
   };
 };

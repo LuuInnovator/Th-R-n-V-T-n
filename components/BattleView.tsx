@@ -15,6 +15,8 @@ interface BattleViewProps {
   onAttack: () => void;
   logs: LogEntry[];
   onClearLogs?: () => void;
+  isAutoAttacking?: boolean;
+  onToggleAutoAttack?: () => void;
 }
 
 export const BattleView: React.FC<BattleViewProps> = ({
@@ -26,7 +28,9 @@ export const BattleView: React.FC<BattleViewProps> = ({
   onExplore,
   onAttack,
   logs,
-  onClearLogs
+  onClearLogs,
+  isAutoAttacking = false,
+  onToggleAutoAttack = () => {}
 }) => {
   return (
     <div className="flex flex-col h-full gap-4 p-4 max-w-7xl mx-auto w-full overflow-y-auto lg:overflow-hidden">
@@ -40,6 +44,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
             zoneDescription={activeZone.description}
             onExplore={onExplore}
             onAttack={onAttack}
+            isAutoAttacking={isAutoAttacking}
+            onToggleAutoAttack={onToggleAutoAttack}
           />
         </div>
         

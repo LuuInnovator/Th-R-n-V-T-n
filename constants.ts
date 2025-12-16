@@ -33,17 +33,17 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
   'z1': [
     {
       id: 'e1_1', name: 'Sói Xám', level: 1, hp: 50, maxHp: 50, attack: 5, defense: 0, isBoss: false,
-      expReward: 10, goldReward: 5,
+      expReward: 15, goldReward: 5,
       dropTable: [{ materialType: MaterialType.Leather, chance: 0.8, minQty: 1, maxQty: 2 }]
     },
     {
       id: 'e1_2', name: 'Mộc Tinh', level: 3, hp: 80, maxHp: 80, attack: 8, defense: 2, isBoss: false,
-      expReward: 15, goldReward: 8,
+      expReward: 25, goldReward: 8,
       dropTable: [{ materialType: MaterialType.Wood, chance: 0.8, minQty: 1, maxQty: 3 }]
     },
     {
       id: 'e1_boss', name: 'Vua Sói Ma (Boss)', level: 10, hp: 500, maxHp: 500, attack: 25, defense: 10, isBoss: true,
-      expReward: 200, goldReward: 100,
+      expReward: 350, goldReward: 100,
       dropTable: [
         { materialType: MaterialType.Leather, chance: 1, minQty: 5, maxQty: 10 },
         { materialType: MaterialType.Gem, chance: 0.5, minQty: 1, maxQty: 1 }
@@ -53,24 +53,24 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
   'z2': [
     {
       id: 'e2_1', name: 'Golem Đá', level: 12, hp: 300, maxHp: 300, attack: 20, defense: 20, isBoss: false,
-      expReward: 40, goldReward: 20,
+      expReward: 65, goldReward: 20,
       dropTable: [{ materialType: MaterialType.Ore, chance: 0.7, minQty: 2, maxQty: 4 }]
     },
     {
       id: 'e2_boss', name: 'Người Khổng Lồ Đá (Boss)', level: 20, hp: 1500, maxHp: 1500, attack: 60, defense: 50, isBoss: true,
-      expReward: 500, goldReward: 300,
+      expReward: 800, goldReward: 300,
       dropTable: [{ materialType: MaterialType.Ore, chance: 1, minQty: 10, maxQty: 20 }, { materialType: MaterialType.Gem, chance: 0.8, minQty: 2, maxQty: 5 }]
     }
   ],
   'z3': [
     {
       id: 'e3_1', name: 'Quỷ Lửa', level: 28, hp: 800, maxHp: 800, attack: 80, defense: 30, isBoss: false,
-      expReward: 100, goldReward: 50,
+      expReward: 180, goldReward: 50,
       dropTable: [{ materialType: MaterialType.Essence, chance: 0.6, minQty: 1, maxQty: 2 }]
     },
     {
       id: 'e3_boss', name: 'Rồng Hỏa Tinh (World Boss)', level: 50, hp: 10000, maxHp: 10000, attack: 200, defense: 150, isBoss: true,
-      expReward: 5000, goldReward: 2000,
+      expReward: 8000, goldReward: 2000,
       dropTable: [{ materialType: MaterialType.Essence, chance: 1, minQty: 5, maxQty: 10 }, { materialType: MaterialType.Gem, chance: 1, minQty: 5, maxQty: 10 }]
     }
   ]

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Zone, Enemy, Blueprint, EquipmentType, Equipment } from './types';
 import { ZONES, ENEMIES_DB, INITIAL_BLUEPRINTS, RARITY_MULTIPLIER } from './constants';
 import { randomInt, rollRarity, generateId, formatNumber } from './utils';
@@ -13,7 +13,7 @@ import { InventoryView } from './components/InventoryView';
 import { BattleView } from './components/BattleView';
 import { CraftingView } from './components/CraftingView';
 import { RebirthView } from './components/RebirthView';
-import { User, Shield, Sword, Hammer, RefreshCw } from 'lucide-react';
+import { User, Shield, Sword, Hammer, RefreshCw, Save, Upload } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'battle' | 'craft' | 'inventory' | 'rebirth'>('battle');
@@ -23,16 +23,18 @@ export default function App() {
   const { player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp } = usePlayer(addLog);
   const { 
     materials, equipments, equipped, 
-    addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, resetInventory 
+    addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, resetInventory, loadInventory 
   } = useInventory(addLog);
 
   // Local State
   const [currentZone, setCurrentZone] = useState<Zone>(ZONES[0]);
   const [currentEnemy, setCurrentEnemy] = useState<Enemy | null>(null);
+  const [isAutoAttacking, setIsAutoAttacking] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // --- ACTIONS ---
 
-  const handleExplore = () => {
+  const handleExplore = useCallback(() => {
     const enemiesInZone = ENEMIES_DB[currentZone.id];
     if (enemiesInZone && enemiesInZone.length > 0) {
       const randIdx = randomInt(0, enemiesInZone.length - 1);
@@ -40,10 +42,11 @@ export default function App() {
       addLog(`⚔️ Bạn đã tìm thấy ${enemiesInZone[randIdx].name}!`);
     } else {
       addLog("Khu vực này có vẻ trống trải...");
+      setIsAutoAttacking(false); // Dừng auto nếu không có quái
     }
-  };
+  }, [currentZone.id, addLog]);
 
-  const handleAttack = () => {
+  const handleAttack = useCallback(() => {
     if (!currentEnemy) return;
 
     // Player Attack
@@ -76,6 +79,7 @@ export default function App() {
       });
 
       setCurrentEnemy(null);
+      // Logic Auto sẽ tiếp tục ở useEffect
     } else {
       // Enemy Counter-attack
       const armorDef = equipped[EquipmentType.Armor]?.stats.defense || 0;
@@ -94,10 +98,103 @@ export default function App() {
         addLog("☠️ BẠN ĐÃ BỊ ĐÁNH BẠI! Hồi sinh tại thị trấn...");
         setFullHp();
         setCurrentEnemy(null);
+        setIsAutoAttacking(false); // Tắt auto khi chết
       }
+    }
+  }, [currentEnemy, player, equipped, addLog, gainExp, addGold, addMaterial, updateHp, setFullHp]);
+
+  // --- AUTOMATION & SAVE SYSTEM ---
+
+  // 1. Auto Loop Logic (Find -> Fight -> Find)
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    
+    if (isAutoAttacking && player.hp > 0) {
+      if (currentEnemy) {
+        // Có quái -> Đánh
+        timer = setTimeout(() => {
+          handleAttack();
+        }, 1000); // Tốc độ đánh
+      } else {
+        // Không có quái -> Tìm
+        timer = setTimeout(() => {
+          handleExplore();
+        }, 1500); // Tốc độ tìm quái
+      }
+    }
+
+    return () => clearTimeout(timer);
+  }, [isAutoAttacking, currentEnemy, player.hp, handleAttack, handleExplore]);
+
+  // 2. Save Game Function (Local Storage)
+  const saveGame = useCallback(() => {
+    const saveData = {
+      player,
+      materials,
+      equipments,
+      equipped,
+      currentZoneId: currentZone.id,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('eternal_blacksmith_save', JSON.stringify(saveData));
+    return saveData;
+  }, [player, materials, equipments, equipped, currentZone.id]);
+
+  // Helper to apply save data (used by both Load and Import)
+  const applySaveData = (saveData: any) => {
+      setPlayer(saveData.player);
+      loadInventory(saveData.materials, saveData.equipments, saveData.equipped);
+      const savedZone = ZONES.find(z => z.id === saveData.currentZoneId);
+      if (savedZone) setCurrentZone(savedZone);
+      setIsAutoAttacking(false);
+      setCurrentEnemy(null);
+      clearLogs();
+  };
+
+  // 3. Export to File (and Save Local)
+  const handleSaveAndExport = () => {
+    const saveData = saveGame(); // Save to local first
+    addLog("💾 Đã lưu dữ liệu!");
+
+    // Then export to file
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(saveData));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `VuaThoRen_Save_Lv${player.level}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  };
+
+  // 4. Import from File
+  const handleImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    if (event.target.files && event.target.files.length > 0) {
+        fileReader.readAsText(event.target.files[0], "UTF-8");
+        fileReader.onload = (e) => {
+            if (e.target?.result) {
+                try {
+                    const parsedData = JSON.parse(e.target.result as string);
+                    applySaveData(parsedData);
+                    addLog("📂 Đã tải dữ liệu từ file thành công!");
+                } catch (error) {
+                    addLog("❌ File không hợp lệ!");
+                }
+            }
+        };
     }
   };
 
+  // 5. Auto Save Interval (30s)
+  useEffect(() => {
+    const autoSaveTimer = setInterval(() => {
+      saveGame();
+    }, 30000);
+    return () => clearInterval(autoSaveTimer);
+  }, [saveGame]);
+
+
+  // --- HANDLERS ---
   const handleCraft = (bp: Blueprint) => {
     consumeMaterials(bp.requiredMaterials);
 
@@ -138,6 +235,8 @@ export default function App() {
     clearLogs();
     setCurrentEnemy(null);
     setCurrentZone(ZONES[0]);
+    setIsAutoAttacking(false);
+    saveGame(); 
 
     addLog(`✨ TÁI SINH THÀNH CÔNG! Nhận ${earnedPoints} Điểm Vĩnh Cửu.`);
     setActiveTab('battle');
@@ -209,7 +308,7 @@ export default function App() {
         </nav>
 
         <div className="p-4 text-[10px] text-slate-600 text-center border-t border-slate-800 bg-slate-950">
-          Eternal Blacksmith v1.1.0
+          Eternal Blacksmith v1.1.7
         </div>
       </aside>
 
@@ -222,6 +321,32 @@ export default function App() {
             {activeTab === 'craft' && <><span className="text-amber-500">◈</span> XƯỞNG RÈN</>}
             {activeTab === 'rebirth' && <><span className="text-purple-500">◈</span> CỔNG TÁI SINH</>}
           </h2>
+
+          {/* New Save/Load Design */}
+          <div className="flex items-center bg-slate-800/80 p-1 rounded-lg border border-slate-700 backdrop-blur-sm">
+            <button 
+                onClick={handleSaveAndExport}
+                className="flex items-center gap-2 px-4 py-1.5 text-sm font-bold text-slate-200 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                title="Lưu & Tải file về máy"
+            >
+                <Save size={16} /> Lưu
+            </button>
+            <div className="w-px h-5 bg-slate-600 mx-1"></div>
+            <button 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 px-4 py-1.5 text-sm font-bold text-slate-200 hover:text-white hover:bg-slate-700 rounded transition-colors"
+                title="Chọn file Save từ máy tính"
+            >
+                <Upload size={16} /> Tải
+            </button>
+            <input 
+              type="file" 
+              ref={fileInputRef}
+              onChange={handleImportFile}
+              accept=".json"
+              className="hidden" 
+            />
+          </div>
         </header>
 
         <div className="flex-1 overflow-hidden relative">
@@ -236,6 +361,8 @@ export default function App() {
               onAttack={handleAttack}
               logs={logs}
               onClearLogs={clearLogs}
+              isAutoAttacking={isAutoAttacking}
+              onToggleAutoAttack={() => setIsAutoAttacking(!isAutoAttacking)}
             />
           )}
           

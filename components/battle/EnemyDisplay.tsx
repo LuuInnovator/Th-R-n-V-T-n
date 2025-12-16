@@ -1,7 +1,7 @@
 import React from 'react';
 import { Enemy } from '../../types';
 import { Button } from '../Button';
-import { Zap, Shield, Skull, Map } from 'lucide-react';
+import { Zap, Shield, Skull, Map, Repeat } from 'lucide-react';
 import { Card } from '../Card';
 
 interface EnemyDisplayProps {
@@ -9,9 +9,18 @@ interface EnemyDisplayProps {
   zoneDescription: string;
   onExplore: () => void;
   onAttack: () => void;
+  isAutoAttacking?: boolean;
+  onToggleAutoAttack?: () => void;
 }
 
-export const EnemyDisplay: React.FC<EnemyDisplayProps> = ({ enemy, zoneDescription, onExplore, onAttack }) => {
+export const EnemyDisplay: React.FC<EnemyDisplayProps> = ({ 
+  enemy, 
+  zoneDescription, 
+  onExplore, 
+  onAttack,
+  isAutoAttacking = false,
+  onToggleAutoAttack
+}) => {
   if (!enemy) {
     return (
       <Card className="h-full items-center justify-center text-center p-8 min-h-[400px]">
@@ -82,16 +91,31 @@ export const EnemyDisplay: React.FC<EnemyDisplayProps> = ({ enemy, zoneDescripti
           </div>
         </div>
 
-        <Button 
-          variant="danger" 
-          size="xl" 
-          onClick={onAttack} 
-          fullWidth 
-          className="max-w-xs shadow-xl hover:scale-105 mx-auto"
-        >
-          <Zap size={24} className={enemy.isBoss ? "animate-pulse" : ""} /> 
-          TẤN CÔNG
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md mx-auto items-center justify-center">
+          <Button 
+            variant="danger" 
+            size="xl" 
+            onClick={onAttack} 
+            className={`w-full sm:w-auto shadow-xl hover:scale-105 flex-1 ${enemy.isBoss ? "animate-pulse" : ""}`}
+          >
+            <Zap size={24} /> 
+            TẤN CÔNG
+          </Button>
+
+          {onToggleAutoAttack && (
+             <Button 
+              variant={isAutoAttacking ? 'primary' : 'outline'}
+              size="xl" 
+              onClick={onToggleAutoAttack}
+              className={`w-full sm:w-auto transition-all ${isAutoAttacking ? 'shadow-[0_0_20px_rgba(59,130,246,0.5)] border-blue-400' : 'border-slate-600'}`}
+              title="Tự động tấn công mỗi giây"
+            >
+              <Repeat size={24} className={isAutoAttacking ? 'animate-spin' : ''} />
+              {isAutoAttacking ? 'ĐANG TỰ ĐỘNG' : 'TỰ ĐỘNG ĐÁNH'}
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );
