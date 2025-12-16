@@ -14,7 +14,16 @@ export enum MaterialType {
   Wood = 'Gỗ',
   Leather = 'Da',
   Gem = 'Đá Quý',
-  Essence = 'Tinh Hoa'
+  Essence = 'Tinh Hoa',
+  FissionCrystal = 'Tinh Thể Nhiệt Hạch' // New Rebirth Material
+}
+
+// Nguyên tố (cho cơ chế Boss)
+export enum ElementType {
+  Physical = 'Vật Lý',
+  Fire = 'Lửa',
+  Ice = 'Băng',
+  Lightning = 'Sét'
 }
 
 // Cấu trúc nguyên liệu trong kho
@@ -31,15 +40,16 @@ export enum EquipmentType {
   Weapon = 'Vũ Khí',
   Armor = 'Giáp',
   Accessory = 'Phụ Kiện',
-  Helmet = 'Mũ',      // Mới: Để đủ bộ set 6 món
-  Boots = 'Giày',     // Mới
-  Gloves = 'Găng Tay' // Mới
+  Helmet = 'Mũ',
+  Boots = 'Giày',
+  Gloves = 'Găng Tay'
 }
 
 // Định danh Set đồ
 export enum SetId {
-  ForgeSpirit = 'forge_spirit', // Tinh Thần Lò Rèn
-  PrimalHunter = 'primal_hunter' // Kẻ Săn Mồi Viễn Cổ
+  ForgeSpirit = 'forge_spirit',
+  PrimalHunter = 'primal_hunter',
+  DragonfireKeeper = 'dragonfire_keeper' // New Set
 }
 
 // Cấu trúc trang bị
@@ -48,6 +58,7 @@ export interface Equipment {
   name: string;
   type: EquipmentType;
   rarity: Rarity;
+  element?: ElementType; // New: Trang bị có thuộc tính
   stats: {
     attack?: number;
     defense?: number;
@@ -55,7 +66,7 @@ export interface Equipment {
   };
   isEquipped: boolean;
   value: number;
-  setId?: SetId; // Thuộc set nào
+  setId?: SetId;
 }
 
 // Công thức chế tạo (Bản thiết kế)
@@ -63,6 +74,7 @@ export interface Blueprint {
   id: string;
   name: string;
   resultType: EquipmentType;
+  element?: ElementType; // New
   requiredMaterials: {
     type: MaterialType;
     amount: number;
@@ -86,10 +98,11 @@ export interface Enemy {
   maxHp: number;
   attack: number;
   defense: number;
+  element: ElementType; // New: Quái có thuộc tính
   isBoss: boolean;
   dropTable: {
     materialType: MaterialType;
-    chance: number; // 0-1
+    chance: number;
     minQty: number;
     maxQty: number;
   }[];
@@ -103,11 +116,12 @@ export interface Zone {
   name: string;
   description: string;
   recommendedLevel: number;
+  reqRebirth?: number; // Yêu cầu số lần Rebirth để mở
   enemies: Enemy[];
   materials: MaterialType[];
 }
 
-// Kỹ năng
+// Kỹ năng thường (Reset sau Rebirth)
 export enum SkillBranch {
   Alchemy = 'Luyện Kim',
   WeaponSmith = 'Rèn Vũ Khí',
@@ -121,7 +135,25 @@ export interface Skill {
   description: string;
   branch: SkillBranch;
   maxLevel: number;
-  cost: number; // SP cost per level
+  cost: number;
+  effectValue: number;
+}
+
+// --- HỆ THỐNG VĨNH HẰNG (ETERNAL SYSTEM) ---
+export enum EternalUpgradeId {
+  HuntersEye = 'hunter_eye',
+  SolidFoundation = 'solid_foundation',
+  LearnFromFailure = 'learn_failure',
+  LatentPower = 'latent_power'
+}
+
+export interface EternalUpgrade {
+  id: EternalUpgradeId;
+  name: string;
+  description: string;
+  maxLevel: number;
+  baseCost: number; // Giá EP cấp 1
+  costMultiplier: number; // Hệ số tăng giá mỗi cấp
   effectValue: number; // Giá trị hiệu ứng mỗi cấp
 }
 
@@ -137,8 +169,9 @@ export interface Player {
   gold: number;
   eternalPoints: number;
   rebirthCount: number;
-  skillPoints: number; // Điểm kỹ năng
-  skills: Record<string, number>; // ID skill -> Level hiện tại
+  skillPoints: number;
+  skills: Record<string, number>;
+  eternalUpgrades: Record<string, number>; // ID EternalUpgrade -> Level hiện tại
 }
 
 // Nhật ký game

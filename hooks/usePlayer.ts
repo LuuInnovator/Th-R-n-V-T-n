@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { Player, Skill } from '../types';
+import { Player, Skill, EternalUpgrade, EternalUpgradeId } from '../types';
 
 const INITIAL_PLAYER: Player = {
   level: 1,
@@ -14,11 +14,19 @@ const INITIAL_PLAYER: Player = {
   eternalPoints: 0,
   rebirthCount: 0,
   skillPoints: 0,
-  skills: {}
+  skills: {},
+  eternalUpgrades: {}
 };
 
 export const usePlayer = (addLog: (msg: string) => void) => {
   const [player, setPlayer] = useState<Player>(INITIAL_PLAYER);
+
+  // Tính toán chỉ số thực tế sau khi áp dụng nâng cấp vĩnh hằng
+  const getStatMultiplier = useCallback((base: number) => {
+    const latentPowerLevel = player.eternalUpgrades[EternalUpgradeId.LatentPower] || 0;
+    // Mỗi cấp Latent Power tăng 5%
+    return Math.floor(base * (1 + latentPowerLevel * 0.05));
+  }, [player.eternalUpgrades]);
 
   const gainExp = useCallback((amount: number) => {
     setPlayer(prev => {
@@ -61,8 +69,8 @@ export const usePlayer = (addLog: (msg: string) => void) => {
   }, [addLog]);
 
   const updateHp = useCallback((newHp: number) => {
-    setPlayer(p => ({ ...p, hp: Math.min(Math.max(0, newHp), p.maxHp) }));
-  }, []);
+    setPlayer(p => ({ ...p, hp: Math.min(Math.max(0, newHp), getStatMultiplier(p.maxHp)) }));
+  }, [getStatMultiplier]);
 
   const addGold = useCallback((amount: number) => {
     setPlayer(p => ({ ...p, gold: p.gold + amount }));
@@ -86,22 +94,58 @@ export const usePlayer = (addLog: (msg: string) => void) => {
     });
   }, [addLog]);
 
+  const buyEternalUpgrade = useCallback((upgrade: EternalUpgrade) => {
+    setPlayer(prev => {
+      const currentLevel = prev.eternalUpgrades[upgrade.id] || 0;
+      if (currentLevel >= upgrade.maxLevel) return prev;
+
+      // Tính giá: Base * (Multiplier ^ CurrentLevel)
+      const cost = Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, currentLevel));
+      
+      if (prev.eternalPoints < cost) {
+          addLog("❌ Không đủ Điểm Vĩnh Cửu!");
+          return prev;
+      }
+
+      addLog(`✨ Đã mở khóa thiên phú: ${upgrade.name} (Cấp ${currentLevel + 1})`);
+      return {
+        ...prev,
+        eternalPoints: prev.eternalPoints - cost,
+        eternalUpgrades: {
+            ...prev.eternalUpgrades,
+            [upgrade.id]: currentLevel + 1
+        }
+      };
+    });
+  }, [addLog]);
+
   const rebirth = useCallback((eternalPointsReward: number) => {
-    setPlayer(prev => ({
-      ...INITIAL_PLAYER,
-      eternalPoints: prev.eternalPoints + eternalPointsReward,
-      rebirthCount: prev.rebirthCount + 1,
-      skills: prev.skills, // Giữ lại kỹ năng sau khi Rebirth
-      skillPoints: prev.skillPoints, // Giữ lại SP dư (tùy chọn design, ở đây giữ lại)
-      // Bonus chỉ số cơ bản sau mỗi lần rebirth
-      attack: INITIAL_PLAYER.attack + (prev.rebirthCount + 1) * 5,
-      defense: INITIAL_PLAYER.defense + (prev.rebirthCount + 1) * 2
-    }));
+    setPlayer(prev => {
+        // Giữ lại Eternal Upgrades & Points
+        const savedUpgrades = prev.eternalUpgrades;
+        const savedPoints = prev.eternalPoints;
+        const savedRebirthCount = prev.rebirthCount + 1;
+        
+        // Base stats sau Rebirth
+        const baseAttack = INITIAL_PLAYER.attack + (savedRebirthCount * 5);
+        const baseDefense = INITIAL_PLAYER.defense + (savedRebirthCount * 2);
+        
+        return {
+          ...INITIAL_PLAYER,
+          eternalPoints: savedPoints + eternalPointsReward,
+          rebirthCount: savedRebirthCount,
+          eternalUpgrades: savedUpgrades,
+          attack: baseAttack,
+          defense: baseDefense
+        };
+    });
   }, []);
 
   const setFullHp = useCallback(() => {
-    setPlayer(p => ({ ...p, hp: p.maxHp }));
-  }, []);
+    setPlayer(p => ({ ...p, hp: getStatMultiplier(p.maxHp) }));
+  }, [getStatMultiplier]);
 
-  return { player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill };
+  return { 
+      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier 
+  };
 };

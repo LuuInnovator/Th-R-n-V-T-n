@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Blueprint, Material } from '../types';
 import { BlueprintList } from './crafting/BlueprintList';
@@ -19,15 +20,18 @@ export const CraftingView: React.FC<CraftingViewProps> = ({
   const [selectedBp, setSelectedBp] = useState<Blueprint | null>(null);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 h-full max-w-7xl mx-auto w-full">
-      <div className="md:col-span-1 h-[300px] md:h-full min-h-0">
+    <div className="flex flex-col md:flex-row gap-6 p-4 h-full max-w-7xl mx-auto w-full overflow-hidden">
+      {/* Danh sách bản vẽ - Scroll độc lập */}
+      <div className="w-full md:w-1/3 h-[40%] md:h-full flex flex-col min-h-0">
         <BlueprintList 
             blueprints={blueprints} 
             selectedId={selectedBp?.id} 
             onSelect={setSelectedBp} 
         />
       </div>
-      <div className="md:col-span-2 h-full min-h-[500px]">
+
+      {/* Chi tiết chế tạo - Scroll độc lập nếu quá dài */}
+      <div className="w-full md:w-2/3 h-[60%] md:h-full flex flex-col min-h-0">
         <CraftingDetail 
             blueprint={selectedBp} 
             materials={materials} 

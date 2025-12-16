@@ -1,5 +1,5 @@
 
-import { Blueprint, Enemy, EquipmentType, MaterialType, Rarity, Zone, Skill, SkillBranch, SetId } from './types';
+import { Blueprint, Enemy, EquipmentType, MaterialType, Rarity, Zone, Skill, SkillBranch, SetId, ElementType, EternalUpgrade, EternalUpgradeId } from './types';
 
 // Danh sách khu vực
 export const ZONES: Zone[] = [
@@ -26,24 +26,33 @@ export const ZONES: Zone[] = [
     recommendedLevel: 25,
     materials: [MaterialType.Ore, MaterialType.Essence],
     enemies: []
+  },
+  {
+    id: 'z4_rebirth',
+    name: 'Lò Rèn Vĩnh Hằng',
+    description: '⚠️ [Vùng Tái Sinh] Nơi ngự trị của Cự Thạch Nham Thạch. Cực kỳ nguy hiểm!',
+    recommendedLevel: 1, // Reset về lv1 nhưng quái mạnh
+    reqRebirth: 1,
+    materials: [MaterialType.Essence, MaterialType.FissionCrystal],
+    enemies: []
   }
 ];
 
-// Danh sách quái vật mẫu (như cũ, giữ nguyên logic import)
+// Danh sách quái vật mẫu
 export const ENEMIES_DB: Record<string, Enemy[]> = {
   'z1': [
     {
-      id: 'e1_1', name: 'Sói Xám', level: 1, hp: 50, maxHp: 50, attack: 5, defense: 0, isBoss: false,
+      id: 'e1_1', name: 'Sói Xám', level: 1, hp: 50, maxHp: 50, attack: 5, defense: 0, isBoss: false, element: ElementType.Physical,
       expReward: 15, goldReward: 5,
       dropTable: [{ materialType: MaterialType.Leather, chance: 0.8, minQty: 1, maxQty: 2 }]
     },
     {
-      id: 'e1_2', name: 'Mộc Tinh', level: 3, hp: 80, maxHp: 80, attack: 8, defense: 2, isBoss: false,
+      id: 'e1_2', name: 'Mộc Tinh', level: 3, hp: 80, maxHp: 80, attack: 8, defense: 2, isBoss: false, element: ElementType.Physical,
       expReward: 25, goldReward: 8,
       dropTable: [{ materialType: MaterialType.Wood, chance: 0.8, minQty: 1, maxQty: 3 }]
     },
     {
-      id: 'e1_boss', name: 'Vua Sói Ma (Boss)', level: 10, hp: 500, maxHp: 500, attack: 25, defense: 10, isBoss: true,
+      id: 'e1_boss', name: 'Vua Sói Ma (Boss)', level: 10, hp: 500, maxHp: 500, attack: 25, defense: 10, isBoss: true, element: ElementType.Physical,
       expReward: 350, goldReward: 100,
       dropTable: [
         { materialType: MaterialType.Leather, chance: 1, minQty: 5, maxQty: 10 },
@@ -53,31 +62,44 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
   ],
   'z2': [
     {
-      id: 'e2_1', name: 'Golem Đá', level: 12, hp: 300, maxHp: 300, attack: 20, defense: 20, isBoss: false,
+      id: 'e2_1', name: 'Golem Đá', level: 12, hp: 300, maxHp: 300, attack: 20, defense: 20, isBoss: false, element: ElementType.Physical,
       expReward: 65, goldReward: 20,
       dropTable: [{ materialType: MaterialType.Ore, chance: 0.7, minQty: 2, maxQty: 4 }]
     },
     {
-      id: 'e2_boss', name: 'Người Khổng Lồ Đá (Boss)', level: 20, hp: 1500, maxHp: 1500, attack: 60, defense: 50, isBoss: true,
+      id: 'e2_boss', name: 'Người Khổng Lồ Đá (Boss)', level: 20, hp: 1500, maxHp: 1500, attack: 60, defense: 50, isBoss: true, element: ElementType.Physical,
       expReward: 800, goldReward: 300,
       dropTable: [{ materialType: MaterialType.Ore, chance: 1, minQty: 10, maxQty: 20 }, { materialType: MaterialType.Gem, chance: 0.8, minQty: 2, maxQty: 5 }]
     }
   ],
   'z3': [
     {
-      id: 'e3_1', name: 'Quỷ Lửa', level: 28, hp: 800, maxHp: 800, attack: 80, defense: 30, isBoss: false,
+      id: 'e3_1', name: 'Quỷ Lửa', level: 28, hp: 800, maxHp: 800, attack: 80, defense: 30, isBoss: false, element: ElementType.Fire,
       expReward: 180, goldReward: 50,
       dropTable: [{ materialType: MaterialType.Essence, chance: 0.6, minQty: 1, maxQty: 2 }]
     },
     {
-      id: 'e3_boss', name: 'Rồng Hỏa Tinh (World Boss)', level: 50, hp: 10000, maxHp: 10000, attack: 200, defense: 150, isBoss: true,
+      id: 'e3_boss', name: 'Rồng Hỏa Tinh (World Boss)', level: 50, hp: 10000, maxHp: 10000, attack: 200, defense: 150, isBoss: true, element: ElementType.Fire,
       expReward: 8000, goldReward: 2000,
       dropTable: [{ materialType: MaterialType.Essence, chance: 1, minQty: 5, maxQty: 10 }, { materialType: MaterialType.Gem, chance: 1, minQty: 5, maxQty: 10 }]
     }
+  ],
+  'z4_rebirth': [
+    {
+        id: 'e4_1', name: 'Linh Hồn Than', level: 5, hp: 2000, maxHp: 2000, attack: 150, defense: 100, isBoss: false, element: ElementType.Fire,
+        expReward: 500, goldReward: 200,
+        dropTable: [{ materialType: MaterialType.Essence, chance: 0.8, minQty: 2, maxQty: 5 }]
+    },
+    {
+        id: 'e4_boss', name: 'Cự Thạch Nham Thạch', level: 20, hp: 50000, maxHp: 50000, attack: 800, defense: 500, isBoss: true, element: ElementType.Fire,
+        expReward: 25000, goldReward: 10000,
+        dropTable: [
+            { materialType: MaterialType.FissionCrystal, chance: 1.0, minQty: 1, maxQty: 3 },
+            { materialType: MaterialType.Ore, chance: 1.0, minQty: 50, maxQty: 100 }
+        ]
+    }
   ]
 };
-
-// --- DATA MỚI ---
 
 // Định nghĩa Set
 export const SETS: Record<SetId, { name: string, bonuses: Record<number, string> }> = {
@@ -95,6 +117,14 @@ export const SETS: Record<SetId, { name: string, bonuses: Record<number, string>
       2: "Sức Mạnh Tàn Bạo: +15% Sát thương lên Boss.",
       4: "Săn Đuổi: Giảm 20% thời gian hồi đòn đánh.",
       6: "Phản Ứng Nguyên Tố: Tăng 30% Sát thương Chí mạng."
+    }
+  },
+  [SetId.DragonfireKeeper]: {
+    name: "Hỏa Long Sứ",
+    bonuses: {
+        2: "Kháng Nhiệt: Giảm 30% Sát thương Lửa nhận vào.",
+        4: "Dung Nham Phản Phệ: Phản lại 20% sát thương khi bị đánh.",
+        6: "Hơi Thở Rồng: Đòn đánh có 10% cơ hội gây thêm 500% sát thương chuẩn."
     }
   }
 };
@@ -152,15 +182,65 @@ export const SKILLS: Skill[] = [
   }
 ];
 
+// Định nghĩa Nâng cấp Vĩnh hằng (Talent Tree)
+export const ETERNAL_UPGRADES: EternalUpgrade[] = [
+    {
+        id: EternalUpgradeId.HuntersEye,
+        name: "Mắt Thợ Săn",
+        description: "Tăng tỷ lệ rơi nguyên liệu hiếm.",
+        maxLevel: 10,
+        baseCost: 50,
+        costMultiplier: 1.5,
+        effectValue: 1 // +1% per level
+    },
+    {
+        id: EternalUpgradeId.SolidFoundation,
+        name: "Nền Tảng Vững Chắc",
+        description: "Giữ lại một lượng Gỗ & Quặng sau khi Tái sinh.",
+        maxLevel: 5,
+        baseCost: 150,
+        costMultiplier: 2,
+        effectValue: 20 // +20 materials per level
+    },
+    {
+        id: EternalUpgradeId.LearnFromFailure,
+        name: "Học Hỏi Từ Thất Bại",
+        description: "Giảm tỷ lệ thất bại khi rèn đồ (đặc biệt là Overheat).",
+        maxLevel: 5,
+        baseCost: 250,
+        costMultiplier: 1.5,
+        effectValue: 2 // -2% fail chance per level
+    },
+    {
+        id: EternalUpgradeId.LatentPower,
+        name: "Sức Mạnh Tiềm Ẩn",
+        description: "Tăng vĩnh viễn mọi chỉ số (Máu, Công, Thủ) thêm %.",
+        maxLevel: 10,
+        baseCost: 500,
+        costMultiplier: 1.8,
+        effectValue: 5 // +5% stats per level
+    }
+];
+
 // Bản thiết kế mở rộng
 export const INITIAL_BLUEPRINTS: Blueprint[] = [
   {
     id: 'bp_sword_1',
     name: 'Kiếm Sắt',
     resultType: EquipmentType.Weapon,
+    element: ElementType.Physical,
     unlocked: true,
     requiredMaterials: [{ type: MaterialType.Ore, amount: 3 }, { type: MaterialType.Wood, amount: 1 }],
     baseStats: { minAtk: 5, maxAtk: 10, minDef: 0, maxDef: 0 }
+  },
+  {
+    id: 'bp_sword_ice',
+    name: 'Băng Kiếm',
+    resultType: EquipmentType.Weapon,
+    element: ElementType.Ice,
+    unlocked: true,
+    requiredMaterials: [{ type: MaterialType.Ore, amount: 5 }, { type: MaterialType.Gem, amount: 2 }],
+    baseStats: { minAtk: 15, maxAtk: 25, minDef: 0, maxDef: 0 }
   },
   {
     id: 'bp_armor_1',
@@ -197,6 +277,16 @@ export const INITIAL_BLUEPRINTS: Blueprint[] = [
     setId: SetId.ForgeSpirit,
     requiredMaterials: [{ type: MaterialType.Ore, amount: 20 }, { type: MaterialType.Gem, amount: 3 }],
     baseStats: { minAtk: 30, maxAtk: 50, minDef: 0, maxDef: 5 }
+  },
+  // Set Hỏa Long Sứ (Từ Boss Rebirth)
+  {
+    id: 'bp_set3_amulet',
+    name: 'Vòng Cổ Hỏa Long',
+    resultType: EquipmentType.Accessory,
+    unlocked: false, // Drop from boss
+    setId: SetId.DragonfireKeeper,
+    requiredMaterials: [{ type: MaterialType.FissionCrystal, amount: 1 }, { type: MaterialType.Essence, amount: 50 }],
+    baseStats: { minAtk: 100, maxAtk: 150, minDef: 50, maxDef: 80 }
   }
 ];
 
