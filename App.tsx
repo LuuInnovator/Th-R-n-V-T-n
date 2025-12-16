@@ -612,11 +612,34 @@ export default function App() {
 
         <div className="flex-1 overflow-hidden relative">
           {activeTab === 'battle' && (
-            <BattleView zones={ZONES} activeZone={currentZone} onSelectZone={handleSelectZone} player={player} currentEnemy={currentEnemy} onExplore={handleExplore} onAttack={handleAttack} logs={logs} onClearLogs={clearLogs} isAutoAttacking={isAutoAttacking} onToggleAutoAttack={() => setIsAutoAttacking(!isAutoAttacking)} />
+            <BattleView 
+              zones={ZONES} 
+              activeZone={currentZone} 
+              onSelectZone={handleSelectZone} 
+              player={player} 
+              currentEnemy={currentEnemy} 
+              onExplore={handleExplore} 
+              onAttack={handleAttack} 
+              logs={logs} 
+              onClearLogs={clearLogs} 
+              isAutoAttacking={isAutoAttacking} 
+              onToggleAutoAttack={() => setIsAutoAttacking(!isAutoAttacking)}
+              decoyCount={materials.find(m => m.type === MaterialType.DecoyItem)?.quantity || 0}
+            />
           )}
           
           {activeTab === 'inventory' && (
-            <InventoryView equipments={equipments} equipped={equipped} onEquip={equipItem} onSell={handleSell} player={player} onSocketGem={handleSocketGem} onAddSocket={handleAddSocket} onEnchant={handleEnchant} />
+            <InventoryView 
+              equipments={equipments} 
+              equipped={equipped} 
+              onEquip={equipItem} 
+              onSell={handleSell} 
+              player={player} 
+              onSocketGem={handleSocketGem} 
+              onAddSocket={handleAddSocket} 
+              onEnchant={handleEnchant}
+              materials={materials} // Pass materials
+            />
           )}
 
           {activeTab === 'craft' && (

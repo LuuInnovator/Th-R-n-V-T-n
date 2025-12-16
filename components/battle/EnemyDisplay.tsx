@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { Enemy } from '../../types';
 import { Button } from '../Button';
-import { Zap, Shield, Skull, Map, Repeat } from 'lucide-react';
+import { Zap, Shield, Skull, Map, Repeat, Target } from 'lucide-react';
 import { Card } from '../Card';
 
 interface EnemyDisplayProps {
@@ -23,100 +24,93 @@ export const EnemyDisplay: React.FC<EnemyDisplayProps> = ({
 }) => {
   if (!enemy) {
     return (
-      <Card className="h-full items-center justify-center text-center p-8 min-h-[400px]">
-        <div className="mb-6 relative">
-          <div className="absolute inset-0 bg-blue-500 blur-3xl opacity-10 rounded-full"></div>
-          <Map className="w-24 h-24 text-slate-600 mx-auto opacity-50" />
+      <div className="text-center animate-fade-in mt-10">
+        <div className="inline-block p-6 bg-slate-900/50 rounded-full mb-4 border border-slate-700 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
+            <Map className="w-16 h-16 text-slate-500" />
         </div>
-        <h3 className="text-2xl font-bold text-slate-300 mb-2">Khu Vực An Toàn</h3>
-        <p className="text-slate-500 mb-8 max-w-sm mx-auto">{zoneDescription}</p>
-        <Button size="xl" onClick={onExplore} className="animate-pulse-slow mx-auto">
-          <Skull size={24} /> TRUY TÌM QUÁI VẬT
-        </Button>
-      </Card>
+        <div className="bg-slate-900/80 p-4 rounded-xl border border-slate-800 backdrop-blur-sm shadow-xl max-w-sm mx-auto">
+            <h3 className="text-xl font-bold text-slate-300 mb-1">Khu Vực An Toàn</h3>
+            <p className="text-xs text-slate-500 mb-4">{zoneDescription}</p>
+            <Button size="lg" onClick={onExplore} fullWidth className="animate-pulse-slow font-bold">
+            <Skull size={20} /> TÌM QUÁI VẬT
+            </Button>
+        </div>
+      </div>
     );
   }
 
   const hpPercent = (enemy.hp / enemy.maxHp) * 100;
 
   return (
-    <Card className="h-full relative overflow-hidden min-h-[400px]">
-      {/* Background Effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-red-900/10 via-slate-900 to-slate-900 pointer-events-none"></div>
-      
-      <div className="relative z-10 flex flex-col h-full items-center justify-center p-6 text-center animate-fade-in">
-        <div className="mb-6">
-          <span className={`
-            inline-block px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border shadow-lg
-            ${enemy.isBoss 
-              ? 'bg-red-500/10 text-red-400 border-red-500/50 shadow-red-900/20' 
-              : 'bg-slate-700/50 text-slate-300 border-slate-600'}
-          `}>
-            {enemy.isBoss ? '⚠️ BOSS KHU VỰC' : 'Quái Vật Thường'}
-          </span>
-          
-          <h2 className={`text-4xl font-black mb-2 drop-shadow-lg ${enemy.isBoss ? 'text-red-500' : 'text-slate-100'}`}>
-            {enemy.name}
-          </h2>
-          <p className="text-slate-400 font-mono">Cấp độ {enemy.level}</p>
-        </div>
+    <div className="w-full max-w-lg flex flex-col items-center animate-fade-in">
+      {/* Boss Info Header */}
+      <div className="text-center mb-2 w-full">
+         <div className="flex items-center justify-center gap-2 mb-1">
+            {enemy.isBoss && <Skull className="text-red-500 animate-pulse" size={20} />}
+            <h2 className={`text-2xl font-black tracking-tight drop-shadow-md ${enemy.isBoss ? 'text-red-500 scale-110' : 'text-slate-200'}`}>
+                {enemy.name}
+            </h2>
+            {enemy.isBoss && <Skull className="text-red-500 animate-pulse" size={20} />}
+         </div>
+         <div className="text-xs font-mono text-slate-400 bg-black/40 inline-block px-2 py-0.5 rounded">
+            Level {enemy.level} • {enemy.element}
+         </div>
+      </div>
 
-        {/* Health Bar */}
-        <div className="w-full max-w-md mb-8">
-          <div className="flex justify-between text-xs font-bold text-slate-400 mb-1 uppercase tracking-wide">
+      {/* BIG HEALTH BAR */}
+      <div className="w-full h-6 bg-slate-950 rounded-full border-2 border-slate-700 relative overflow-hidden shadow-2xl mb-4">
+         <div 
+            className={`absolute top-0 left-0 h-full transition-all duration-200 ease-linear ${enemy.isBoss ? 'bg-gradient-to-r from-red-900 via-red-600 to-orange-600' : 'bg-gradient-to-r from-red-700 to-red-500'}`}
+            style={{ width: `${hpPercent}%` }}
+         ></div>
+         <div className="absolute inset-0 flex items-center justify-between px-3 text-[10px] font-bold text-white drop-shadow-md z-10">
             <span>HP</span>
-            <span>{enemy.hp} / {enemy.maxHp}</span>
-          </div>
-          <div className="h-4 bg-slate-900 rounded-full overflow-hidden border border-slate-700 shadow-inner relative">
-            <div 
-              className="absolute top-0 left-0 h-full bg-red-600 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(220,38,38,0.7)]"
-              style={{ width: `${hpPercent}%` }}
-            ></div>
-          </div>
-        </div>
+            <span>{enemy.hp} / {enemy.maxHp} ({Math.floor(hpPercent)}%)</span>
+         </div>
+      </div>
 
-        {/* Stats */}
-        <div className="flex justify-center gap-6 mb-10 w-full max-w-sm">
-          <div className="flex-1 bg-slate-800/50 p-3 rounded-lg border border-slate-700 backdrop-blur-sm">
-            <div className="text-slate-500 text-xs uppercase mb-1 flex items-center justify-center gap-1">
-              <Zap size={12} /> Tấn công
-            </div>
-            <div className="text-red-400 font-bold text-xl">{enemy.attack}</div>
-          </div>
-          <div className="flex-1 bg-slate-800/50 p-3 rounded-lg border border-slate-700 backdrop-blur-sm">
-            <div className="text-slate-500 text-xs uppercase mb-1 flex items-center justify-center gap-1">
-              <Shield size={12} /> Phòng thủ
-            </div>
-            <div className="text-blue-400 font-bold text-xl">{enemy.defense}</div>
-          </div>
-        </div>
+      {/* Model / Visual Placeholder (Circle) */}
+      <div className={`
+         w-32 h-32 rounded-full border-4 flex items-center justify-center mb-6 relative group
+         ${enemy.isBoss ? 'border-red-600 shadow-[0_0_40px_rgba(220,38,38,0.4)] bg-slate-900' : 'border-slate-600 bg-slate-800'}
+      `}>
+          <Target size={64} className={`${enemy.isBoss ? 'text-red-500' : 'text-slate-500'} transition-transform duration-100 group-active:scale-90`} />
+          {/* Hit effect overlay could go here */}
+      </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md mx-auto items-center justify-center">
+      {/* Stats Mini */}
+      <div className="flex gap-4 mb-6 text-xs font-bold">
+          <div className="bg-slate-900/80 px-3 py-1 rounded border border-red-900/30 text-red-400 flex items-center gap-1">
+              <Zap size={12}/> {enemy.attack} ATK
+          </div>
+          <div className="bg-slate-900/80 px-3 py-1 rounded border border-blue-900/30 text-blue-400 flex items-center gap-1">
+              <Shield size={12}/> {enemy.defense} DEF
+          </div>
+      </div>
+
+      {/* Main Action Buttons */}
+      <div className="flex gap-3 w-full max-w-xs">
           <Button 
             variant="danger" 
-            size="xl" 
+            size="lg" 
+            fullWidth
             onClick={onAttack} 
-            className={`w-full sm:w-auto shadow-xl hover:scale-105 flex-1 ${enemy.isBoss ? "animate-pulse" : ""}`}
+            className="shadow-xl active:scale-95"
           >
-            <Zap size={24} /> 
             TẤN CÔNG
           </Button>
 
           {onToggleAutoAttack && (
              <Button 
               variant={isAutoAttacking ? 'primary' : 'outline'}
-              size="xl" 
+              size="lg" 
               onClick={onToggleAutoAttack}
-              className={`w-full sm:w-auto transition-all ${isAutoAttacking ? 'shadow-[0_0_20px_rgba(59,130,246,0.5)] border-blue-400' : 'border-slate-600'}`}
-              title="Tự động tấn công mỗi giây"
+              className={`px-3 ${isAutoAttacking ? 'animate-pulse' : ''}`}
             >
-              <Repeat size={24} className={isAutoAttacking ? 'animate-spin' : ''} />
-              {isAutoAttacking ? 'ĐANG TỰ ĐỘNG' : 'TỰ ĐỘNG ĐÁNH'}
+              <Repeat size={20} />
             </Button>
           )}
-        </div>
       </div>
-    </Card>
+    </div>
   );
 };
