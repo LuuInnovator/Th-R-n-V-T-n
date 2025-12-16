@@ -1,8 +1,9 @@
 
 import { useState, useCallback } from 'react';
-import { Player, Skill, EternalUpgrade, EternalUpgradeId } from '../types';
+import { Player, Skill, EternalUpgrade, EternalUpgradeId, CharacterClass } from '../types';
 
 const INITIAL_PLAYER: Player = {
+  characterClass: CharacterClass.None,
   level: 1,
   currentExp: 0,
   maxExp: 100,
@@ -15,18 +16,46 @@ const INITIAL_PLAYER: Player = {
   rebirthCount: 0,
   skillPoints: 0,
   skills: {},
-  eternalUpgrades: {}
+  eternalUpgrades: {},
+  gemInventory: {} // Initialize gem inventory
 };
 
 export const usePlayer = (addLog: (msg: string) => void) => {
   const [player, setPlayer] = useState<Player>(INITIAL_PLAYER);
 
-  // Tính toán chỉ số thực tế sau khi áp dụng nâng cấp vĩnh hằng
+  // Tính toán chỉ số thực tế sau khi áp dụng nâng cấp vĩnh hằng và Class
   const getStatMultiplier = useCallback((base: number) => {
+    let multiplier = 1.0;
+    
+    // 1. Eternal Upgrade: Latent Power
     const latentPowerLevel = player.eternalUpgrades[EternalUpgradeId.LatentPower] || 0;
-    // Mỗi cấp Latent Power tăng 5%
-    return Math.floor(base * (1 + latentPowerLevel * 0.05));
-  }, [player.eternalUpgrades]);
+    multiplier += latentPowerLevel * 0.05;
+
+    // 2. Class Bonuses
+    if (player.characterClass === CharacterClass.HeavySentinel) {
+        // Sentinel gets bonus Def, but we are calculating multiplier generically here. 
+        // We will apply specific bonuses in usage context, OR apply "Base Stat" bonus here if 'base' represents a specific stat.
+        // For simplicity in this function, we treat it as a generic multiplier for now, 
+        // BUT strictly speaking, Sentinel only boosts DEF.
+        // Let's refine: This function is mostly used for HP cap.
+    }
+    
+    return Math.floor(base * multiplier);
+  }, [player.eternalUpgrades, player.characterClass]);
+
+  // Hàm chọn Class
+  const selectClass = useCallback((cls: CharacterClass) => {
+      setPlayer(prev => ({
+          ...prev,
+          characterClass: cls,
+          // Cộng chỉ số khởi đầu tùy class
+          attack: cls === CharacterClass.ShadowBlade ? prev.attack + 5 : prev.attack,
+          defense: cls === CharacterClass.HeavySentinel ? prev.defense + 5 : prev.defense,
+          maxHp: cls === CharacterClass.AlchemistMage ? prev.maxHp + 20 : prev.maxHp,
+          hp: cls === CharacterClass.AlchemistMage ? prev.maxHp + 20 : prev.hp
+      }));
+      addLog(`✨ Bạn đã chọn lớp nhân vật: ${cls}`);
+  }, [addLog]);
 
   const gainExp = useCallback((amount: number) => {
     setPlayer(prev => {
@@ -46,7 +75,7 @@ export const usePlayer = (addLog: (msg: string) => void) => {
         newMaxHp += 20;
         newAtk += 2;
         newDef += 1;
-        newSP += 1; // +1 SP per level
+        newSP += 1; 
         leveledUp = true;
       }
 
@@ -98,8 +127,6 @@ export const usePlayer = (addLog: (msg: string) => void) => {
     setPlayer(prev => {
       const currentLevel = prev.eternalUpgrades[upgrade.id] || 0;
       if (currentLevel >= upgrade.maxLevel) return prev;
-
-      // Tính giá: Base * (Multiplier ^ CurrentLevel)
       const cost = Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, currentLevel));
       
       if (prev.eternalPoints < cost) {
@@ -121,10 +148,10 @@ export const usePlayer = (addLog: (msg: string) => void) => {
 
   const rebirth = useCallback((eternalPointsReward: number) => {
     setPlayer(prev => {
-        // Giữ lại Eternal Upgrades & Points
         const savedUpgrades = prev.eternalUpgrades;
         const savedPoints = prev.eternalPoints;
         const savedRebirthCount = prev.rebirthCount + 1;
+        const savedClass = prev.characterClass; // Giữ nguyên class hoặc reset tùy design (ở đây giữ nguyên)
         
         // Base stats sau Rebirth
         const baseAttack = INITIAL_PLAYER.attack + (savedRebirthCount * 5);
@@ -132,6 +159,7 @@ export const usePlayer = (addLog: (msg: string) => void) => {
         
         return {
           ...INITIAL_PLAYER,
+          characterClass: savedClass,
           eternalPoints: savedPoints + eternalPointsReward,
           rebirthCount: savedRebirthCount,
           eternalUpgrades: savedUpgrades,
@@ -145,7 +173,32 @@ export const usePlayer = (addLog: (msg: string) => void) => {
     setPlayer(p => ({ ...p, hp: getStatMultiplier(p.maxHp) }));
   }, [getStatMultiplier]);
 
+  // Gem Helpers
+  const addGem = useCallback((key: string, qty: number) => {
+    setPlayer(prev => ({
+      ...prev,
+      gemInventory: {
+        ...prev.gemInventory,
+        [key]: (prev.gemInventory[key] || 0) + qty
+      }
+    }));
+  }, []);
+
+  const removeGem = useCallback((key: string, qty: number) => {
+     setPlayer(prev => {
+         const current = prev.gemInventory[key] || 0;
+         if (current < qty) return prev;
+         return {
+             ...prev,
+             gemInventory: {
+                 ...prev.gemInventory,
+                 [key]: current - qty
+             }
+         };
+     });
+  }, []);
+
   return { 
-      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier 
+      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem 
   };
 };

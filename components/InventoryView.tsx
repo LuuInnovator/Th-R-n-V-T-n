@@ -1,19 +1,34 @@
 
 import React from 'react';
-import { Equipment, EquipmentType, SetId } from '../types';
+import { Equipment, EquipmentType, SetId, Player, GemType, EnchantmentType } from '../types';
 import { RARITY_COLOR, SETS } from '../constants';
 import { Shield, Sword, HardHat, Hand, Footprints, CircuitBoard } from 'lucide-react';
 import { Card } from './Card';
 import { EquipmentList } from './inventory/EquipmentList';
+import { usePlayer } from '../hooks/usePlayer'; // Import hook to get context or pass from App
 
 interface InventoryViewProps {
   equipments: Equipment[];
   equipped: Record<EquipmentType, Equipment | null>;
   onEquip: (item: Equipment) => void;
   onSell: (item: Equipment) => void;
+  // New props passed from App implicitly via context or prop drilling. 
+  // For simplicity in this structure, we'll need to grab player context or assume App passes them.
+  // We'll update App.tsx to pass these, but since we are modifying files, let's assume App passes them to InventoryView.
 }
 
-// Map EquipmentType to Lucide Icons
+// Since we can't easily change the signature of InventoryView in App.tsx without making it messy, 
+// let's grab the necessary handlers from context or just update App.tsx to pass them.
+// I updated App.tsx to pass them? Wait, I need to update App.tsx render section for InventoryView.
+
+// Let's redefine Props to be safe
+interface InventoryViewPropsExpanded extends InventoryViewProps {
+    player?: Player;
+    onSocketGem?: (gemKey: string, item: Equipment) => void;
+    onAddSocket?: (item: Equipment) => void;
+    onEnchant?: (type: EnchantmentType, item: Equipment) => void;
+}
+
 const EQUIPMENT_ICONS: Record<EquipmentType, React.ElementType> = {
   [EquipmentType.Weapon]: Sword,
   [EquipmentType.Helmet]: HardHat,
@@ -23,13 +38,13 @@ const EQUIPMENT_ICONS: Record<EquipmentType, React.ElementType> = {
   [EquipmentType.Accessory]: CircuitBoard,
 };
 
-export const InventoryView: React.FC<InventoryViewProps> = ({
+export const InventoryView: React.FC<InventoryViewPropsExpanded> = ({
   equipments,
   equipped,
   onEquip,
-  onSell
+  onSell,
+  player, onSocketGem, onAddSocket, onEnchant
 }) => {
-  // Calculate Active Sets
   const activeSets: Record<SetId, number> = {} as any;
   Object.values(equipped).forEach(item => {
     if (item && item.setId) {
@@ -38,15 +53,9 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   });
 
   return (
-    /* 
-      FIX LỖI CUỘN:
-      - Sử dụng h-full và overflow-y-auto ở ngay container cha.
-      - pb-32: Padding đáy cực lớn để đảm bảo món đồ cuối cùng không bị thanh menu dưới che mất.
-    */
     <div className="h-full w-full overflow-y-auto scrollbar-thin p-4 pb-32">
       <div className="max-w-5xl mx-auto flex flex-col gap-6">
         
-        {/* Phần 1: Trang bị đang mặc */}
         <Card>
           <div className="flex items-center justify-between mb-2 border-b border-slate-700/50 pb-2">
             <div className="flex items-center gap-2">
@@ -67,6 +76,11 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                     <div className="animate-fade-in text-center z-10 w-full flex flex-col items-center justify-center h-full">
                        <Icon size={24} className={`mb-1 ${RARITY_COLOR[item.rarity]}`} />
                        <span className={`text-[10px] font-bold line-clamp-1 px-1 ${RARITY_COLOR[item.rarity]}`}>{item.name}</span>
+                       {(item.socketedGems?.length || 0) > 0 && (
+                           <div className="flex gap-0.5 mt-0.5">
+                               {item.socketedGems.map((_, i) => <div key={i} className="w-1.5 h-1.5 rounded-full bg-amber-400"></div>)}
+                           </div>
+                       )}
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center opacity-30 h-full">
@@ -79,7 +93,6 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
             })}
           </div>
           
-           {/* Active Set Bonuses Compact */}
            {Object.keys(activeSets).length > 0 && (
             <div className="bg-slate-900/40 rounded px-3 py-2 border border-slate-700/50 flex flex-wrap gap-x-4 gap-y-1 mt-2">
                 {(Object.keys(activeSets) as SetId[]).map(setId => (
@@ -91,8 +104,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           )}
         </Card>
 
-        {/* Phần 2: Kho Trang Bị - Render trực tiếp, không wrap cứng height nữa */}
-        <EquipmentList equipments={equipments} onEquip={onEquip} onSell={onSell} />
+        {/* Pass new props to EquipmentList */}
+        <EquipmentList 
+            equipments={equipments} 
+            onEquip={onEquip} 
+            onSell={onSell}
+            player={player}
+            onSocketGem={onSocketGem}
+            onAddSocket={onAddSocket}
+            onEnchant={onEnchant}
+        />
       </div>
     </div>
   );

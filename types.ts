@@ -13,9 +13,11 @@ export enum MaterialType {
   Ore = 'Quặng',
   Wood = 'Gỗ',
   Leather = 'Da',
-  Gem = 'Đá Quý',
+  Gem = 'Đá Quý Thô', // Gem thô nhặt được
   Essence = 'Tinh Hoa',
-  FissionCrystal = 'Tinh Thể Nhiệt Hạch' // New Rebirth Material
+  FissionCrystal = 'Tinh Thể Nhiệt Hạch',
+  SoulDust = 'Bụi Linh Hồn', // Mới: Dùng để chế đồ phù phép
+  EnchantScroll = 'Giấy Phép Thuật' // Mới: Dùng để phù phép
 }
 
 // Nguyên tố (cho cơ chế Boss)
@@ -49,16 +51,44 @@ export enum EquipmentType {
 export enum SetId {
   ForgeSpirit = 'forge_spirit',
   PrimalHunter = 'primal_hunter',
-  DragonfireKeeper = 'dragonfire_keeper' // New Set
+  DragonfireKeeper = 'dragonfire_keeper'
 }
 
-// Cấu trúc trang bị
+// --- HỆ THỐNG GEM & ENCHANT MỚI ---
+export enum GemType {
+  Ruby = 'Hồng Ngọc', // Tấn công
+  Sapphire = 'Lam Ngọc', // Thủ / Kháng
+  Topaz = 'Hoàng Ngọc' // Máu
+}
+
+export enum GemTier {
+  Chipped = 1, // Sơ cấp
+  Flawed = 2,
+  Normal = 3,
+  Flawless = 4,
+  Perfect = 5 // Hoàn mỹ
+}
+
+export interface SocketedGem {
+  type: GemType;
+  tier: GemTier;
+}
+
+export enum EnchantmentType {
+  None = 'Không',
+  Sharpness = 'Sắc Bén', // Tăng % ATK
+  Protection = 'Bảo Hộ', // Tăng % DEF
+  Vampirism = 'Hút Máu', // Hồi máu khi đánh
+  Fortune = 'May Mắn' // Tăng drop rate
+}
+
+// Cấu trúc trang bị (Cập nhật)
 export interface Equipment {
   id: string;
   name: string;
   type: EquipmentType;
   rarity: Rarity;
-  element?: ElementType; // New: Trang bị có thuộc tính
+  element?: ElementType; 
   stats: {
     attack?: number;
     defense?: number;
@@ -67,14 +97,20 @@ export interface Equipment {
   isEquipped: boolean;
   value: number;
   setId?: SetId;
+  
+  // New Fields
+  sockets: number; // Số lỗ tối đa (0-3)
+  socketedGems: SocketedGem[]; // Ngọc đã khảm
+  enchantment?: EnchantmentType; // Phù phép hiện tại
 }
 
 // Công thức chế tạo (Bản thiết kế)
 export interface Blueprint {
   id: string;
   name: string;
-  resultType: EquipmentType;
-  element?: ElementType; // New
+  resultType: EquipmentType | 'MATERIAL'; // Cho phép chế nguyên liệu
+  resultMaterial?: MaterialType; // Nếu là chế nguyên liệu
+  element?: ElementType;
   requiredMaterials: {
     type: MaterialType;
     amount: number;
@@ -98,7 +134,7 @@ export interface Enemy {
   maxHp: number;
   attack: number;
   defense: number;
-  element: ElementType; // New: Quái có thuộc tính
+  element: ElementType;
   isBoss: boolean;
   dropTable: {
     materialType: MaterialType;
@@ -116,12 +152,12 @@ export interface Zone {
   name: string;
   description: string;
   recommendedLevel: number;
-  reqRebirth?: number; // Yêu cầu số lần Rebirth để mở
+  reqRebirth?: number;
   enemies: Enemy[];
   materials: MaterialType[];
 }
 
-// Kỹ năng thường (Reset sau Rebirth)
+// Kỹ năng thường
 export enum SkillBranch {
   Alchemy = 'Luyện Kim',
   WeaponSmith = 'Rèn Vũ Khí',
@@ -152,13 +188,22 @@ export interface EternalUpgrade {
   name: string;
   description: string;
   maxLevel: number;
-  baseCost: number; // Giá EP cấp 1
-  costMultiplier: number; // Hệ số tăng giá mỗi cấp
-  effectValue: number; // Giá trị hiệu ứng mỗi cấp
+  baseCost: number; 
+  costMultiplier: number; 
+  effectValue: number; 
+}
+
+// --- LỚP NHÂN VẬT ---
+export enum CharacterClass {
+  None = 'Chưa chọn',
+  HeavySentinel = 'Chiến Binh Giáp Nặng',
+  ShadowBlade = 'Sát Thủ Bóng Đêm',
+  AlchemistMage = 'Pháp Sư Luyện Kim'
 }
 
 // Trạng thái người chơi
 export interface Player {
+  characterClass: CharacterClass; // New
   level: number;
   currentExp: number;
   maxExp: number;
@@ -171,7 +216,10 @@ export interface Player {
   rebirthCount: number;
   skillPoints: number;
   skills: Record<string, number>;
-  eternalUpgrades: Record<string, number>; // ID EternalUpgrade -> Level hiện tại
+  eternalUpgrades: Record<string, number>;
+  
+  // Inventory cho Ngọc (Lưu dạng dictionary cho gọn)
+  gemInventory: Record<string, number>; // key: "Ruby_1", value: qty
 }
 
 // Nhật ký game

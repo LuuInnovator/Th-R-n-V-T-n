@@ -1,5 +1,5 @@
 
-import { Blueprint, Enemy, EquipmentType, MaterialType, Rarity, Zone, Skill, SkillBranch, SetId, ElementType, EternalUpgrade, EternalUpgradeId } from './types';
+import { Blueprint, CharacterClass, EnchantmentType, Enemy, EquipmentType, GemTier, GemType, MaterialType, Rarity, Zone, Skill, SkillBranch, SetId, ElementType, EternalUpgrade, EternalUpgradeId } from './types';
 
 // Danh sách khu vực
 export const ZONES: Zone[] = [
@@ -14,7 +14,7 @@ export const ZONES: Zone[] = [
   {
     id: 'z2',
     name: 'Mỏ Đá Cổ',
-    description: 'Hầm ngục bỏ hoang đầy rẫy golem. Nơi tốt nhất để tìm Quặng.',
+    description: 'Hầm ngục bỏ hoang đầy rẫy golem. Nơi tốt nhất để tìm Quặng và Đá Quý Thô.',
     recommendedLevel: 10,
     materials: [MaterialType.Ore, MaterialType.Gem],
     enemies: []
@@ -30,15 +30,15 @@ export const ZONES: Zone[] = [
   {
     id: 'z4_rebirth',
     name: 'Lò Rèn Vĩnh Hằng',
-    description: '⚠️ [Vùng Tái Sinh] Nơi ngự trị của Cự Thạch Nham Thạch. Cực kỳ nguy hiểm!',
-    recommendedLevel: 1, // Reset về lv1 nhưng quái mạnh
+    description: '⚠️ [Vùng Tái Sinh] Nơi ngự trị của Cự Thạch Nham Thạch.',
+    recommendedLevel: 1,
     reqRebirth: 1,
-    materials: [MaterialType.Essence, MaterialType.FissionCrystal],
+    materials: [MaterialType.Essence, MaterialType.FissionCrystal, MaterialType.SoulDust],
     enemies: []
   }
 ];
 
-// Danh sách quái vật mẫu
+// Danh sách quái vật
 export const ENEMIES_DB: Record<string, Enemy[]> = {
   'z1': [
     {
@@ -56,7 +56,8 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
       expReward: 350, goldReward: 100,
       dropTable: [
         { materialType: MaterialType.Leather, chance: 1, minQty: 5, maxQty: 10 },
-        { materialType: MaterialType.Gem, chance: 0.5, minQty: 1, maxQty: 1 }
+        { materialType: MaterialType.Gem, chance: 0.5, minQty: 1, maxQty: 2 },
+        { materialType: MaterialType.SoulDust, chance: 0.3, minQty: 1, maxQty: 1 }
       ]
     }
   ],
@@ -69,7 +70,11 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
     {
       id: 'e2_boss', name: 'Người Khổng Lồ Đá (Boss)', level: 20, hp: 1500, maxHp: 1500, attack: 60, defense: 50, isBoss: true, element: ElementType.Physical,
       expReward: 800, goldReward: 300,
-      dropTable: [{ materialType: MaterialType.Ore, chance: 1, minQty: 10, maxQty: 20 }, { materialType: MaterialType.Gem, chance: 0.8, minQty: 2, maxQty: 5 }]
+      dropTable: [
+          { materialType: MaterialType.Ore, chance: 1, minQty: 10, maxQty: 20 }, 
+          { materialType: MaterialType.Gem, chance: 0.8, minQty: 2, maxQty: 5 },
+          { materialType: MaterialType.SoulDust, chance: 0.5, minQty: 2, maxQty: 4 }
+      ]
     }
   ],
   'z3': [
@@ -81,7 +86,11 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
     {
       id: 'e3_boss', name: 'Rồng Hỏa Tinh (World Boss)', level: 50, hp: 10000, maxHp: 10000, attack: 200, defense: 150, isBoss: true, element: ElementType.Fire,
       expReward: 8000, goldReward: 2000,
-      dropTable: [{ materialType: MaterialType.Essence, chance: 1, minQty: 5, maxQty: 10 }, { materialType: MaterialType.Gem, chance: 1, minQty: 5, maxQty: 10 }]
+      dropTable: [
+          { materialType: MaterialType.Essence, chance: 1, minQty: 5, maxQty: 10 }, 
+          { materialType: MaterialType.Gem, chance: 1, minQty: 5, maxQty: 10 },
+          { materialType: MaterialType.SoulDust, chance: 1, minQty: 5, maxQty: 10 }
+      ]
     }
   ],
   'z4_rebirth': [
@@ -95,13 +104,47 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
         expReward: 25000, goldReward: 10000,
         dropTable: [
             { materialType: MaterialType.FissionCrystal, chance: 1.0, minQty: 1, maxQty: 3 },
-            { materialType: MaterialType.Ore, chance: 1.0, minQty: 50, maxQty: 100 }
+            { materialType: MaterialType.Ore, chance: 1.0, minQty: 50, maxQty: 100 },
+             { materialType: MaterialType.SoulDust, chance: 1, minQty: 10, maxQty: 20 }
         ]
     }
   ]
 };
 
-// Định nghĩa Set
+// --- CONSTANTS CHO HỆ THỐNG MỚI ---
+
+export const GEM_STATS = {
+  [GemType.Ruby]: { [GemTier.Chipped]: 2, [GemTier.Flawed]: 5, [GemTier.Normal]: 10, [GemTier.Flawless]: 20, [GemTier.Perfect]: 50 }, // Attack
+  [GemType.Sapphire]: { [GemTier.Chipped]: 2, [GemTier.Flawed]: 5, [GemTier.Normal]: 10, [GemTier.Flawless]: 20, [GemTier.Perfect]: 50 }, // Defense
+  [GemType.Topaz]: { [GemTier.Chipped]: 10, [GemTier.Flawed]: 25, [GemTier.Normal]: 50, [GemTier.Flawless]: 100, [GemTier.Perfect]: 250 } // HP
+};
+
+export const ENCHANT_STATS = {
+  [EnchantmentType.Sharpness]: { desc: "+15% Tấn công", multAtk: 0.15 },
+  [EnchantmentType.Protection]: { desc: "+15% Phòng thủ", multDef: 0.15 },
+  [EnchantmentType.Vampirism]: { desc: "Hồi 5% HP khi đánh", lifesteal: 0.05 },
+  [EnchantmentType.Fortune]: { desc: "+20% Tỷ lệ rơi đồ", dropRate: 0.20 }
+};
+
+export const CLASS_INFO = {
+  [CharacterClass.HeavySentinel]: {
+    name: "Chiến Binh Giáp Nặng",
+    desc: "Bậc thầy cận chiến và phòng thủ.",
+    bonuses: "Tăng 10% khả năng tìm Quặng. Tăng 10% Phòng thủ gốc."
+  },
+  [CharacterClass.ShadowBlade]: {
+    name: "Sát Thủ Bóng Đêm",
+    desc: "Nhanh nhẹn và chết chóc.",
+    bonuses: "Giảm 10% thời gian đánh (Tốc độ). Tăng 10% Tấn công gốc."
+  },
+  [CharacterClass.AlchemistMage]: {
+    name: "Pháp Sư Luyện Kim",
+    desc: "Thông thái và khéo léo.",
+    bonuses: "Tăng 15% khả năng tìm Bụi Linh Hồn. Tăng hiệu quả hồi phục."
+  }
+};
+
+// Định nghĩa Set (Giữ nguyên)
 export const SETS: Record<SetId, { name: string, bonuses: Record<number, string> }> = {
   [SetId.ForgeSpirit]: {
     name: "Tinh Thần Lò Rèn",
@@ -129,9 +172,8 @@ export const SETS: Record<SetId, { name: string, bonuses: Record<number, string>
   }
 };
 
-// Định nghĩa Kỹ Năng
+// Kỹ Năng (Giữ nguyên)
 export const SKILLS: Skill[] = [
-  // Nhánh Rèn Vũ Khí
   {
     id: 'wp_mastery',
     name: 'Bậc Thầy Vũ Khí',
@@ -139,7 +181,7 @@ export const SKILLS: Skill[] = [
     branch: SkillBranch.WeaponSmith,
     maxLevel: 10,
     cost: 1,
-    effectValue: 2 // +2 Damage per level
+    effectValue: 2
   },
   {
     id: 'wp_crit',
@@ -148,9 +190,8 @@ export const SKILLS: Skill[] = [
     branch: SkillBranch.WeaponSmith,
     maxLevel: 5,
     cost: 2,
-    effectValue: 1 // +1% Crit chance per level
+    effectValue: 1
   },
-  // Nhánh May Vá
   {
     id: 'ar_mastery',
     name: 'Lớp Giáp Hoàn Hảo',
@@ -158,9 +199,8 @@ export const SKILLS: Skill[] = [
     branch: SkillBranch.ArmorSmith,
     maxLevel: 10,
     cost: 1,
-    effectValue: 2 // +2 Defense per level
+    effectValue: 2 
   },
-  // Nhánh Luyện Kim
   {
     id: 'al_efficiency',
     name: 'Tiết Kiệm Nguyên Liệu',
@@ -168,9 +208,8 @@ export const SKILLS: Skill[] = [
     branch: SkillBranch.Alchemy,
     maxLevel: 5,
     cost: 3,
-    effectValue: 5 // 5% chance to refund mats
+    effectValue: 5
   },
-  // Nhánh Bùa Chú
   {
     id: 'en_overheat',
     name: 'Kiểm Soát Nhiệt',
@@ -178,11 +217,11 @@ export const SKILLS: Skill[] = [
     branch: SkillBranch.Enchanting,
     maxLevel: 5,
     cost: 2,
-    effectValue: 5 // -5% failure chance per level
+    effectValue: 5
   }
 ];
 
-// Định nghĩa Nâng cấp Vĩnh hằng (Talent Tree)
+// Nâng cấp Vĩnh hằng (Giữ nguyên)
 export const ETERNAL_UPGRADES: EternalUpgrade[] = [
     {
         id: EternalUpgradeId.HuntersEye,
@@ -191,7 +230,7 @@ export const ETERNAL_UPGRADES: EternalUpgrade[] = [
         maxLevel: 10,
         baseCost: 50,
         costMultiplier: 1.5,
-        effectValue: 1 // +1% per level
+        effectValue: 1 
     },
     {
         id: EternalUpgradeId.SolidFoundation,
@@ -200,7 +239,7 @@ export const ETERNAL_UPGRADES: EternalUpgrade[] = [
         maxLevel: 5,
         baseCost: 150,
         costMultiplier: 2,
-        effectValue: 20 // +20 materials per level
+        effectValue: 20 
     },
     {
         id: EternalUpgradeId.LearnFromFailure,
@@ -209,7 +248,7 @@ export const ETERNAL_UPGRADES: EternalUpgrade[] = [
         maxLevel: 5,
         baseCost: 250,
         costMultiplier: 1.5,
-        effectValue: 2 // -2% fail chance per level
+        effectValue: 2 
     },
     {
         id: EternalUpgradeId.LatentPower,
@@ -218,12 +257,21 @@ export const ETERNAL_UPGRADES: EternalUpgrade[] = [
         maxLevel: 10,
         baseCost: 500,
         costMultiplier: 1.8,
-        effectValue: 5 // +5% stats per level
+        effectValue: 5 
     }
 ];
 
-// Bản thiết kế mở rộng
+// Bản thiết kế (Mở rộng thêm Giấy Phép Thuật)
 export const INITIAL_BLUEPRINTS: Blueprint[] = [
+  {
+    id: 'bp_enchant_scroll',
+    name: 'Giấy Phép Thuật',
+    resultType: 'MATERIAL',
+    resultMaterial: MaterialType.EnchantScroll,
+    unlocked: true,
+    requiredMaterials: [{ type: MaterialType.SoulDust, amount: 5 }, { type: MaterialType.Leather, amount: 2 }],
+    baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }
+  },
   {
     id: 'bp_sword_1',
     name: 'Kiếm Sắt',
@@ -273,17 +321,17 @@ export const INITIAL_BLUEPRINTS: Blueprint[] = [
     id: 'bp_set1_sword',
     name: 'Kiếm Tinh Thần',
     resultType: EquipmentType.Weapon,
-    unlocked: false, // Drop from boss
+    unlocked: false, 
     setId: SetId.ForgeSpirit,
     requiredMaterials: [{ type: MaterialType.Ore, amount: 20 }, { type: MaterialType.Gem, amount: 3 }],
     baseStats: { minAtk: 30, maxAtk: 50, minDef: 0, maxDef: 5 }
   },
-  // Set Hỏa Long Sứ (Từ Boss Rebirth)
+  // Set Hỏa Long Sứ
   {
     id: 'bp_set3_amulet',
     name: 'Vòng Cổ Hỏa Long',
     resultType: EquipmentType.Accessory,
-    unlocked: false, // Drop from boss
+    unlocked: false,
     setId: SetId.DragonfireKeeper,
     requiredMaterials: [{ type: MaterialType.FissionCrystal, amount: 1 }, { type: MaterialType.Essence, amount: 50 }],
     baseStats: { minAtk: 100, maxAtk: 150, minDef: 50, maxDef: 80 }

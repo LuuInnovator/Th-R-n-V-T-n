@@ -1,14 +1,22 @@
 
-import React from 'react';
-import { Equipment, EquipmentType } from '../../types';
-import { RARITY_COLOR } from '../../constants';
-import { Sword, Shield, HardHat, Hand, Footprints, CircuitBoard, DollarSign } from 'lucide-react';
+import React, { useState } from 'react';
+import { Equipment, EquipmentType, Player, GemType, EnchantmentType, GemTier } from '../../types';
+import { RARITY_COLOR, GEM_STATS } from '../../constants';
+import { Sword, Shield, HardHat, Hand, Footprints, CircuitBoard, DollarSign, Hammer, Gem, Sparkles } from 'lucide-react';
 import { Card } from '../Card';
+import { ItemUpgradeModal } from '../ItemUpgradeModal'; // Import Modal mới
+import { useInventory } from '../../hooks/useInventory'; // Cần hook update
 
 interface EquipmentListProps {
   equipments: Equipment[];
   onEquip: (item: Equipment) => void;
   onSell: (item: Equipment) => void;
+  // Truyền thêm prop update
+  onUpdateItem?: (item: Equipment) => void;
+  player?: Player; // Cần player để check gem inventory
+  onSocketGem?: (gemKey: string, item: Equipment) => void;
+  onAddSocket?: (item: Equipment) => void;
+  onEnchant?: (type: EnchantmentType, item: Equipment) => void;
 }
 
 const TYPE_ICONS: Record<EquipmentType, React.ElementType> = {
@@ -20,13 +28,32 @@ const TYPE_ICONS: Record<EquipmentType, React.ElementType> = {
   [EquipmentType.Accessory]: CircuitBoard,
 };
 
-export const EquipmentList: React.FC<EquipmentListProps> = ({ equipments, onEquip, onSell }) => {
+export const EquipmentList: React.FC<EquipmentListProps> = ({ 
+    equipments, onEquip, onSell, onUpdateItem, player, onSocketGem, onAddSocket, onEnchant 
+}) => {
+  const [selectedItem, setSelectedItem] = useState<Equipment | null>(null);
+
+  const handleSocket = (gemKey: string) => {
+      if (selectedItem && onSocketGem) {
+          onSocketGem(gemKey, selectedItem);
+          // Đóng modal sau khi thao tác hoặc để mở để socket tiếp (tùy UX, tạm để mở)
+      }
+  };
+
+  const handleEnchant = (type: EnchantmentType) => {
+      if (selectedItem && onEnchant) {
+          onEnchant(type, selectedItem);
+      }
+  };
+
+  const handleAddSocket = () => {
+      if (selectedItem && onAddSocket) {
+          onAddSocket(selectedItem);
+      }
+  };
+
   return (
-    /* 
-      FIX LỖI CUỘN:
-      - Loại bỏ h-full, overflow-hidden.
-      - Để Card tự giãn chiều cao (height: auto) theo số lượng item.
-    */
+    <>
     <Card className="border-slate-700 bg-slate-900/40 shadow-2xl min-h-[300px]">
       <div className="flex items-center justify-between mb-4 border-b border-slate-700 pb-2">
         <div className="flex items-center gap-2">
@@ -41,18 +68,21 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({ equipments, onEqui
             Chưa có trang bị nào. Hãy đi đánh quái và chế tạo thêm!
           </div>
       ) : (
-        /* Grid thuần túy, không có scroll nội bộ, scroll theo trang chính */
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
             {equipments.map((item) => {
               const Icon = TYPE_ICONS[item.type] || Sword;
               const isAtk = !!item.stats.attack;
               const statValue = isAtk ? item.stats.attack : item.stats.defense;
+              
+              // Calculate visuals for gems
+              const hasSockets = (item.sockets || 0) > 0;
+              const filledSockets = item.socketedGems?.length || 0;
 
               return (
                 <div 
                     key={item.id} 
                     className={`
-                        aspect-square relative flex flex-col justify-between p-2 rounded-xl border transition-all duration-200
+                        aspect-[3/4] relative flex flex-col justify-between p-2 rounded-xl border transition-all duration-200 group
                         ${item.isEquipped 
                             ? 'bg-blue-900/20 border-blue-500/50' 
                             : 'bg-slate-800/60 border-slate-700 hover:border-slate-500 hover:bg-slate-800'}
@@ -60,11 +90,11 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({ equipments, onEqui
                 >
                     {/* Top Info */}
                     <div className="flex justify-between items-start z-10">
-                         {/* Element Badge */}
-                        {item.element ? (
-                            <div className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-950 text-slate-400 border border-slate-800">
-                                {item.element}
-                            </div>
+                         {/* Enchant Badge */}
+                        {item.enchantment ? (
+                             <div className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300 border border-purple-700 animate-pulse-slow">
+                                <Sparkles size={8} className="inline mr-0.5"/> Phù Phép
+                             </div>
                         ) : <div></div>}
                         
                         {/* Stat Badge */}
@@ -74,14 +104,22 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({ equipments, onEqui
                     </div>
 
                     {/* Center Icon & Name */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20 group-hover:opacity-10 transition-opacity">
                          <Icon size={40} />
                     </div>
                     
-                    <div className="text-center z-10 mt-1 mb-1">
+                    <div className="text-center z-10 mt-4 mb-1">
                         <div className={`font-bold text-xs leading-tight line-clamp-2 ${RARITY_COLOR[item.rarity]}`}>
                             {item.name}
                         </div>
+                        {/* Sockets Visual */}
+                        {hasSockets && (
+                             <div className="flex justify-center gap-1 mt-1">
+                                 {Array.from({length: item.sockets}).map((_, i) => (
+                                     <div key={i} className={`w-2 h-2 rounded-full border border-slate-500 ${i < filledSockets ? 'bg-amber-400' : 'bg-slate-900'}`}></div>
+                                 ))}
+                             </div>
+                        )}
                     </div>
 
                     {/* Actions */}
@@ -90,23 +128,30 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({ equipments, onEqui
                             onClick={() => onEquip(item)} 
                             disabled={item.isEquipped}
                             className={`
-                                flex items-center justify-center py-1.5 rounded text-[10px] font-bold uppercase transition-colors
+                                flex items-center justify-center py-1.5 rounded text-[10px] font-bold uppercase transition-colors col-span-2
                                 ${item.isEquipped 
-                                    ? 'bg-blue-600/20 text-blue-400 col-span-2 cursor-default' 
+                                    ? 'bg-blue-600/20 text-blue-400 cursor-default' 
                                     : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/40'}
                             `}
                         >
                             {item.isEquipped ? 'Đang dùng' : 'Dùng'}
                         </button>
 
-                        {!item.isEquipped && (
-                            <button 
-                                onClick={() => onSell(item)}
-                                className="flex items-center justify-center py-1.5 rounded text-[10px] font-bold bg-slate-700 hover:bg-red-600 text-slate-300 hover:text-white transition-colors gap-0.5"
-                            >
-                                <DollarSign size={10} /> {item.value}
-                            </button>
-                        )}
+                        <button 
+                            onClick={() => setSelectedItem(item)}
+                            className="flex items-center justify-center py-1.5 rounded text-[10px] font-bold bg-slate-700 hover:bg-amber-600 text-slate-300 hover:text-white transition-colors gap-0.5"
+                            title="Nâng cấp (Khảm/Phù phép)"
+                        >
+                            <Hammer size={10} />
+                        </button>
+                        
+                        <button 
+                            onClick={() => onSell(item)}
+                            disabled={item.isEquipped}
+                            className={`flex items-center justify-center py-1.5 rounded text-[10px] font-bold transition-colors gap-0.5 ${item.isEquipped ? 'opacity-0' : 'bg-slate-700 hover:bg-red-600 text-slate-300 hover:text-white'}`}
+                        >
+                            <DollarSign size={10} />
+                        </button>
                     </div>
                 </div>
               );
@@ -114,5 +159,18 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({ equipments, onEqui
         </div>
       )}
     </Card>
+
+    {/* Upgrade Modal */}
+    {selectedItem && player && (
+        <ItemUpgradeModal 
+            item={selectedItem}
+            player={player}
+            onClose={() => setSelectedItem(null)}
+            onSocketGem={handleSocket}
+            onEnchant={handleEnchant}
+            onAddSocket={handleAddSocket}
+        />
+    )}
+    </>
   );
 };

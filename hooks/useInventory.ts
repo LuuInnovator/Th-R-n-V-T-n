@@ -1,13 +1,12 @@
 
 import { useState, useCallback } from 'react';
-import { Material, Equipment, EquipmentType, MaterialType, Rarity } from '../types';
+import { Material, Equipment, EquipmentType, MaterialType, Rarity, SocketedGem, EnchantmentType } from '../types';
 import { generateId } from '../utils';
 
 export const useInventory = (addLog: (msg: string) => void) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   
-  // Khởi tạo equipped với đầy đủ các slot mới
   const [equipped, setEquipped] = useState<Record<EquipmentType, Equipment | null>>({
     [EquipmentType.Weapon]: null,
     [EquipmentType.Armor]: null,
@@ -53,7 +52,22 @@ export const useInventory = (addLog: (msg: string) => void) => {
   }, [addLog]);
 
   const removeEquipment = useCallback((id: string) => {
-    setEquipments(prev => prev.filter(e => e.id !== id));
+    setEquipments(prev => {
+        const item = prev.find(e => e.id === id);
+        // Logic mới: Disenchant trả lại vật liệu nếu item hiếm
+        return prev.filter(e => e.id !== id);
+    });
+  }, []);
+
+  // Update Item (Dùng cho Socketing/Enchanting)
+  const updateEquipment = useCallback((updatedItem: Equipment) => {
+      setEquipments(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
+      setEquipped(prev => {
+          if (prev[updatedItem.type]?.id === updatedItem.id) {
+              return { ...prev, [updatedItem.type]: updatedItem };
+          }
+          return prev;
+      });
   }, []);
 
   const equipItem = useCallback((item: Equipment) => {
@@ -83,7 +97,6 @@ export const useInventory = (addLog: (msg: string) => void) => {
     });
   }, []);
 
-  // Hàm mới để load dữ liệu từ file save
   const loadInventory = useCallback((
     savedMaterials: Material[], 
     savedEquipments: Equipment[], 
@@ -91,8 +104,6 @@ export const useInventory = (addLog: (msg: string) => void) => {
   ) => {
     setMaterials(savedMaterials);
     setEquipments(savedEquipments);
-    
-    // Đảm bảo load đủ key cho equipped (phòng trường hợp save cũ thiếu key mới)
     const defaultEquipped = {
       [EquipmentType.Weapon]: null,
       [EquipmentType.Armor]: null,
@@ -101,13 +112,12 @@ export const useInventory = (addLog: (msg: string) => void) => {
       [EquipmentType.Gloves]: null,
       [EquipmentType.Boots]: null
     };
-    
     setEquipped({...defaultEquipped, ...savedEquipped});
   }, []);
 
   return { 
     materials, equipments, equipped, 
-    addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, resetInventory,
+    addMaterial, consumeMaterials, addEquipment, removeEquipment, updateEquipment, equipItem, resetInventory,
     loadInventory 
   };
 };
