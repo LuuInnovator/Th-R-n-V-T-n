@@ -1,6 +1,13 @@
 
 import { useState, useCallback } from 'react';
-import { Player, Skill, EternalUpgrade, EternalUpgradeId, CharacterClass } from '../types';
+import { Player, Skill, EternalUpgrade, EternalUpgradeId, CharacterClass, Guild } from '../types';
+
+const INITIAL_GUILD: Guild = {
+    name: 'Thợ Rèn Lang Thang',
+    level: 1,
+    fame: 0,
+    blueprints: []
+};
 
 const INITIAL_PLAYER: Player = {
   characterClass: CharacterClass.None,
@@ -17,7 +24,8 @@ const INITIAL_PLAYER: Player = {
   skillPoints: 0,
   skills: {},
   eternalUpgrades: {},
-  gemInventory: {} // Initialize gem inventory
+  gemInventory: {}, 
+  guild: INITIAL_GUILD
 };
 
 export const usePlayer = (addLog: (msg: string) => void) => {
@@ -33,11 +41,7 @@ export const usePlayer = (addLog: (msg: string) => void) => {
 
     // 2. Class Bonuses
     if (player.characterClass === CharacterClass.HeavySentinel) {
-        // Sentinel gets bonus Def, but we are calculating multiplier generically here. 
-        // We will apply specific bonuses in usage context, OR apply "Base Stat" bonus here if 'base' represents a specific stat.
-        // For simplicity in this function, we treat it as a generic multiplier for now, 
-        // BUT strictly speaking, Sentinel only boosts DEF.
-        // Let's refine: This function is mostly used for HP cap.
+        // Placeholder for future stats logic
     }
     
     return Math.floor(base * multiplier);
@@ -151,7 +155,8 @@ export const usePlayer = (addLog: (msg: string) => void) => {
         const savedUpgrades = prev.eternalUpgrades;
         const savedPoints = prev.eternalPoints;
         const savedRebirthCount = prev.rebirthCount + 1;
-        const savedClass = prev.characterClass; // Giữ nguyên class hoặc reset tùy design (ở đây giữ nguyên)
+        const savedClass = prev.characterClass; 
+        const savedGuild = prev.guild; // Guild stays
         
         // Base stats sau Rebirth
         const baseAttack = INITIAL_PLAYER.attack + (savedRebirthCount * 5);
@@ -164,7 +169,8 @@ export const usePlayer = (addLog: (msg: string) => void) => {
           rebirthCount: savedRebirthCount,
           eternalUpgrades: savedUpgrades,
           attack: baseAttack,
-          defense: baseDefense
+          defense: baseDefense,
+          guild: savedGuild
         };
     });
   }, []);
@@ -198,7 +204,30 @@ export const usePlayer = (addLog: (msg: string) => void) => {
      });
   }, []);
 
+  // Guild Helpers
+  const addGuildFame = useCallback((amount: number) => {
+      setPlayer(prev => ({
+          ...prev,
+          guild: { ...prev.guild, fame: prev.guild.fame + amount }
+      }));
+  }, []);
+
+  const unlockGuildBlueprint = useCallback((bpId: string, cost: number) => {
+      setPlayer(prev => {
+          if (prev.guild.fame < cost) return prev;
+          if (prev.guild.blueprints.includes(bpId)) return prev;
+          return {
+              ...prev,
+              guild: {
+                  ...prev.guild,
+                  fame: prev.guild.fame - cost,
+                  blueprints: [...prev.guild.blueprints, bpId]
+              }
+          };
+      });
+  }, []);
+
   return { 
-      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem 
+      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem, addGuildFame, unlockGuildBlueprint 
   };
 };

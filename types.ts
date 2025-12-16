@@ -16,8 +16,13 @@ export enum MaterialType {
   Gem = 'Đá Quý Thô', // Gem thô nhặt được
   Essence = 'Tinh Hoa',
   FissionCrystal = 'Tinh Thể Nhiệt Hạch',
-  SoulDust = 'Bụi Linh Hồn', // Mới: Dùng để chế đồ phù phép
-  EnchantScroll = 'Giấy Phép Thuật' // Mới: Dùng để phù phép
+  SoulDust = 'Bụi Linh Hồn', // Dùng để chế đồ phù phép
+  EnchantScroll = 'Giấy Phép Thuật', // Dùng để phù phép
+  // --- MỚI CHO UPDATE BOSS & GUILD ---
+  CondensedTimesand = 'Cát Thời Gian Cô Đặc', // Boss Drop
+  AntiRustPotion = 'Thuốc Giải Rỉ Sét', // Craftable Consumable
+  DecoyItem = 'Vật Phẩm Mồi', // Craftable Consumable
+  GuildToken = 'Huy Hiệu Bang Hội' // Currency
 }
 
 // Nguyên tố (cho cơ chế Boss)
@@ -51,7 +56,8 @@ export enum EquipmentType {
 export enum SetId {
   ForgeSpirit = 'forge_spirit',
   PrimalHunter = 'primal_hunter',
-  DragonfireKeeper = 'dragonfire_keeper'
+  DragonfireKeeper = 'dragonfire_keeper',
+  InfinityChrono = 'infinity_chrono' // New Set
 }
 
 // --- HỆ THỐNG GEM & ENCHANT MỚI ---
@@ -123,6 +129,8 @@ export interface Blueprint {
   };
   unlocked: boolean;
   setId?: SetId;
+  isGuildBlueprint?: boolean; // New: Bản vẽ bang hội
+  guildFameCost?: number; // New: Chi phí mở khóa
 }
 
 // Kẻ thù
@@ -201,9 +209,17 @@ export enum CharacterClass {
   AlchemistMage = 'Pháp Sư Luyện Kim'
 }
 
+// --- BANG HỘI ---
+export interface Guild {
+  name: string;
+  level: number;
+  fame: number; // Danh tiếng dùng để mở khóa trong shop bang hội
+  blueprints: string[]; // ID các bản vẽ đã mở khóa
+}
+
 // Trạng thái người chơi
 export interface Player {
-  characterClass: CharacterClass; // New
+  characterClass: CharacterClass; 
   level: number;
   currentExp: number;
   maxExp: number;
@@ -217,9 +233,9 @@ export interface Player {
   skillPoints: number;
   skills: Record<string, number>;
   eternalUpgrades: Record<string, number>;
+  gemInventory: Record<string, number>; 
   
-  // Inventory cho Ngọc (Lưu dạng dictionary cho gọn)
-  gemInventory: Record<string, number>; // key: "Ruby_1", value: qty
+  guild: Guild; // New: Thông tin bang hội
 }
 
 // Nhật ký game

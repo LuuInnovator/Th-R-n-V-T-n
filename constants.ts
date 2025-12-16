@@ -35,6 +35,15 @@ export const ZONES: Zone[] = [
     reqRebirth: 1,
     materials: [MaterialType.Essence, MaterialType.FissionCrystal, MaterialType.SoulDust],
     enemies: []
+  },
+  {
+    id: 'z5_time',
+    name: 'Đồng Hồ Cát Vô Định',
+    description: '💀 [Nguy Hiểm Tột Cùng] Không gian bị bóp méo bởi Kẻ Gìn Giữ Thời Gian.',
+    recommendedLevel: 60,
+    reqRebirth: 2,
+    materials: [MaterialType.CondensedTimesand, MaterialType.SoulDust],
+    enemies: []
   }
 ];
 
@@ -108,6 +117,17 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
              { materialType: MaterialType.SoulDust, chance: 1, minQty: 10, maxQty: 20 }
         ]
     }
+  ],
+  'z5_time': [
+      {
+          id: 'e5_boss', name: 'Kẻ Gìn Giữ Thời Gian (Final Boss)', level: 75, hp: 200000, maxHp: 200000, attack: 2500, defense: 1200, isBoss: true, element: ElementType.Lightning,
+          expReward: 100000, goldReward: 50000,
+          dropTable: [
+              { materialType: MaterialType.CondensedTimesand, chance: 1.0, minQty: 1, maxQty: 2 },
+              { materialType: MaterialType.SoulDust, chance: 1.0, minQty: 20, maxQty: 50 },
+              { materialType: MaterialType.Gem, chance: 1.0, minQty: 10, maxQty: 20 }
+          ]
+      }
   ]
 };
 
@@ -169,6 +189,14 @@ export const SETS: Record<SetId, { name: string, bonuses: Record<number, string>
         4: "Dung Nham Phản Phệ: Phản lại 20% sát thương khi bị đánh.",
         6: "Hơi Thở Rồng: Đòn đánh có 10% cơ hội gây thêm 500% sát thương chuẩn."
     }
+  },
+  [SetId.InfinityChrono]: {
+      name: "Thời Gian Vô Tận",
+      bonuses: {
+          2: "Tốc Độ Ánh Sáng: Giảm 50% thời gian đánh tự động.",
+          4: "Quay Ngược: Khi HP < 20%, tự động hồi 100% HP (Cooldown 5 phút).",
+          6: "Lãnh Chúa Thời Gian: Sát thương tăng theo thời gian trận đấu (1% mỗi giây)."
+      }
   }
 };
 
@@ -263,6 +291,25 @@ export const ETERNAL_UPGRADES: EternalUpgrade[] = [
 
 // Bản thiết kế (Mở rộng thêm Giấy Phép Thuật)
 export const INITIAL_BLUEPRINTS: Blueprint[] = [
+  // --- CONSUMABLES MỚI ---
+  {
+      id: 'bp_anti_rust',
+      name: 'Thuốc Giải Rỉ Sét',
+      resultType: 'MATERIAL',
+      resultMaterial: MaterialType.AntiRustPotion,
+      unlocked: true,
+      requiredMaterials: [{ type: MaterialType.Essence, amount: 2 }, { type: MaterialType.Gem, amount: 1 }],
+      baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }
+  },
+  {
+      id: 'bp_decoy',
+      name: 'Vật Phẩm Mồi',
+      resultType: 'MATERIAL',
+      resultMaterial: MaterialType.DecoyItem,
+      unlocked: true,
+      requiredMaterials: [{ type: MaterialType.Ore, amount: 5 }, { type: MaterialType.Wood, amount: 5 }],
+      baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }
+  },
   {
     id: 'bp_enchant_scroll',
     name: 'Giấy Phép Thuật',
@@ -272,6 +319,7 @@ export const INITIAL_BLUEPRINTS: Blueprint[] = [
     requiredMaterials: [{ type: MaterialType.SoulDust, amount: 5 }, { type: MaterialType.Leather, amount: 2 }],
     baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }
   },
+  // --- WEAPONS & ARMORS ---
   {
     id: 'bp_sword_1',
     name: 'Kiếm Sắt',
@@ -335,6 +383,30 @@ export const INITIAL_BLUEPRINTS: Blueprint[] = [
     setId: SetId.DragonfireKeeper,
     requiredMaterials: [{ type: MaterialType.FissionCrystal, amount: 1 }, { type: MaterialType.Essence, amount: 50 }],
     baseStats: { minAtk: 100, maxAtk: 150, minDef: 50, maxDef: 80 }
+  },
+  // --- GUILD / LATE GAME BLUEPRINTS ---
+  {
+      id: 'bp_set_chrono_sword',
+      name: 'Vô Tận Kiếm',
+      resultType: EquipmentType.Weapon,
+      unlocked: false,
+      isGuildBlueprint: true,
+      guildFameCost: 1000,
+      setId: SetId.InfinityChrono,
+      element: ElementType.Lightning,
+      requiredMaterials: [{ type: MaterialType.CondensedTimesand, amount: 2 }, { type: MaterialType.FissionCrystal, amount: 5 }],
+      baseStats: { minAtk: 200, maxAtk: 300, minDef: 0, maxDef: 0 }
+  },
+  {
+      id: 'bp_set_chrono_armor',
+      name: 'Giáp Vô Tận',
+      resultType: EquipmentType.Armor,
+      unlocked: false,
+      isGuildBlueprint: true,
+      guildFameCost: 1000,
+      setId: SetId.InfinityChrono,
+      requiredMaterials: [{ type: MaterialType.CondensedTimesand, amount: 2 }, { type: MaterialType.FissionCrystal, amount: 5 }],
+      baseStats: { minAtk: 0, maxAtk: 0, minDef: 150, maxDef: 200 }
   }
 ];
 

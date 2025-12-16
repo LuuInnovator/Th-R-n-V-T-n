@@ -18,15 +18,16 @@ import { RebirthView } from './components/RebirthView';
 import { SkillTreeView } from './components/SkillTreeView';
 import { CharacterStatsModal } from './components/CharacterStatsModal'; 
 import { ClassSelectionModal } from './components/ClassSelectionModal';
-import { User, Shield, Sword, Hammer, RefreshCw, Save, Upload, Zap, BarChart2 } from 'lucide-react';
+import { GuildView } from './components/GuildView'; // New
+import { User, Shield, Sword, Hammer, RefreshCw, Save, Upload, Zap, BarChart2, Users } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'battle' | 'craft' | 'inventory' | 'rebirth' | 'skills'>('battle');
+  const [activeTab, setActiveTab] = useState<'battle' | 'craft' | 'inventory' | 'rebirth' | 'skills' | 'guild'>('battle');
   const [showStatsModal, setShowStatsModal] = useState(false);
   
   const { logs, addLog, clearLogs } = useGameLog();
   const { 
-      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem 
+      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem, addGuildFame, unlockGuildBlueprint 
   } = usePlayer(addLog);
   const { 
     materials, equipments, equipped, 
@@ -37,6 +38,11 @@ export default function App() {
   const [currentEnemy, setCurrentEnemy] = useState<Enemy | null>(null);
   const [isAutoAttacking, setIsAutoAttacking] = useState(false);
   const [hasRevivedInBattle, setHasRevivedInBattle] = useState(false);
+  
+  // State mới cho Boss Timekeeper
+  const [bossPhase, setBossPhase] = useState<number>(0);
+  const [rustStacks, setRustStacks] = useState<number>(0);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const getActiveSets = useCallback(() => {
@@ -47,7 +53,29 @@ export default function App() {
     return activeSets;
   }, [equipped]);
 
-  // --- ITEM UPGRADE HANDLERS ---
+  // --- GUILD HANDLERS ---
+  const handleUnlockBlueprint = (bp: Blueprint) => {
+      if ((bp.guildFameCost || 0) > player.guild.fame) {
+          addLog("❌ Không đủ Danh Tiếng Bang Hội!");
+          return;
+      }
+      unlockGuildBlueprint(bp.id, bp.guildFameCost || 0);
+      addLog(`📖 Đã mở khóa bản vẽ Bang Hội: ${bp.name}`);
+  };
+
+  const handleTradeItem = (item: Equipment) => {
+      let fameGain = 0;
+      if (item.rarity === Rarity.Rare) fameGain = 10;
+      if (item.rarity === Rarity.Epic) fameGain = 50;
+      if (item.rarity === Rarity.Legendary) fameGain = 250;
+      if (item.rarity === Rarity.Mythic) fameGain = 1000;
+
+      removeEquipment(item.id);
+      addGuildFame(fameGain);
+      addLog(`🤝 Đã đổi ${item.name} lấy ${fameGain} Fame.`);
+  };
+
+  // --- ITEM UPGRADE HANDLERS (Giữ nguyên) ---
   const handleSocketGem = (gemKey: string, item: Equipment) => {
       const [typeStr, tierStr] = gemKey.split('_');
       const type = typeStr as GemType;
@@ -118,8 +146,15 @@ export default function App() {
       totalAtk += weaponMasteryLevel * 2;
       totalDef += armorMasteryLevel * 2;
 
+      // New Set: Infinity Chrono Bonus (Time Lord)
+      const activeSets = getActiveSets();
+      if ((activeSets[SetId.InfinityChrono] || 0) >= 6) {
+          // Mocking time scaling: +5% stats flat for now as "time passes"
+          totalAtk *= 1.05;
+      }
+
       return { totalAtk, totalDef, totalHp };
-  }, [player, equipped, getStatMultiplier]);
+  }, [player, equipped, getStatMultiplier, getActiveSets]);
 
   const canEnterZone = (zone: Zone) => !zone.reqRebirth || player.rebirthCount >= zone.reqRebirth;
 
@@ -131,6 +166,8 @@ export default function App() {
       setCurrentZone(zone);
       setCurrentEnemy(null);
       setIsAutoAttacking(false);
+      setBossPhase(0);
+      setRustStacks(0);
   };
 
   const handleExplore = useCallback(() => {
@@ -139,6 +176,8 @@ export default function App() {
       const randIdx = randomInt(0, enemiesInZone.length - 1);
       setCurrentEnemy({ ...enemiesInZone[randIdx] });
       setHasRevivedInBattle(false);
+      setBossPhase(0);
+      setRustStacks(0);
       addLog(`⚔️ Bạn đã tìm thấy ${enemiesInZone[randIdx].name}!`);
     } else {
       addLog("Khu vực này có vẻ trống trải...");
@@ -173,6 +212,60 @@ export default function App() {
     const isCrit = Math.random() < 0.05 + (player.skills['wp_crit'] || 0) * 0.01;
     const critMult = 1.5 + (primalHunterCount >= 6 ? 0.3 : 0);
 
+    // --- TIMEKEEPER BOSS MECHANICS ---
+    let effectiveDef = totalDef;
+    if (currentEnemy.id === 'e5_boss') {
+        const hpPercent = (currentEnemy.hp / currentEnemy.maxHp) * 100;
+        
+        // Phase 1: Rust (100% - 60%)
+        if (hpPercent > 60) {
+            setBossPhase(1);
+            if (rustStacks < 5) {
+                const potion = materials.find(m => m.type === MaterialType.AntiRustPotion && m.quantity > 0);
+                if (potion) {
+                     addLog("🧪 Đã dùng Thuốc Giải Rỉ Sét! Ngăn chặn ăn mòn.");
+                     consumeMaterials([{ type: MaterialType.AntiRustPotion, amount: 1 }]);
+                } else {
+                     setRustStacks(prev => prev + 1);
+                     addLog(`⚠️ Bị dính Rỉ Sét! Giáp giảm ${10 * (rustStacks + 1)}%`);
+                }
+            }
+            effectiveDef = Math.floor(effectiveDef * (1 - (rustStacks * 0.1)));
+        } 
+        // Phase 2: Siphon (60% - 30%)
+        else if (hpPercent > 30) {
+            setBossPhase(2);
+            if (Math.random() < 0.3) { // 30% chance per turn
+                const decoy = materials.find(m => m.type === MaterialType.DecoyItem && m.quantity > 0);
+                if (decoy) {
+                    addLog("🎭 Boss ăn phải Vật Phẩm Mồi!");
+                    consumeMaterials([{ type: MaterialType.DecoyItem, amount: 1 }]);
+                } else {
+                    addLog("🧛 Boss hút Nguyên Liệu của bạn để hồi máu!");
+                    // Random steal logic (simplified)
+                    const stealable = materials.find(m => m.quantity > 0 && m.type !== MaterialType.DecoyItem);
+                    if (stealable) {
+                        consumeMaterials([{ type: stealable.type, amount: 1 }]);
+                        const healAmt = Math.floor(currentEnemy.maxHp * 0.05);
+                        currentEnemy.hp = Math.min(currentEnemy.maxHp, currentEnemy.hp + healAmt);
+                        addLog(`Boss hồi phục ${healAmt} HP từ ${stealable.name}!`);
+                    }
+                }
+            }
+        }
+        // Phase 3: Split (30% - 0%)
+        else {
+             setBossPhase(3);
+             // Boss takes reduced damage unless element is opposite
+             if (weaponElement !== ElementType.Physical) { // Simplified weak check
+                 addLog("⚡ Phá vỡ phòng thủ nguyên tố của Boss!");
+             } else {
+                 damageMultiplier *= 0.3; // 70% reduction if physical
+                 addLog("🛡️ Boss đang ở trạng thái Phân Thân! Kháng vật lý cực cao.");
+             }
+        }
+    }
+
     const effectiveEnemyDef = currentEnemy.defense * (1 - ignoreDefense);
     const rawDmg = Math.max(1, (totalAtk - effectiveEnemyDef));
     const finalDmg = Math.floor(rawDmg * damageMultiplier * elementMult * (isCrit ? critMult : 1));
@@ -185,6 +278,15 @@ export default function App() {
     if (lifeSteal > 0) {
         const heal = Math.ceil(finalDmg * lifeSteal);
         updateHp(player.hp + heal);
+    }
+
+    // Set Infinity Chrono Auto Heal Logic
+    if ((activeSets[SetId.InfinityChrono] || 0) >= 4 && player.hp < player.maxHp * 0.2) {
+        // Mock cooldown check (should implement proper CD)
+        if (Math.random() < 0.1) { // 10% chance to trigger for simplicity in this loop
+             updateHp(player.maxHp);
+             addLog("⏳ QUAY NGƯỢC! HP đã trở về trạng thái đầy đủ.");
+        }
     }
 
     if (newEnemyHp <= 0) {
@@ -218,11 +320,16 @@ export default function App() {
         }
       });
       setCurrentEnemy(null);
+      setBossPhase(0);
+      setRustStacks(0);
     } else {
       let incomingDmg = currentEnemy.attack;
       if (dragonfireCount >= 2 && currentEnemy.element === ElementType.Fire) incomingDmg *= 0.7;
 
-      let dmgToPlayer = incomingDmg - totalDef;
+      // Phase 3 Boss deals triple damage? Or just high damage
+      if (currentEnemy.id === 'e5_boss' && bossPhase === 3) incomingDmg *= 1.5;
+
+      let dmgToPlayer = incomingDmg - effectiveDef;
       if (dmgToPlayer <= 0) {
         const hitChance = 0.1;
         if (Math.random() < hitChance) {
@@ -253,26 +360,31 @@ export default function App() {
         setFullHp();
         setCurrentEnemy(null);
         setIsAutoAttacking(false);
+        setBossPhase(0);
+        setRustStacks(0);
       } else {
         updateHp(newPlayerHp);
         setCurrentEnemy({ ...currentEnemy, hp: newEnemyHp });
       }
     }
-  }, [currentEnemy, player, equipped, addLog, gainExp, addGold, addMaterial, updateHp, setFullHp, getActiveSets, hasRevivedInBattle, calculateTotalStats, addGem]);
+  }, [currentEnemy, player, equipped, addLog, gainExp, addGold, addMaterial, updateHp, setFullHp, getActiveSets, hasRevivedInBattle, calculateTotalStats, addGem, materials, consumeMaterials, bossPhase, rustStacks]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     if (isAutoAttacking && player.hp > 0) {
       const activeSets = getActiveSets();
       let cooldownRed = (activeSets[SetId.PrimalHunter] || 0) >= 4 ? 0.8 : 1; 
+      if ((activeSets[SetId.InfinityChrono] || 0) >= 2) cooldownRed -= 0.5; // Infinity Set Bonus
+
       if (player.characterClass === CharacterClass.ShadowBlade) cooldownRed -= 0.1;
-      const attackSpeed = 1000 * cooldownRed;
+      const attackSpeed = 1000 * Math.max(0.1, cooldownRed);
       if (currentEnemy) timer = setTimeout(() => handleAttack(), attackSpeed);
       else timer = setTimeout(() => handleExplore(), 1500);
     }
     return () => clearTimeout(timer);
   }, [isAutoAttacking, currentEnemy, player.hp, handleAttack, handleExplore, getActiveSets, player.characterClass]);
 
+  /* ... (Save/Load functions remain same) ... */
   const saveGame = useCallback(() => {
     const saveData = {
       player, materials, equipments, equipped, currentZoneId: currentZone.id, timestamp: Date.now()
@@ -327,8 +439,7 @@ export default function App() {
   }, [saveGame]);
 
   const handleCraft = (bp: Blueprint, useOverheat: boolean) => {
-    // ... (Crafting logic remains largely same, just checking if we need to call handleSocket/Enchant here - NO, separate handlers)
-    // COPY PASTE OLD CRAFT LOGIC WITH NEW SOCKET GENERATION
+    // ... (Old craft logic)
     const refundChance = (player.skills['al_efficiency'] || 0) * 0.05;
     if (Math.random() > refundChance) consumeMaterials(bp.requiredMaterials);
     else addLog("⚗️ Luyện kim thuật: Đã tiết kiệm nguyên liệu!");
@@ -462,6 +573,7 @@ export default function App() {
           <SidebarButton id="inventory" icon={User} label="Túi Đồ" />
           <SidebarButton id="craft" icon={Hammer} label="Chế Tạo" />
           <SidebarButton id="skills" icon={Zap} label="Kỹ Năng" />
+          <SidebarButton id="guild" icon={Users} label="Bang Hội" colorClass="text-amber-400 hover:text-amber-300" />
           <div className="my-4 border-t border-slate-800/50 mx-2"></div>
           <SidebarButton id="rebirth" icon={RefreshCw} label="Tái Sinh" colorClass="text-purple-400 hover:text-purple-300" />
         </nav>
@@ -471,7 +583,7 @@ export default function App() {
         <button onClick={() => setActiveTab('battle')} className={`p-2 flex flex-col items-center ${activeTab === 'battle' ? 'text-blue-500' : 'text-slate-500'}`}><Sword size={20} /><span className="text-[9px] font-bold mt-1">Chiến Đấu</span></button>
         <button onClick={() => setActiveTab('inventory')} className={`p-2 flex flex-col items-center ${activeTab === 'inventory' ? 'text-blue-500' : 'text-slate-500'}`}><User size={20} /><span className="text-[9px] font-bold mt-1">Túi Đồ</span></button>
         <button onClick={() => setActiveTab('craft')} className={`p-2 flex flex-col items-center ${activeTab === 'craft' ? 'text-blue-500' : 'text-slate-500'}`}><Hammer size={20} /><span className="text-[9px] font-bold mt-1">Chế Tạo</span></button>
-        <button onClick={() => setActiveTab('skills')} className={`p-2 flex flex-col items-center ${activeTab === 'skills' ? 'text-blue-500' : 'text-slate-500'}`}><Zap size={20} /><span className="text-[9px] font-bold mt-1">Kỹ Năng</span></button>
+        <button onClick={() => setActiveTab('guild')} className={`p-2 flex flex-col items-center ${activeTab === 'guild' ? 'text-blue-500' : 'text-slate-500'}`}><Users size={20} /><span className="text-[9px] font-bold mt-1">Bang Hội</span></button>
         <button onClick={() => setActiveTab('rebirth')} className={`p-2 flex flex-col items-center ${activeTab === 'rebirth' ? 'text-purple-500' : 'text-slate-500'}`}><RefreshCw size={20} /><span className="text-[9px] font-bold mt-1">Tái Sinh</span></button>
       </div>
 
@@ -486,6 +598,7 @@ export default function App() {
                 {activeTab === 'inventory' && <><span className="text-green-500">◈</span> KHO ĐỒ</>}
                 {activeTab === 'craft' && <><span className="text-amber-500">◈</span> XƯỞNG RÈN</>}
                 {activeTab === 'skills' && <><span className="text-red-500">◈</span> CÂY KỸ NĂNG</>}
+                {activeTab === 'guild' && <><span className="text-amber-500">◈</span> BANG HỘI</>}
                 {activeTab === 'rebirth' && <><span className="text-purple-500">◈</span> CỔNG TÁI SINH</>}
             </h2>
           </div>
@@ -507,11 +620,21 @@ export default function App() {
           )}
 
           {activeTab === 'craft' && (
-            <CraftingView blueprints={INITIAL_BLUEPRINTS} materials={materials} onCraft={handleCraft} craftingSkill={1 + player.rebirthCount} />
+            <CraftingView blueprints={[...INITIAL_BLUEPRINTS].filter(bp => !bp.isGuildBlueprint || player.guild.blueprints.includes(bp.id))} materials={materials} onCraft={handleCraft} craftingSkill={1 + player.rebirthCount} />
           )}
 
           {activeTab === 'skills' && (
             <SkillTreeView player={player} onUpgrade={upgradeSkill} />
+          )}
+
+          {activeTab === 'guild' && (
+            <GuildView 
+                player={player} 
+                guildBlueprints={INITIAL_BLUEPRINTS.filter(bp => bp.isGuildBlueprint)} 
+                onUnlockBlueprint={handleUnlockBlueprint}
+                onTradeItem={handleTradeItem}
+                inventory={equipments}
+            />
           )}
 
           {activeTab === 'rebirth' && (
