@@ -86,20 +86,29 @@ export const INITIAL_BLUEPRINTS: Blueprint[] = [
 ];
 
 export const SKILLS: Skill[] = [
-  // HỘ VỆ THỦ LĨNH
-  { id: 'hs_armor', name: 'Bản Lĩnh Thép', branch: SkillBranch.ArmorSmith, description: 'Tăng 5% thủ cơ bản.', maxLevel: 10, cost: 2, effectValue: 5, reqClass: CharacterClass.HeavySentinel },
+  // --- HỘ VỆ THỦ LĨNH (HEAVY SENTINEL) ---
+  { id: 'hs_armor', name: 'Bản Lĩnh Thép', branch: SkillBranch.ArmorSmith, description: 'Tăng 5% thủ cơ bản mỗi cấp.', maxLevel: 10, cost: 2, effectValue: 5, reqClass: CharacterClass.HeavySentinel },
   { id: 'hs_reflect', name: 'Khiên Phản Kích', branch: SkillBranch.ArmorSmith, description: 'Phản lại 10% sát thương nhận vào.', maxLevel: 5, cost: 3, effectValue: 10, reqClass: CharacterClass.HeavySentinel },
-  { id: 'hs_wall', name: 'Bức Tường Bất Tận', branch: SkillBranch.ArmorSmith, description: 'Tăng vĩnh viễn 2% Máu tối đa.', maxLevel: 10, cost: 2, effectValue: 2, reqClass: CharacterClass.HeavySentinel },
-  
-  // BÓNG MA HẮC ÁM
-  { id: 'sb_crit', name: 'Nhát Chém Hư Vô', branch: SkillBranch.WeaponSmith, description: 'Tăng 3% sát thương chí mạng.', maxLevel: 10, cost: 2, effectValue: 3, reqClass: CharacterClass.ShadowBlade },
-  { id: 'sb_dodge', name: 'Bộ Pháp Ảnh Diệt', branch: SkillBranch.WeaponSmith, description: 'Tăng 2% né tránh.', maxLevel: 10, cost: 2, effectValue: 2, reqClass: CharacterClass.ShadowBlade },
-  { id: 'sb_execute', name: 'Nhát Chém Khai Tử', branch: SkillBranch.WeaponSmith, description: 'Gây thêm 10% sát thương lên mục tiêu thấp máu.', maxLevel: 5, cost: 4, effectValue: 10, reqClass: CharacterClass.ShadowBlade },
-  
-  // GIẢ KIM PHÁP SƯ
+  { id: 'hs_wall', name: 'Bức Tường Bất Tận', branch: SkillBranch.ArmorSmith, description: 'Tăng vĩnh viễn 2% Máu tối đa mỗi cấp.', maxLevel: 10, cost: 2, effectValue: 2, reqClass: CharacterClass.HeavySentinel },
+  { id: 'hs_regen', name: 'Hơi Thở Sinh Mệnh', branch: SkillBranch.ArmorSmith, description: 'Hồi 1% Máu tối đa sau mỗi đòn đánh.', maxLevel: 5, cost: 4, effectValue: 1, reqClass: CharacterClass.HeavySentinel },
+  { id: 'hs_taunt', name: 'Uy Nghiêm Thủ Lĩnh', branch: SkillBranch.ArmorSmith, description: 'Giảm 2% sát thương quái vật gây ra.', maxLevel: 10, cost: 2, effectValue: 2, reqClass: CharacterClass.HeavySentinel },
+  { id: 'hs_fortify', name: 'Kiên Cố Hóa', branch: SkillBranch.ArmorSmith, description: 'Tăng thêm 20% Thủ khi Máu dưới 30%.', maxLevel: 5, cost: 5, effectValue: 20, reqClass: CharacterClass.HeavySentinel },
+
+  // --- BÓNG MA HẮC ÁM (SHADOW BLADE) ---
+  { id: 'sb_crit', name: 'Nhát Chém Hư Vô', branch: SkillBranch.WeaponSmith, description: 'Tăng 3% sát thương chí mạng mỗi cấp.', maxLevel: 10, cost: 2, effectValue: 3, reqClass: CharacterClass.ShadowBlade },
+  { id: 'sb_dodge', name: 'Bộ Pháp Ảnh Diệt', branch: SkillBranch.WeaponSmith, description: 'Tăng 2% tỷ lệ né tránh hoàn toàn.', maxLevel: 10, cost: 2, effectValue: 2, reqClass: CharacterClass.ShadowBlade },
+  { id: 'sb_execute', name: 'Nhát Chém Khai Tử', branch: SkillBranch.WeaponSmith, description: 'Gây thêm 10% sát thương lên mục tiêu < 30% HP.', maxLevel: 5, cost: 4, effectValue: 10, reqClass: CharacterClass.ShadowBlade },
+  { id: 'sb_pen', name: 'Mũi Kiếm Xuyên Thấu', branch: SkillBranch.WeaponSmith, description: 'Bỏ qua 3% Phòng thủ của kẻ địch.', maxLevel: 10, cost: 2, effectValue: 3, reqClass: CharacterClass.ShadowBlade },
+  { id: 'sb_bleed', name: 'Huyết Sát Luân Hồi', branch: SkillBranch.WeaponSmith, description: 'Gây thêm 2% sát thương chuẩn mỗi giây.', maxLevel: 5, cost: 5, effectValue: 2, reqClass: CharacterClass.ShadowBlade },
+  { id: 'sb_luck', name: 'Phước Lành Bóng Tối', branch: SkillBranch.WeaponSmith, description: 'Tăng 5% tỷ lệ rơi đồ Rare+.', maxLevel: 10, cost: 2, effectValue: 5, reqClass: CharacterClass.ShadowBlade },
+
+  // --- GIẢ KIM PHÁP SƯ (ALCHEMIST MAGE) ---
   { id: 'am_essence', name: 'Dòng Chảy Tinh Hoa', branch: SkillBranch.Enchanting, description: 'Ngọc khảm tăng thêm 10% hiệu quả.', maxLevel: 10, cost: 2, effectValue: 10, reqClass: CharacterClass.AlchemistMage },
   { id: 'am_myth', name: 'Tri Thức Cấm Kỵ', branch: SkillBranch.Alchemy, description: 'Tăng 0.5% tỉ lệ rèn đồ Vũ Trụ.', maxLevel: 5, cost: 4, effectValue: 0.5, reqClass: CharacterClass.AlchemistMage },
-  { id: 'am_transmute', name: 'Chuyển Hóa Vật Chất', branch: SkillBranch.Alchemy, description: 'Nhận thêm 5% vàng khi đánh quái.', maxLevel: 10, cost: 2, effectValue: 5, reqClass: CharacterClass.AlchemistMage }
+  { id: 'am_transmute', name: 'Chuyển Hóa Vật Chất', branch: SkillBranch.Alchemy, description: 'Nhận thêm 5% vàng khi đánh quái.', maxLevel: 10, cost: 2, effectValue: 5, reqClass: CharacterClass.AlchemistMage },
+  { id: 'am_recycle', name: 'Tuần Hoàn Nguyên Liệu', branch: SkillBranch.Alchemy, description: '3% tỷ lệ không mất nguyên liệu khi rèn.', maxLevel: 10, cost: 3, effectValue: 3, reqClass: CharacterClass.AlchemistMage },
+  { id: 'am_catalyst', name: 'Xúc Tác Ma Pháp', branch: SkillBranch.Enchanting, description: 'Tăng 10% chỉ số cộng thêm từ Phù Phép.', maxLevel: 10, cost: 2, effectValue: 10, reqClass: CharacterClass.AlchemistMage },
+  { id: 'am_wisdom', name: 'Trí Tuệ Cổ Đại', branch: SkillBranch.Alchemy, description: 'Nhận thêm 10% Kinh nghiệm mỗi trận đánh.', maxLevel: 10, cost: 2, effectValue: 10, reqClass: CharacterClass.AlchemistMage }
 ];
 
 export const ETERNAL_UPGRADES: EternalUpgrade[] = [

@@ -26,14 +26,15 @@ export const INITIAL_PLAYER: Player = {
   memoryGemPotential: 0
 };
 
-const SAVE_KEY = 'thoren_vontat_save';
+const SAVE_KEY = 'thoren_vontat_save_v2';
 
 export const usePlayer = (addLog: (msg: string) => void) => {
   const [player, setPlayer] = useState<Player>(INITIAL_PLAYER);
 
   const saveGame = useCallback(() => {
+    // Lưu vào localStorage của trình duyệt
     localStorage.setItem(SAVE_KEY, JSON.stringify(player));
-    addLog("💾 Ký ức thợ rèn đã được ghi lại thành công!");
+    addLog("💾 Ký ức thợ rèn đã được ghi lại thành công vào trình duyệt!");
   }, [player, addLog]);
 
   const loadGame = useCallback(() => {
@@ -41,13 +42,22 @@ export const usePlayer = (addLog: (msg: string) => void) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setPlayer(parsed);
-        addLog("📖 Khôi phục ký ức thành công!");
+        // Merge state để đảm bảo nếu có trường mới trong INITIAL_PLAYER thì không bị mất
+        setPlayer(prev => ({
+          ...INITIAL_PLAYER,
+          ...parsed,
+          // Đảm bảo các object lồng nhau cũng được merge
+          stats: { ...INITIAL_PLAYER.stats, ...parsed.stats },
+          skills: { ...parsed.skills },
+          eternalUpgrades: { ...parsed.eternalUpgrades },
+          blueprintLevels: { ...parsed.blueprintLevels }
+        }));
+        addLog("📖 Khôi phục ký ức thành công từ bộ nhớ trình duyệt!");
       } catch (e) {
-        addLog("❌ Lỗi khi đọc bản lưu!");
+        addLog("❌ Lỗi khi đọc bản lưu: Dữ liệu không hợp lệ.");
       }
     } else {
-      addLog("⚠️ Không tìm thấy bản lưu nào!");
+      addLog("⚠️ Không tìm thấy bản lưu nào trong trình duyệt!");
     }
   }, [addLog]);
 
