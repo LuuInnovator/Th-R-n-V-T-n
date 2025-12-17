@@ -6,10 +6,10 @@ import { ZONES, ENEMIES_DB, INITIAL_BLUEPRINTS, RARITY_MULTIPLIER, GEM_STATS, EN
 import { randomInt, rollRarity, generateId, formatNumber } from './utils';
 
 // Hooks
-import { usePlayer } from './hooks/usePlayer';
+import { usePlayer, INITIAL_PLAYER } from './hooks/usePlayer'; // Import INITIAL_PLAYER
 import { useInventory } from './hooks/useInventory';
 import { useGameLog } from './hooks/useGameLog';
-import { calculatePlayerStats } from './utils/statCalculator'; // Import mới
+import { calculatePlayerStats } from './utils/statCalculator'; 
 
 // Components
 import { InventoryView } from './components/InventoryView';
@@ -30,7 +30,7 @@ export default function App() {
   const { logs, addLog, clearLogs } = useGameLog();
   const { 
       player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem, addGuildFame, unlockGuildBlueprint,
-      allocateStat, resetStats // New hooks
+      allocateStat, resetStats 
   } = usePlayer(addLog);
   const { 
     materials, equipments, equipped, 
@@ -55,7 +55,6 @@ export default function App() {
     return calculatedStats.activeSets;
   }, [calculatedStats]);
 
-  // --- CALCULATE DROP RATE BONUS (For display and logic) ---
   const dropRateBonus = useMemo(() => {
     return calculatedStats.dropRateBonus;
   }, [calculatedStats]);
@@ -143,25 +142,20 @@ export default function App() {
     const enemiesInZone = ENEMIES_DB[currentZone.id];
     
     if (enemiesInZone && enemiesInZone.length > 0) {
-      // Phân loại quái và boss
       const bosses = enemiesInZone.filter(e => e.isBoss);
       const normalMobs = enemiesInZone.filter(e => !e.isBoss);
-
       let selectedEnemy: Enemy;
 
-      // Logic: Nếu zone có cả boss và quái thường, chỉ 5% ra boss
       if (bosses.length > 0 && normalMobs.length > 0) {
-          if (Math.random() < 0.05) { // 5% cơ hội gặp Boss
+          if (Math.random() < 0.05) { 
               selectedEnemy = bosses[randomInt(0, bosses.length - 1)];
           } else {
               selectedEnemy = normalMobs[randomInt(0, normalMobs.length - 1)];
           }
       } else {
-          // Nếu chỉ có boss (Map cuối) hoặc chỉ có quái thường
           selectedEnemy = enemiesInZone[randomInt(0, enemiesInZone.length - 1)];
       }
 
-      // Clone enemy để tránh sửa trực tiếp vào DB
       setCurrentEnemy({ ...selectedEnemy });
       setHasRevivedInBattle(false);
       setBossPhase(0);
@@ -175,14 +169,13 @@ export default function App() {
 
   const handleAttack = useCallback(() => {
     if (!currentEnemy) return;
-    const { totalAtk, totalDef, weaponElement, activeSets, critChance, critDamage, dropRateBonus } = calculatedStats;
+    const { totalAtk, totalDef, weaponElement, activeSets, critChance, critDamage, dropRateBonus, totalHp } = calculatedStats;
 
     const forgeSpiritCount = activeSets[SetId.ForgeSpirit] || 0;
     const primalHunterCount = activeSets[SetId.PrimalHunter] || 0;
     const dragonfireCount = activeSets[SetId.DragonfireKeeper] || 0;
 
     let elementMult = 1.0;
-    // Cast weaponElement to ElementType to avoid TypeScript narrowing issues
     const wElement = weaponElement as ElementType;
     if (wElement === ElementType.Ice && currentEnemy.element === ElementType.Fire) elementMult = 1.5;
     if (wElement === ElementType.Fire && currentEnemy.element === ElementType.Ice) elementMult = 1.5;
@@ -195,7 +188,6 @@ export default function App() {
     if (primalHunterCount >= 2 && currentEnemy.isBoss) damageMultiplier += 0.15;
     const ignoreDefense = forgeSpiritCount >= 4 ? 0.2 : 0;
     
-    // Crit calculation using new stats
     const isCrit = Math.random() < (critChance / 100);
     const finalCritMult = critDamage / 100;
 
@@ -204,7 +196,6 @@ export default function App() {
     if (currentEnemy.id === 'e5_boss') {
         const hpPercent = (currentEnemy.hp / currentEnemy.maxHp) * 100;
         
-        // Phase 1: Rust (100% - 60%)
         if (hpPercent > 60) {
             setBossPhase(1);
             if (rustStacks < 5) {
@@ -219,17 +210,15 @@ export default function App() {
             }
             effectiveDef = Math.floor(effectiveDef * (1 - (rustStacks * 0.1)));
         } 
-        // Phase 2: Siphon (60% - 30%)
         else if (hpPercent > 30) {
             setBossPhase(2);
-            if (Math.random() < 0.3) { // 30% chance per turn
+            if (Math.random() < 0.3) { 
                 const decoy = materials.find(m => m.type === MaterialType.DecoyItem && m.quantity > 0);
                 if (decoy) {
                     addLog("🎭 Boss ăn phải Vật Phẩm Mồi!");
                     consumeMaterials([{ type: MaterialType.DecoyItem, amount: 1 }]);
                 } else {
                     addLog("🧛 Boss hút Nguyên Liệu của bạn để hồi máu!");
-                    // Random steal logic (simplified)
                     const stealable = materials.find(m => m.quantity > 0 && m.type !== MaterialType.DecoyItem);
                     if (stealable) {
                         consumeMaterials([{ type: stealable.type, amount: 1 }]);
@@ -240,14 +229,12 @@ export default function App() {
                 }
             }
         }
-        // Phase 3: Split (30% - 0%)
         else {
              setBossPhase(3);
-             // Boss takes reduced damage unless element is opposite
-             if (wElement !== ElementType.Physical) { // Simplified weak check
+             if (wElement !== ElementType.Physical) {
                  addLog("⚡ Phá vỡ phòng thủ nguyên tố của Boss!");
              } else {
-                 damageMultiplier *= 0.3; // 70% reduction if physical
+                 damageMultiplier *= 0.3;
                  addLog("🛡️ Boss đang ở trạng thái Phân Thân! Kháng vật lý cực cao.");
              }
         }
@@ -267,10 +254,8 @@ export default function App() {
         updateHp(player.hp + heal);
     }
 
-    // Set Infinity Chrono Auto Heal Logic
     if ((activeSets[SetId.InfinityChrono] || 0) >= 4 && player.hp < player.maxHp * 0.2) {
-        // Mock cooldown check (should implement proper CD)
-        if (Math.random() < 0.1) { // 10% chance to trigger for simplicity in this loop
+        if (Math.random() < 0.1) {
              updateHp(player.maxHp);
              addLog("⏳ QUAY NGƯỢC! HP đã trở về trạng thái đầy đủ.");
         }
@@ -281,8 +266,11 @@ export default function App() {
       addLog(`+${currentEnemy.expReward} EXP, +${currentEnemy.goldReward} Vàng`);
       gainExp(currentEnemy.expReward);
       addGold(currentEnemy.goldReward);
+
+      // --- HỒI ĐẦY MÁU SAU CHIẾN THẮNG ---
+      setFullHp(totalHp);
+      addLog("💚 Đã hồi phục toàn bộ HP sau trận chiến!");
       
-      // Use calculated dropRateBonus
       currentEnemy.dropTable.forEach(drop => {
         let specificBonus = 0;
         if (player.characterClass === CharacterClass.AlchemistMage && (drop.materialType === MaterialType.SoulDust || drop.materialType === MaterialType.Essence)) {
@@ -309,12 +297,11 @@ export default function App() {
       let incomingDmg = currentEnemy.attack;
       if (dragonfireCount >= 2 && currentEnemy.element === ElementType.Fire) incomingDmg *= 0.7;
 
-      // Phase 3 Boss deals triple damage? Or just high damage
       if (currentEnemy.id === 'e5_boss' && bossPhase === 3) incomingDmg *= 1.5;
 
       let dmgToPlayer = incomingDmg - effectiveDef;
       if (dmgToPlayer <= 0) {
-        const hitChance = 0.1; // Still small chance to hit for 1 dmg
+        const hitChance = 0.1;
         if (Math.random() < hitChance) {
              dmgToPlayer = 1;
              addLog(`🛡️ ${currentEnemy.name} tấn công sượt qua! (1 sát thương)`);
@@ -333,14 +320,15 @@ export default function App() {
           addLog(`🛡️ Giáp phản lại ${reflectDmg} sát thương!`);
       }
       if (newPlayerHp <= 0 && forgeSpiritCount >= 6 && !hasRevivedInBattle) {
-        newPlayerHp = Math.floor(player.maxHp * 0.5);
+        newPlayerHp = Math.floor(totalHp * 0.5); // Sửa: Dùng totalHp thay vì player.maxHp (vì totalHp mới là thực tế)
         setHasRevivedInBattle(true);
         addLog("✨ Tinh Thần Lò Rèn trỗi dậy! Bạn đã được hồi sinh!");
       }
       if (newPlayerHp <= 0) {
         updateHp(0);
         addLog("☠️ BẠN ĐÃ BỊ ĐÁNH BẠI! Hồi sinh tại thị trấn...");
-        setFullHp();
+        // SỬA LỖI: Hồi sinh bằng đúng tổng HP thực tế thay vì con số hardcode
+        setFullHp(totalHp); 
         setCurrentEnemy(null);
         setIsAutoAttacking(false);
         setBossPhase(0);
@@ -365,7 +353,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [isAutoAttacking, currentEnemy, player.hp, handleAttack, handleExplore, calculatedStats]);
 
-  /* ... (Save/Load functions remain same) ... */
+  /* ... (Save/Load functions) ... */
   const saveGame = useCallback(() => {
     const saveData = {
       player, materials, equipments, equipped, currentZoneId: currentZone.id, timestamp: Date.now()
@@ -375,10 +363,53 @@ export default function App() {
   }, [player, materials, equipments, equipped, currentZone.id]);
 
   const applySaveData = (saveData: any) => {
-      setPlayer(saveData.player);
-      loadInventory(saveData.materials, saveData.equipments, saveData.equipped);
+      // MIGRATION LOGIC: Merge dữ liệu cũ với cấu trúc mới để tránh lỗi
+      // Nếu saveData.player thiếu field nào (ví dụ stats, gemInventory), nó sẽ lấy từ INITIAL_PLAYER
+      const safePlayer = { 
+          ...INITIAL_PLAYER, 
+          ...saveData.player,
+          // Merge stats object cẩn thận vì nó là object lồng nhau
+          stats: { ...INITIAL_PLAYER.stats, ...(saveData.player?.stats || {}) },
+          // Merge guild object
+          guild: { ...INITIAL_PLAYER.guild, ...(saveData.player?.guild || {}) },
+          // Các field khác nếu thiếu thì lấy từ INITIAL_PLAYER
+          gemInventory: saveData.player?.gemInventory || INITIAL_PLAYER.gemInventory,
+          skills: saveData.player?.skills || INITIAL_PLAYER.skills,
+          eternalUpgrades: saveData.player?.eternalUpgrades || INITIAL_PLAYER.eternalUpgrades
+      };
+
+      // Vệ sinh Equipments (Thêm sockets/gems cho item cũ chưa có)
+      const safeEquipments = (saveData.equipments || []).map((item: any) => ({
+          ...item,
+          sockets: item.sockets ?? 0,
+          socketedGems: item.socketedGems || [],
+          enchantment: item.enchantment || EnchantmentType.None
+      }));
+
+      // Vệ sinh Equipped items
+      const safeEquipped: any = {};
+      Object.keys(EquipmentType).forEach(key => {
+          // @ts-ignore
+          const type = EquipmentType[key];
+          const eqItem = saveData.equipped?.[type];
+          if (eqItem) {
+              safeEquipped[type] = {
+                  ...eqItem,
+                  sockets: eqItem.sockets ?? 0,
+                  socketedGems: eqItem.socketedGems || [],
+                  enchantment: eqItem.enchantment || EnchantmentType.None
+              };
+          } else {
+              safeEquipped[type] = null;
+          }
+      });
+
+      setPlayer(safePlayer);
+      loadInventory(saveData.materials || [], safeEquipments, safeEquipped);
       const savedZone = ZONES.find(z => z.id === saveData.currentZoneId);
       if (savedZone) setCurrentZone(savedZone);
+      else setCurrentZone(ZONES[0]);
+
       setIsAutoAttacking(false);
       setCurrentEnemy(null);
       clearLogs();
@@ -405,9 +436,10 @@ export default function App() {
                 try {
                     const parsedData = JSON.parse(e.target.result as string);
                     applySaveData(parsedData);
-                    addLog("📂 Đã tải dữ liệu từ file thành công!");
+                    addLog("📂 Đã tải và đồng bộ dữ liệu thành công!");
                 } catch (error) {
-                    addLog("❌ File không hợp lệ!");
+                    console.error(error);
+                    addLog("❌ File lỗi hoặc không tương thích!");
                 }
             }
         };
@@ -425,7 +457,7 @@ export default function App() {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         e.preventDefault();
         const message = "Những thay đổi của bạn có thể chưa được lưu. Bạn có chắc chắn muốn rời đi?";
-        e.returnValue = message; // Dành cho các trình duyệt cũ, trình duyệt mới sẽ hiển thị thông báo mặc định
+        e.returnValue = message; 
         return message;
     };
 
@@ -437,7 +469,7 @@ export default function App() {
   }, []);
 
   const handleCraft = (bp: Blueprint, useOverheat: boolean) => {
-    // ... (Old craft logic)
+    // 1. Tiêu thụ nguyên liệu (trước khi roll)
     const refundChance = (player.skills['al_efficiency'] || 0) * 0.05;
     if (Math.random() > refundChance) consumeMaterials(bp.requiredMaterials);
     else addLog("⚗️ Luyện kim thuật: Đã tiết kiệm nguyên liệu!");
@@ -448,24 +480,42 @@ export default function App() {
         return;
     }
 
+    let rarity: Rarity = Rarity.Common;
+    const overheatMult = useOverheat ? 2.5 : 1.0; 
+
+    // 2. Logic Overheat (Thất bại 75% cứng)
     if (useOverheat) {
         const talentSafety = (player.eternalUpgrades[EternalUpgradeId.LearnFromFailure] || 0) * 0.02;
         const skillSafety = (player.skills['en_overheat'] || 0) * 0.05;
-        const failChance = Math.max(0.05, 0.35 - skillSafety - talentSafety); // Tăng tỷ lệ rủi ro lên 35%
+        // Mặc định thất bại 75%, giảm xuống nếu có skill (nhưng không giảm quá nhiều để giữ độ khó)
+        const failChance = Math.max(0.50, 0.75 - skillSafety - talentSafety); 
+
         if (Math.random() < failChance) {
-            addLog("🔥 LÒ RÈN QUÁ NHIỆT! Thất bại và mất nguyên liệu.");
+            addLog("🔥 LÒ RÈN NỔ TUNG! Quá nhiệt thất bại và mất nguyên liệu.");
             return;
+        } else {
+             // Nếu thành công trong Overheat, CHẮC CHẮN ra đồ xịn (Epic trở lên)
+             const roll = Math.random();
+             if (roll > 0.80) rarity = Rarity.Mythic; // 20% trong nhóm thành công (5% tổng)
+             else if (roll > 0.40) rarity = Rarity.Legendary; // 40% trong nhóm thành công (10% tổng)
+             else rarity = Rarity.Epic; // 40% trong nhóm thành công (10% tổng)
+             
+             addLog("🔥 RÈN CỰC HẠN THÀNH CÔNG! Sức mạnh bùng nổ!");
         }
+    } else {
+        // 3. Logic Normal (Roll bình thường)
+        const rarityBonus = (player.rebirthCount * 0.05); // Bonus nhỏ từ rebirth
+        const roll = Math.random() + rarityBonus;
+        
+        if (roll > 0.99) rarity = Rarity.Mythic;
+        else if (roll > 0.95) rarity = Rarity.Legendary;
+        else if (roll > 0.85) rarity = Rarity.Epic;
+        else if (roll > 0.60) rarity = Rarity.Rare;
+        else rarity = Rarity.Common;
     }
 
-    // Tăng tỷ lệ ra đồ hiếm khi Overheat
-    const rarityBonus = (player.rebirthCount * 0.1) + (useOverheat ? 0.6 : 0); // Tăng bonus từ 0.3 lên 0.6
-    const rarity = rollRarity(rarityBonus); 
     const multiplier = RARITY_MULTIPLIER[rarity];
     
-    // Tăng Multiplier chỉ số khi Overheat (Mạnh hơn 2.5 lần nếu may mắn)
-    const overheatMult = useOverheat ? 2.5 : 1.0; 
-
     const atkBase = bp.baseStats.maxAtk > 0 ? randomInt(bp.baseStats.minAtk, bp.baseStats.maxAtk) : 0;
     const defBase = bp.baseStats.maxDef > 0 ? randomInt(bp.baseStats.minDef, bp.baseStats.maxDef) : 0;
 
@@ -493,7 +543,6 @@ export default function App() {
     };
 
     addEquipment(newItem);
-    if (useOverheat) addLog(`🔥 RÈN CỰC HẠN THÀNH CÔNG! Tạo ra ${newItem.name} với sức mạnh đột biến!`);
   };
 
   const handleSell = (item: Equipment) => {
@@ -576,7 +625,7 @@ export default function App() {
             <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="bg-slate-900/50 p-2 rounded border border-slate-800 text-center">
                     <div className="text-[10px] text-slate-500 uppercase">HP</div>
-                    <div className="font-bold text-red-400">{formatNumber(player.hp)}</div>
+                    <div className="font-bold text-red-400">{formatNumber(calculatedStats.totalHp)}</div> {/* Use calculated HP here */}
                 </div>
                 <div className="bg-slate-900/50 p-2 rounded border border-slate-800 text-center">
                     <div className="text-[10px] text-slate-500 uppercase">Vàng</div>
@@ -636,7 +685,7 @@ export default function App() {
               zones={ZONES} 
               activeZone={currentZone} 
               onSelectZone={handleSelectZone} 
-              player={player} 
+              player={{...player, maxHp: calculatedStats.totalHp}} // Hack: pass calculated totalHp as maxHp for UI bar
               currentEnemy={currentEnemy} 
               onExplore={handleExplore} 
               onAttack={handleAttack} 
@@ -646,7 +695,7 @@ export default function App() {
               onToggleAutoAttack={() => setIsAutoAttacking(!isAutoAttacking)}
               decoyCount={materials.find(m => m.type === MaterialType.DecoyItem)?.quantity || 0}
               blueprints={[...INITIAL_BLUEPRINTS].filter(bp => !bp.isGuildBlueprint || player.guild.blueprints.includes(bp.id))}
-              dropRateBonus={dropRateBonus} // Pass bonus down
+              dropRateBonus={dropRateBonus} 
             />
           )}
 
@@ -664,8 +713,8 @@ export default function App() {
               onSocketGem={handleSocketGem} 
               onAddSocket={handleAddSocket} 
               onEnchant={handleEnchant}
-              materials={materials} // Pass materials
-              onUpgradeMaterial={upgradeMaterial} // Pass new handler
+              materials={materials} 
+              onUpgradeMaterial={upgradeMaterial}
             />
           )}
 

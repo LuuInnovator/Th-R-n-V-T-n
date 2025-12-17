@@ -1,4 +1,5 @@
 
+/* ... (Imports remain same) ... */
 import { Blueprint, CharacterClass, EnchantmentType, Enemy, EquipmentType, GemTier, GemType, MaterialType, Rarity, Zone, Skill, SkillBranch, SetId, ElementType, EternalUpgrade, EternalUpgradeId } from './types';
 
 // Danh sách khu vực
@@ -47,26 +48,26 @@ export const ZONES: Zone[] = [
   }
 ];
 
-// Danh sách quái vật (Đã update tỷ lệ Boss cao hơn)
+// Danh sách quái vật (Đã update tỷ lệ Drop Rate cao hơn theo yêu cầu)
 export const ENEMIES_DB: Record<string, Enemy[]> = {
   'z1': [
     {
       id: 'e1_1', name: 'Sói Xám', level: 1, hp: 60, maxHp: 60, attack: 8, defense: 2, isBoss: false, element: ElementType.Physical,
       expReward: 23, goldReward: 5,
-      dropTable: [{ materialType: MaterialType.Leather, chance: 0.15, minQty: 1, maxQty: 1 }]
+      dropTable: [{ materialType: MaterialType.Leather, chance: 0.40, minQty: 1, maxQty: 2 }] // Tăng từ 0.15 lên 0.40
     },
     {
       id: 'e1_2', name: 'Mộc Tinh', level: 3, hp: 100, maxHp: 100, attack: 12, defense: 4, isBoss: false, element: ElementType.Physical,
       expReward: 38, goldReward: 8,
-      dropTable: [{ materialType: MaterialType.Wood, chance: 0.15, minQty: 1, maxQty: 2 }]
+      dropTable: [{ materialType: MaterialType.Wood, chance: 0.40, minQty: 1, maxQty: 2 }] // Tăng từ 0.15 lên 0.40
     },
     {
       id: 'e1_boss', name: 'Vua Sói Ma (Boss)', level: 10, hp: 800, maxHp: 800, attack: 55, defense: 15, isBoss: true, element: ElementType.Physical,
       expReward: 525, goldReward: 100,
       dropTable: [
-        { materialType: MaterialType.Leather, chance: 0.60, minQty: 3, maxQty: 6 }, // Tăng từ 0.40
-        { materialType: MaterialType.Gem, chance: 0.25, minQty: 1, maxQty: 1 }, // Tăng từ 0.08
-        { materialType: MaterialType.SoulDust, chance: 0.10, minQty: 1, maxQty: 1 } // Tăng từ 0.02
+        { materialType: MaterialType.Leather, chance: 1.0, minQty: 5, maxQty: 8 }, // Boss chắc chắn rớt đồ
+        { materialType: MaterialType.Gem, chance: 0.50, minQty: 1, maxQty: 2 },
+        { materialType: MaterialType.SoulDust, chance: 0.30, minQty: 1, maxQty: 1 }
       ]
     }
   ],
@@ -74,15 +75,15 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
     {
       id: 'e2_1', name: 'Golem Đá', level: 12, hp: 450, maxHp: 450, attack: 35, defense: 25, isBoss: false, element: ElementType.Physical,
       expReward: 98, goldReward: 20,
-      dropTable: [{ materialType: MaterialType.Ore, chance: 0.15, minQty: 1, maxQty: 3 }]
+      dropTable: [{ materialType: MaterialType.Ore, chance: 0.35, minQty: 2, maxQty: 4 }] // Tăng drop rate
     },
     {
       id: 'e2_boss', name: 'Người Khổng Lồ Đá (Boss)', level: 20, hp: 2500, maxHp: 2500, attack: 180, defense: 90, isBoss: true, element: ElementType.Physical,
       expReward: 1200, goldReward: 300,
       dropTable: [
-          { materialType: MaterialType.Ore, chance: 0.75, minQty: 8, maxQty: 15 }, // Buff mạnh
-          { materialType: MaterialType.Gem, chance: 0.35, minQty: 2, maxQty: 3 }, // Buff mạnh
-          { materialType: MaterialType.SoulDust, chance: 0.15, minQty: 1, maxQty: 3 } // Buff mạnh
+          { materialType: MaterialType.Ore, chance: 1.0, minQty: 10, maxQty: 20 },
+          { materialType: MaterialType.Gem, chance: 0.60, minQty: 2, maxQty: 4 },
+          { materialType: MaterialType.SoulDust, chance: 0.40, minQty: 2, maxQty: 4 }
       ]
     }
   ],
@@ -90,15 +91,15 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
     {
       id: 'e3_1', name: 'Quỷ Lửa', level: 28, hp: 1000, maxHp: 1000, attack: 130, defense: 40, isBoss: false, element: ElementType.Fire,
       expReward: 270, goldReward: 50,
-      dropTable: [{ materialType: MaterialType.Essence, chance: 0.10, minQty: 1, maxQty: 1 }]
+      dropTable: [{ materialType: MaterialType.Essence, chance: 0.25, minQty: 1, maxQty: 2 }] // Tăng drop rate
     },
     {
       id: 'e3_boss', name: 'Rồng Hỏa Tinh (World Boss)', level: 50, hp: 20000, maxHp: 20000, attack: 950, defense: 350, isBoss: true, element: ElementType.Fire,
       expReward: 12000, goldReward: 2000,
       dropTable: [
-          { materialType: MaterialType.Essence, chance: 0.8, minQty: 5, maxQty: 10 }, 
-          { materialType: MaterialType.Gem, chance: 0.5, minQty: 3, maxQty: 6 },
-          { materialType: MaterialType.SoulDust, chance: 0.4, minQty: 3, maxQty: 6 }
+          { materialType: MaterialType.Essence, chance: 1.0, minQty: 10, maxQty: 20 }, 
+          { materialType: MaterialType.Gem, chance: 0.8, minQty: 5, maxQty: 8 },
+          { materialType: MaterialType.SoulDust, chance: 0.6, minQty: 5, maxQty: 10 }
       ]
     }
   ],
@@ -106,15 +107,15 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
     {
         id: 'e4_1', name: 'Linh Hồn Than', level: 5, hp: 4000, maxHp: 4000, attack: 400, defense: 150, isBoss: false, element: ElementType.Fire,
         expReward: 750, goldReward: 200,
-        dropTable: [{ materialType: MaterialType.Essence, chance: 0.2, minQty: 1, maxQty: 2 }]
+        dropTable: [{ materialType: MaterialType.Essence, chance: 0.4, minQty: 2, maxQty: 4 }]
     },
     {
         id: 'e4_boss', name: 'Cự Thạch Nham Thạch', level: 20, hp: 100000, maxHp: 100000, attack: 3000, defense: 1200, isBoss: true, element: ElementType.Fire,
         expReward: 37500, goldReward: 10000,
         dropTable: [
-            { materialType: MaterialType.FissionCrystal, chance: 0.3, minQty: 1, maxQty: 1 }, // Tăng nhẹ từ 0.2
-            { materialType: MaterialType.Ore, chance: 1.0, minQty: 50, maxQty: 100 }, // Chắc chắn rơi nhiều quặng
-             { materialType: MaterialType.SoulDust, chance: 0.5, minQty: 10, maxQty: 20 }
+            { materialType: MaterialType.FissionCrystal, chance: 0.5, minQty: 1, maxQty: 2 },
+            { materialType: MaterialType.Ore, chance: 1.0, minQty: 100, maxQty: 200 },
+             { materialType: MaterialType.SoulDust, chance: 0.8, minQty: 20, maxQty: 30 }
         ]
     }
   ],
@@ -123,9 +124,9 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
           id: 'e5_boss', name: 'Kẻ Gìn Giữ Thời Gian (Final Boss)', level: 99, hp: 666666, maxHp: 666666, attack: 12000, defense: 6000, isBoss: true, element: ElementType.Lightning,
           expReward: 150000, goldReward: 50000,
           dropTable: [
-              { materialType: MaterialType.CondensedTimesand, chance: 0.1, minQty: 1, maxQty: 1 }, // Tăng từ 0.05 lên 0.1
-              { materialType: MaterialType.SoulDust, chance: 0.8, minQty: 20, maxQty: 40 },
-              { materialType: MaterialType.Gem, chance: 0.8, minQty: 10, maxQty: 20 }
+              { materialType: MaterialType.CondensedTimesand, chance: 0.3, minQty: 1, maxQty: 1 },
+              { materialType: MaterialType.SoulDust, chance: 1.0, minQty: 50, maxQty: 100 },
+              { materialType: MaterialType.Gem, chance: 1.0, minQty: 20, maxQty: 30 }
           ]
       }
   ]
@@ -352,7 +353,7 @@ export const INITIAL_BLUEPRINTS: Blueprint[] = [
   },
   {
       id: 'bp_decoy',
-      name: 'Vật Phẩm Mồi',
+      name: 'Vật Phẩm Mồi (Dùng cho Boss)',
       resultType: 'MATERIAL',
       resultMaterial: MaterialType.DecoyItem,
       unlocked: true,

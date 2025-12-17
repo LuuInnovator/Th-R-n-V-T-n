@@ -9,7 +9,7 @@ const INITIAL_GUILD: Guild = {
     blueprints: []
 };
 
-const INITIAL_PLAYER: Player = {
+export const INITIAL_PLAYER: Player = {
   characterClass: CharacterClass.None,
   level: 1,
   currentExp: 0,
@@ -155,8 +155,6 @@ export const usePlayer = (addLog: (msg: string) => void) => {
                              (prev.stats.vitality - 1) + 
                              (prev.stats.luck - 1);
           
-          // Class bonus points không reset được (giữ nguyên logic đơn giản là reset về 1 rồi cộng lại base points)
-          // Để đơn giản cho MVP: Reset về 1 hết, trả lại toàn bộ điểm (bao gồm cả điểm từ Class ban đầu coi như free respec class bonus stat)
           const refundedPoints = prev.statPoints + totalSpent;
           
           // Cost: Miễn phí dưới cấp 10, sau đó tốn vàng
@@ -186,8 +184,6 @@ export const usePlayer = (addLog: (msg: string) => void) => {
   }, [addLog]);
 
   const updateHp = useCallback((newHp: number) => {
-    // Lưu ý: Cần tính maxHp thực tế (bao gồm Vitality) ở component cha hoặc truyền vào
-    // Ở đây tạm thời dùng prev.maxHp cơ bản, logic battle sẽ handle việc cap HP
     setPlayer(p => ({ ...p, hp: Math.max(0, newHp) })); 
   }, []);
 
@@ -264,10 +260,9 @@ export const usePlayer = (addLog: (msg: string) => void) => {
     });
   }, []);
 
-  const setFullHp = useCallback(() => {
-      // Logic hồi máu sẽ được xử lý ở UI component dựa trên MaxHP tính toán
-      // Hack: Đặt HP thành một số rất lớn, component sẽ clamp lại
-      setPlayer(p => ({ ...p, hp: 9999999 }));
+  // Update: Nhận vào giá trị cụ thể để set máu (thường là Max HP tính toán được)
+  const setFullHp = useCallback((amount: number) => {
+      setPlayer(p => ({ ...p, hp: amount }));
   }, []);
 
   // Gem Helpers
