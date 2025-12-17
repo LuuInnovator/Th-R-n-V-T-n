@@ -1,477 +1,130 @@
 
-/* ... (Imports remain same) ... */
-import { Blueprint, CharacterClass, EnchantmentType, Enemy, EquipmentType, GemTier, GemType, MaterialType, Rarity, Zone, Skill, SkillBranch, SetId, ElementType, EternalUpgrade, EternalUpgradeId } from './types';
-
-// Danh sách khu vực
-export const ZONES: Zone[] = [
-  {
-    id: 'z1',
-    name: 'Rừng Chết',
-    description: 'Nơi sinh sống của loài sói ma và cây ăn thịt. Nguồn cung cấp Gỗ và Da.',
-    recommendedLevel: 1,
-    materials: [MaterialType.Wood, MaterialType.Leather],
-    enemies: [] 
-  },
-  {
-    id: 'z2',
-    name: 'Mỏ Đá Cổ',
-    description: 'Hầm ngục bỏ hoang đầy rẫy golem. Nơi tốt nhất để tìm Quặng và Đá Quý Thô.',
-    recommendedLevel: 10,
-    materials: [MaterialType.Ore, MaterialType.Gem],
-    enemies: []
-  },
-  {
-    id: 'z3',
-    name: 'Núi Lửa Hỏa Tinh',
-    description: 'Vùng đất chết chóc. Chỉ những thợ rèn giỏi nhất mới dám khai thác Tinh Hoa ở đây.',
-    recommendedLevel: 25,
-    materials: [MaterialType.Ore, MaterialType.Essence],
-    enemies: []
-  },
-  {
-    id: 'z4_rebirth',
-    name: 'Lò Rèn Vĩnh Hằng',
-    description: '⚠️ [Vùng Tái Sinh] Nơi ngự trị của Cự Thạch Nham Thạch.',
-    recommendedLevel: 1,
-    reqRebirth: 1,
-    materials: [MaterialType.Essence, MaterialType.FissionCrystal, MaterialType.SoulDust],
-    enemies: []
-  },
-  {
-    id: 'z5_time',
-    name: 'Đồng Hồ Cát Vô Định',
-    description: '💀 [Nguy Hiểm Tột Cùng] Không gian bị bóp méo bởi Kẻ Gìn Giữ Thời Gian.',
-    recommendedLevel: 60,
-    reqRebirth: 2,
-    materials: [MaterialType.CondensedTimesand, MaterialType.SoulDust],
-    enemies: []
-  }
-];
-
-// Danh sách quái vật (Đã update tỷ lệ Drop Rate cao hơn theo yêu cầu)
-export const ENEMIES_DB: Record<string, Enemy[]> = {
-  'z1': [
-    {
-      id: 'e1_1', name: 'Sói Xám', level: 1, hp: 60, maxHp: 60, attack: 8, defense: 2, isBoss: false, element: ElementType.Physical,
-      expReward: 23, goldReward: 5,
-      dropTable: [{ materialType: MaterialType.Leather, chance: 0.40, minQty: 1, maxQty: 2 }] // Tăng từ 0.15 lên 0.40
-    },
-    {
-      id: 'e1_2', name: 'Mộc Tinh', level: 3, hp: 100, maxHp: 100, attack: 12, defense: 4, isBoss: false, element: ElementType.Physical,
-      expReward: 38, goldReward: 8,
-      dropTable: [{ materialType: MaterialType.Wood, chance: 0.40, minQty: 1, maxQty: 2 }] // Tăng từ 0.15 lên 0.40
-    },
-    {
-      id: 'e1_boss', name: 'Vua Sói Ma (Boss)', level: 10, hp: 800, maxHp: 800, attack: 55, defense: 15, isBoss: true, element: ElementType.Physical,
-      expReward: 525, goldReward: 100,
-      dropTable: [
-        { materialType: MaterialType.Leather, chance: 1.0, minQty: 5, maxQty: 8 }, // Boss chắc chắn rớt đồ
-        { materialType: MaterialType.Gem, chance: 0.50, minQty: 1, maxQty: 2 },
-        { materialType: MaterialType.SoulDust, chance: 0.30, minQty: 1, maxQty: 1 }
-      ]
-    }
-  ],
-  'z2': [
-    {
-      id: 'e2_1', name: 'Golem Đá', level: 12, hp: 450, maxHp: 450, attack: 35, defense: 25, isBoss: false, element: ElementType.Physical,
-      expReward: 98, goldReward: 20,
-      dropTable: [{ materialType: MaterialType.Ore, chance: 0.35, minQty: 2, maxQty: 4 }] // Tăng drop rate
-    },
-    {
-      id: 'e2_boss', name: 'Người Khổng Lồ Đá (Boss)', level: 20, hp: 2500, maxHp: 2500, attack: 180, defense: 90, isBoss: true, element: ElementType.Physical,
-      expReward: 1200, goldReward: 300,
-      dropTable: [
-          { materialType: MaterialType.Ore, chance: 1.0, minQty: 10, maxQty: 20 },
-          { materialType: MaterialType.Gem, chance: 0.60, minQty: 2, maxQty: 4 },
-          { materialType: MaterialType.SoulDust, chance: 0.40, minQty: 2, maxQty: 4 }
-      ]
-    }
-  ],
-  'z3': [
-    {
-      id: 'e3_1', name: 'Quỷ Lửa', level: 28, hp: 1000, maxHp: 1000, attack: 130, defense: 40, isBoss: false, element: ElementType.Fire,
-      expReward: 270, goldReward: 50,
-      dropTable: [{ materialType: MaterialType.Essence, chance: 0.25, minQty: 1, maxQty: 2 }] // Tăng drop rate
-    },
-    {
-      id: 'e3_boss', name: 'Rồng Hỏa Tinh (World Boss)', level: 50, hp: 20000, maxHp: 20000, attack: 950, defense: 350, isBoss: true, element: ElementType.Fire,
-      expReward: 12000, goldReward: 2000,
-      dropTable: [
-          { materialType: MaterialType.Essence, chance: 1.0, minQty: 10, maxQty: 20 }, 
-          { materialType: MaterialType.Gem, chance: 0.8, minQty: 5, maxQty: 8 },
-          { materialType: MaterialType.SoulDust, chance: 0.6, minQty: 5, maxQty: 10 }
-      ]
-    }
-  ],
-  'z4_rebirth': [
-    {
-        id: 'e4_1', name: 'Linh Hồn Than', level: 5, hp: 4000, maxHp: 4000, attack: 400, defense: 150, isBoss: false, element: ElementType.Fire,
-        expReward: 750, goldReward: 200,
-        dropTable: [{ materialType: MaterialType.Essence, chance: 0.4, minQty: 2, maxQty: 4 }]
-    },
-    {
-        id: 'e4_boss', name: 'Cự Thạch Nham Thạch', level: 20, hp: 100000, maxHp: 100000, attack: 3000, defense: 1200, isBoss: true, element: ElementType.Fire,
-        expReward: 37500, goldReward: 10000,
-        dropTable: [
-            { materialType: MaterialType.FissionCrystal, chance: 0.5, minQty: 1, maxQty: 2 },
-            { materialType: MaterialType.Ore, chance: 1.0, minQty: 100, maxQty: 200 },
-             { materialType: MaterialType.SoulDust, chance: 0.8, minQty: 20, maxQty: 30 }
-        ]
-    }
-  ],
-  'z5_time': [
-      {
-          id: 'e5_boss', name: 'Kẻ Gìn Giữ Thời Gian (Final Boss)', level: 99, hp: 666666, maxHp: 666666, attack: 12000, defense: 6000, isBoss: true, element: ElementType.Lightning,
-          expReward: 150000, goldReward: 50000,
-          dropTable: [
-              { materialType: MaterialType.CondensedTimesand, chance: 0.3, minQty: 1, maxQty: 1 },
-              { materialType: MaterialType.SoulDust, chance: 1.0, minQty: 50, maxQty: 100 },
-              { materialType: MaterialType.Gem, chance: 1.0, minQty: 20, maxQty: 30 }
-          ]
-      }
-  ]
-};
-
-// --- CONSTANTS CHO HỆ THỐNG MỚI ---
-
-export const GEM_STATS = {
-  [GemType.Ruby]: { [GemTier.Chipped]: 2, [GemTier.Flawed]: 5, [GemTier.Normal]: 10, [GemTier.Flawless]: 20, [GemTier.Perfect]: 50 }, // Attack
-  [GemType.Sapphire]: { [GemTier.Chipped]: 2, [GemTier.Flawed]: 5, [GemTier.Normal]: 10, [GemTier.Flawless]: 20, [GemTier.Perfect]: 50 }, // Defense
-  [GemType.Topaz]: { [GemTier.Chipped]: 10, [GemTier.Flawed]: 25, [GemTier.Normal]: 50, [GemTier.Flawless]: 100, [GemTier.Perfect]: 250 } // HP
-};
-
-export const ENCHANT_STATS = {
-  [EnchantmentType.Sharpness]: { desc: "+15% Tấn công", multAtk: 0.15 },
-  [EnchantmentType.Protection]: { desc: "+15% Phòng thủ", multDef: 0.15 },
-  [EnchantmentType.Vampirism]: { desc: "Hồi 5% HP khi đánh", lifesteal: 0.05 },
-  [EnchantmentType.Fortune]: { desc: "+20% Tỷ lệ rơi đồ", dropRate: 0.20 }
-};
-
-export const CLASS_INFO = {
-  [CharacterClass.HeavySentinel]: {
-    name: "Chiến Binh Giáp Nặng",
-    desc: "Bậc thầy cận chiến và phòng thủ.",
-    bonuses: "Tăng 10% khả năng tìm Quặng. Tăng 10% Phòng thủ gốc."
-  },
-  [CharacterClass.ShadowBlade]: {
-    name: "Sát Thủ Bóng Đêm",
-    desc: "Nhanh nhẹn và chết chóc.",
-    bonuses: "Giảm 10% thời gian đánh (Tốc độ). Tăng 10% Tấn công gốc."
-  },
-  [CharacterClass.AlchemistMage]: {
-    name: "Pháp Sư Luyện Kim",
-    desc: "Thông thái và khéo léo.",
-    bonuses: "Tăng 15% khả năng tìm Bụi Linh Hồn. Tăng hiệu quả hồi phục."
-  }
-};
-
-// Định nghĩa Set (Giữ nguyên)
-export const SETS: Record<SetId, { name: string, bonuses: Record<number, string> }> = {
-  [SetId.ForgeSpirit]: {
-    name: "Tinh Thần Lò Rèn",
-    bonuses: {
-      2: "Tập Trung: Tăng 5% cơ hội Chế tạo Đồ hiếm.",
-      4: "Đòn Thấu Quang: Đòn đánh bỏ qua 20% Giáp đối thủ.",
-      6: "Hồi Sinh Vô Tận: 1 lần hồi sinh/trận với 50% HP."
-    }
-  },
-  [SetId.PrimalHunter]: {
-    name: "Kẻ Săn Mồi Viễn Cổ",
-    bonuses: {
-      2: "Sức Mạnh Tàn Bạo: +15% Sát thương lên Boss.",
-      4: "Săn Đuổi: Giảm 20% thời gian hồi đòn đánh.",
-      6: "Phản Ứng Nguyên Tố: Tăng 30% Sát thương Chí mạng."
-    }
-  },
-  [SetId.DragonfireKeeper]: {
-    name: "Hỏa Long Sứ",
-    bonuses: {
-        2: "Kháng Nhiệt: Giảm 30% Sát thương Lửa nhận vào.",
-        4: "Dung Nham Phản Phệ: Phản lại 20% sát thương khi bị đánh.",
-        6: "Hơi Thở Rồng: Đòn đánh có 10% cơ hội gây thêm 500% sát thương chuẩn."
-    }
-  },
-  [SetId.InfinityChrono]: {
-      name: "Thời Gian Vô Tận",
-      bonuses: {
-          2: "Tốc Độ Ánh Sáng: Giảm 50% thời gian đánh tự động.",
-          4: "Quay Ngược: Khi HP < 20%, tự động hồi 100% HP (Cooldown 5 phút).",
-          6: "Lãnh Chúa Thời Gian: Sát thương tăng theo thời gian trận đấu (1% mỗi giây)."
-      }
-  }
-};
-
-// Kỹ Năng - Cập nhật Class Requirement
-export const SKILLS: Skill[] = [
-  // --- KỸ NĂNG CHUNG ---
-  {
-    id: 'wp_mastery',
-    name: 'Bậc Thầy Vũ Khí',
-    description: 'Tăng sát thương cho mọi vũ khí bạn chế tạo.',
-    branch: SkillBranch.WeaponSmith,
-    maxLevel: 10,
-    cost: 1,
-    effectValue: 2
-  },
-  {
-    id: 'ar_mastery',
-    name: 'Lớp Giáp Hoàn Hảo',
-    description: 'Tăng chỉ số phòng thủ cho giáp bạn chế tạo.',
-    branch: SkillBranch.ArmorSmith,
-    maxLevel: 10,
-    cost: 1,
-    effectValue: 2 
-  },
-  {
-    id: 'en_overheat',
-    name: 'Kiểm Soát Nhiệt',
-    description: 'Giảm rủi ro thất bại khi Tăng Nhiệt Lò Rèn.',
-    branch: SkillBranch.Enchanting,
-    maxLevel: 5,
-    cost: 2,
-    effectValue: 5
-  },
-
-  // --- KỸ NĂNG RIÊNG: CHIẾN BINH GIÁP NẶNG (HeavySentinel) ---
-  {
-      id: 'sentinel_shield',
-      name: 'Khiên Thần (Class)',
-      description: 'Tăng cường khả năng phòng thủ cho mọi giáp nặng.',
-      branch: SkillBranch.ArmorSmith,
-      maxLevel: 5,
-      cost: 2,
-      effectValue: 5,
-      reqClass: CharacterClass.HeavySentinel
-  },
-  {
-      id: 'sentinel_tenacity',
-      name: 'Kiên Cường (Class)',
-      description: 'Tăng khả năng sống sót khi HP thấp.',
-      branch: SkillBranch.Enchanting,
-      maxLevel: 5,
-      cost: 3,
-      effectValue: 2,
-      reqClass: CharacterClass.HeavySentinel
-  },
-
-  // --- KỸ NĂNG RIÊNG: SÁT THỦ BÓNG ĐÊM (ShadowBlade) ---
-  {
-    id: 'wp_crit',
-    name: 'Điểm Yếu Tinh Xảo (Class)',
-    description: 'Tăng mạnh cơ hội chí mạng khi sử dụng vũ khí.',
-    branch: SkillBranch.WeaponSmith,
-    maxLevel: 5,
-    cost: 2,
-    effectValue: 2, // Buffed for assassin
-    reqClass: CharacterClass.ShadowBlade
-  },
-  {
-      id: 'shadow_swiftness',
-      name: 'Thần Tốc (Class)',
-      description: 'Giảm thêm thời gian hồi chiêu khi rèn vũ khí nhẹ.',
-      branch: SkillBranch.WeaponSmith,
-      maxLevel: 5,
-      cost: 3,
-      effectValue: 1,
-      reqClass: CharacterClass.ShadowBlade
-  },
-
-  // --- KỸ NĂNG RIÊNG: PHÁP SƯ LUYỆN KIM (AlchemistMage) ---
-  {
-    id: 'al_efficiency',
-    name: 'Tiết Kiệm Nguyên Liệu (Class)',
-    description: 'Giảm lượng nguyên liệu cần thiết (mô phỏng hoàn trả).',
-    branch: SkillBranch.Alchemy,
-    maxLevel: 5,
-    cost: 2, // Cheaper for Mage
-    effectValue: 8, // Stronger for Mage
-    reqClass: CharacterClass.AlchemistMage
-  },
-  {
-      id: 'mage_transmute',
-      name: 'Chuyển Hóa Vàng (Class)',
-      description: 'Tăng lượng vàng nhận được khi bán vật phẩm.',
-      branch: SkillBranch.Alchemy,
-      maxLevel: 5,
-      cost: 2,
-      effectValue: 5,
-      reqClass: CharacterClass.AlchemistMage
-  }
-];
-
-// Nâng cấp Vĩnh hằng (Giữ nguyên)
-export const ETERNAL_UPGRADES: EternalUpgrade[] = [
-    {
-        id: EternalUpgradeId.HuntersEye,
-        name: "Mắt Thợ Săn",
-        description: "Tăng tỷ lệ rơi nguyên liệu hiếm.",
-        maxLevel: 10,
-        baseCost: 50,
-        costMultiplier: 1.5,
-        effectValue: 1 
-    },
-    {
-        id: EternalUpgradeId.SolidFoundation,
-        name: "Nền Tảng Vững Chắc",
-        description: "Giữ lại một lượng Gỗ & Quặng sau khi Tái sinh.",
-        maxLevel: 5,
-        baseCost: 150,
-        costMultiplier: 2,
-        effectValue: 20 
-    },
-    {
-        id: EternalUpgradeId.LearnFromFailure,
-        name: "Học Hỏi Từ Thất Bại",
-        description: "Giảm tỷ lệ thất bại khi rèn đồ (đặc biệt là Overheat).",
-        maxLevel: 5,
-        baseCost: 250,
-        costMultiplier: 1.5,
-        effectValue: 2 
-    },
-    {
-        id: EternalUpgradeId.LatentPower,
-        name: "Sức Mạnh Tiềm Ẩn",
-        description: "Tăng vĩnh viễn mọi chỉ số (Máu, Công, Thủ) thêm %.",
-        maxLevel: 10,
-        baseCost: 500,
-        costMultiplier: 1.8,
-        effectValue: 5 
-    }
-];
-
-// Bản thiết kế (Mở rộng thêm Giấy Phép Thuật)
-export const INITIAL_BLUEPRINTS: Blueprint[] = [
-  // --- CONSUMABLES MỚI ---
-  {
-      id: 'bp_anti_rust',
-      name: 'Thuốc Giải Rỉ Sét',
-      resultType: 'MATERIAL',
-      resultMaterial: MaterialType.AntiRustPotion,
-      unlocked: true,
-      requiredMaterials: [{ type: MaterialType.Essence, amount: 2 }, { type: MaterialType.Gem, amount: 1 }],
-      baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }
-  },
-  {
-      id: 'bp_decoy',
-      name: 'Vật Phẩm Mồi (Dùng cho Boss)',
-      resultType: 'MATERIAL',
-      resultMaterial: MaterialType.DecoyItem,
-      unlocked: true,
-      requiredMaterials: [{ type: MaterialType.Ore, amount: 5 }, { type: MaterialType.Wood, amount: 5 }],
-      baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }
-  },
-  {
-    id: 'bp_enchant_scroll',
-    name: 'Giấy Phép Thuật',
-    resultType: 'MATERIAL',
-    resultMaterial: MaterialType.EnchantScroll,
-    unlocked: true,
-    requiredMaterials: [{ type: MaterialType.SoulDust, amount: 5 }, { type: MaterialType.Leather, amount: 2 }],
-    baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }
-  },
-  // --- WEAPONS & ARMORS ---
-  {
-    id: 'bp_sword_1',
-    name: 'Kiếm Sắt',
-    resultType: EquipmentType.Weapon,
-    element: ElementType.Physical,
-    unlocked: true,
-    requiredMaterials: [{ type: MaterialType.Ore, amount: 3 }, { type: MaterialType.Wood, amount: 1 }],
-    baseStats: { minAtk: 5, maxAtk: 10, minDef: 0, maxDef: 0 }
-  },
-  {
-    id: 'bp_sword_ice',
-    name: 'Băng Kiếm',
-    resultType: EquipmentType.Weapon,
-    element: ElementType.Ice,
-    unlocked: true,
-    requiredMaterials: [{ type: MaterialType.Ore, amount: 5 }, { type: MaterialType.Gem, amount: 2 }],
-    baseStats: { minAtk: 15, maxAtk: 25, minDef: 0, maxDef: 0 }
-  },
-  {
-    id: 'bp_armor_1',
-    name: 'Áo Giáp Da',
-    resultType: EquipmentType.Armor,
-    unlocked: true,
-    requiredMaterials: [{ type: MaterialType.Leather, amount: 5 }],
-    baseStats: { minAtk: 0, maxAtk: 0, minDef: 3, maxDef: 8 }
-  },
-  // Set Tinh Thần Lò Rèn
-  {
-    id: 'bp_set1_helm',
-    name: 'Mũ Tinh Thần',
-    resultType: EquipmentType.Helmet,
-    unlocked: true,
-    setId: SetId.ForgeSpirit,
-    requiredMaterials: [{ type: MaterialType.Ore, amount: 10 }, { type: MaterialType.Gem, amount: 1 }],
-    baseStats: { minAtk: 2, maxAtk: 5, minDef: 5, maxDef: 10 }
-  },
-  {
-    id: 'bp_set1_glove',
-    name: 'Găng Tay Tinh Thần',
-    resultType: EquipmentType.Gloves,
-    unlocked: true,
-    setId: SetId.ForgeSpirit,
-    requiredMaterials: [{ type: MaterialType.Leather, amount: 8 }, { type: MaterialType.Ore, amount: 5 }],
-    baseStats: { minAtk: 3, maxAtk: 6, minDef: 3, maxDef: 6 }
-  },
-  {
-    id: 'bp_set1_sword',
-    name: 'Kiếm Tinh Thần',
-    resultType: EquipmentType.Weapon,
-    unlocked: false, 
-    setId: SetId.ForgeSpirit,
-    requiredMaterials: [{ type: MaterialType.Ore, amount: 20 }, { type: MaterialType.Gem, amount: 3 }],
-    baseStats: { minAtk: 30, maxAtk: 50, minDef: 0, maxDef: 5 }
-  },
-  // Set Hỏa Long Sứ
-  {
-    id: 'bp_set3_amulet',
-    name: 'Vòng Cổ Hỏa Long',
-    resultType: EquipmentType.Accessory,
-    unlocked: false,
-    setId: SetId.DragonfireKeeper,
-    requiredMaterials: [{ type: MaterialType.FissionCrystal, amount: 1 }, { type: MaterialType.Essence, amount: 50 }],
-    baseStats: { minAtk: 100, maxAtk: 150, minDef: 50, maxDef: 80 }
-  },
-  // --- GUILD / LATE GAME BLUEPRINTS ---
-  {
-      id: 'bp_set_chrono_sword',
-      name: 'Vô Tận Kiếm',
-      resultType: EquipmentType.Weapon,
-      unlocked: false,
-      isGuildBlueprint: true,
-      guildFameCost: 1000,
-      setId: SetId.InfinityChrono,
-      element: ElementType.Lightning,
-      requiredMaterials: [{ type: MaterialType.CondensedTimesand, amount: 2 }, { type: MaterialType.FissionCrystal, amount: 5 }],
-      baseStats: { minAtk: 200, maxAtk: 300, minDef: 0, maxDef: 0 }
-  },
-  {
-      id: 'bp_set_chrono_armor',
-      name: 'Giáp Vô Tận',
-      resultType: EquipmentType.Armor,
-      unlocked: false,
-      isGuildBlueprint: true,
-      guildFameCost: 1000,
-      setId: SetId.InfinityChrono,
-      requiredMaterials: [{ type: MaterialType.CondensedTimesand, amount: 2 }, { type: MaterialType.FissionCrystal, amount: 5 }],
-      baseStats: { minAtk: 0, maxAtk: 0, minDef: 150, maxDef: 200 }
-  }
-];
+import { 
+  Rarity, 
+  Zone, 
+  Enemy, 
+  ElementType, 
+  MaterialType, 
+  Blueprint, 
+  EquipmentType, 
+  SetId, 
+  EternalUpgrade, 
+  EternalUpgradeId,
+  Skill,
+  SkillBranch,
+  GemType,
+  GemTier,
+  EnchantmentType,
+  CharacterClass,
+  EquipmentTalent,
+  MutationType,
+  MonsterAbility
+} from './types';
 
 export const RARITY_MULTIPLIER: Record<Rarity, number> = {
   [Rarity.Common]: 1,
   [Rarity.Rare]: 1.5,
   [Rarity.Epic]: 2.5,
   [Rarity.Legendary]: 5,
-  [Rarity.Mythic]: 10
+  [Rarity.Mythic]: 10,
+  [Rarity.Cosmic]: 25
 };
 
 export const RARITY_COLOR: Record<Rarity, string> = {
-  [Rarity.Common]: 'text-gray-400',
+  [Rarity.Common]: 'text-slate-400',
   [Rarity.Rare]: 'text-blue-400',
   [Rarity.Epic]: 'text-purple-400',
   [Rarity.Legendary]: 'text-yellow-400',
-  [Rarity.Mythic]: 'text-red-500'
+  [Rarity.Mythic]: 'text-red-500',
+  [Rarity.Cosmic]: 'text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]'
+};
+
+export const ZONES: Zone[] = [
+  { id: 'z1', name: 'Rừng Khởi Nguyên', description: 'Nơi tập luyện cho tân thủ thợ rèn.', recommendedLevel: 1, materials: [MaterialType.IronScraps, MaterialType.Wood, MaterialType.Leather] },
+  { id: 'z2', name: 'Hang Động Quặng Thô', description: 'Vách đá chứa đầy tài nguyên cơ bản.', recommendedLevel: 10, materials: [MaterialType.Ore, MaterialType.StoneSharpener] },
+  { id: 'z3', name: 'Núi Tuyết Vĩnh Cửu', description: 'Khí hậu khắc nghiệt, quái vật bắt đầu mạnh lên.', recommendedLevel: 25, materials: [MaterialType.Ice, MaterialType.Essence] },
+  { id: 'z4', name: 'Thành Cổ Hoang Tàn', description: 'Tàn tích của đế chế thợ rèn xưa.', recommendedLevel: 45, materials: [MaterialType.SoulDust, MaterialType.StoneSharpener] },
+  { id: 'z5', name: 'Cung Điện Ẩn Giấu', description: 'Khu vực bí mật chỉ dành cho kẻ đã tái sinh.', recommendedLevel: 60, materials: [MaterialType.Gem, MaterialType.MemoryShard] },
+  { id: 'z6', name: 'Vùng Đất Song Song', description: 'Mọi quy luật vật lý bị đảo lộn (Thế giới gương).', recommendedLevel: 80, materials: [MaterialType.CondensedTimesand, MaterialType.FissionCrystal] },
+  { id: 'z7', name: 'Vực Thẳm Vô Định', description: 'Nơi trú ngụ của những thực thể không thể gọi tên.', recommendedLevel: 100, materials: [MaterialType.MemoryShard, MaterialType.CondensedTimesand] }
+];
+
+export const ENEMIES_DB: Record<string, Enemy[]> = {
+  z1: [
+    { id: 'e1_1', name: 'Slime Xanh', level: 1, hp: 60, maxHp: 60, attack: 12, defense: 2, element: ElementType.Physical, expReward: 20, goldReward: 10, dropTable: [{ materialType: MaterialType.IronScraps, chance: 0.8, minQty: 1, maxQty: 2 }] },
+    { id: 'e1_2', name: 'Nấm Độc', level: 3, hp: 100, maxHp: 100, attack: 18, defense: 4, element: ElementType.Acid, expReward: 35, goldReward: 15, dropTable: [{ materialType: MaterialType.Leather, chance: 0.5, minQty: 1, maxQty: 1 }] },
+    { id: 'e1_3', name: 'Sâu Rừng', level: 5, hp: 160, maxHp: 160, attack: 25, defense: 6, element: ElementType.Physical, expReward: 50, goldReward: 20, dropTable: [{ materialType: MaterialType.Wood, chance: 0.7, minQty: 1, maxQty: 3 }] }
+  ],
+  z2: [
+    { id: 'e2_1', name: 'Dơi Hang', level: 12, hp: 400, maxHp: 400, attack: 45, defense: 20, element: ElementType.Physical, expReward: 120, goldReward: 50, dropTable: [{ materialType: MaterialType.Ore, chance: 0.6, minQty: 2, maxQty: 4 }] },
+    { id: 'e2_2', name: 'Nhện Đá', level: 15, hp: 600, maxHp: 600, attack: 55, defense: 35, element: ElementType.Physical, expReward: 180, goldReward: 80, dropTable: [{ materialType: MaterialType.StoneSharpener, chance: 0.4, minQty: 1, maxQty: 1 }] },
+    { id: 'e2_3', name: 'Golem Đất', level: 20, hp: 1200, maxHp: 1200, attack: 80, defense: 60, element: ElementType.Physical, isBoss: true, expReward: 500, goldReward: 250, dropTable: [{ materialType: MaterialType.Ore, chance: 1, minQty: 5, maxQty: 10 }] }
+  ],
+  z5: [
+    { id: 'e5_1', name: 'Hộ Vệ Hoàng Gia', level: 60, hp: 8000, maxHp: 8000, attack: 450, defense: 300, element: ElementType.Lightning, abilities: [MonsterAbility.ArmorBreak], expReward: 2000, goldReward: 1000, dropTable: [{ materialType: MaterialType.Gem, chance: 0.3, minQty: 1, maxQty: 1 }] },
+    { id: 'e5_2', name: 'Pháp Sư Cấm Thuật', level: 65, hp: 6500, maxHp: 6500, attack: 600, defense: 150, element: ElementType.Fire, abilities: [MonsterAbility.Reflect], expReward: 2500, goldReward: 1200, dropTable: [{ materialType: MaterialType.MemoryShard, chance: 0.2, minQty: 1, maxQty: 2 }] }
+  ],
+  z7: [
+    { id: 'e7_1', name: 'Thực Thể Vô Định', level: 100, hp: 50000, maxHp: 50000, attack: 2500, defense: 1500, element: ElementType.Physical, mutation: MutationType.Void, abilities: [MonsterAbility.Invisibility, MonsterAbility.Reflect], expReward: 10000, goldReward: 5000, dropTable: [{ materialType: MaterialType.CondensedTimesand, chance: 0.5, minQty: 2, maxQty: 5 }] }
+  ]
+};
+
+export const INITIAL_BLUEPRINTS: Blueprint[] = [
+  { id: 'bp1', name: 'Đoản Kiếm Rèn Vội', resultType: EquipmentType.Weapon, requiredMaterials: [{ type: MaterialType.IronScraps, amount: 5 }], baseStats: { minAtk: 12, maxAtk: 20, minDef: 0, maxDef: 0 }, unlocked: true },
+  { id: 'bp2', name: 'Áo Vải Bền Chắc', resultType: EquipmentType.Armor, requiredMaterials: [{ type: MaterialType.Leather, amount: 8 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 15, maxDef: 25 }, unlocked: true },
+  { id: 'bp_void', name: 'Kiếm Hư Không', resultType: EquipmentType.Weapon, requiredMaterials: [{ type: MaterialType.CondensedTimesand, amount: 20 }, { type: MaterialType.FissionCrystal, amount: 5 }], baseStats: { minAtk: 1500, maxAtk: 2500, minDef: 0, maxDef: 0 }, unlocked: false }
+];
+
+export const SETS: Record<SetId, { name: string; description: string }> = {
+  [SetId.PrimalHunter]: { name: 'Thợ Săn Nguyên Thủy', description: 'Tăng mạnh khả năng sinh tồn trong rừng sâu.' },
+  [SetId.InfinityChrono]: { name: 'Vòng Lặp Vĩnh Hằng', description: 'Kiểm soát thời gian rèn đúc.' }
+};
+
+export const CLASS_INFO: Record<string, { name: string; desc: string; bonuses: string }> = {
+  [CharacterClass.None]: { name: 'Vô Danh', desc: 'Chưa thức tỉnh sức mạnh.', bonuses: '' },
+  [CharacterClass.HeavySentinel]: { name: 'Hộ Vệ Thủ Lĩnh', desc: 'Lấy thủ làm công, vững chãi như bàn thạch.', bonuses: '+10% Phòng thủ, +20% Máu tối đa' },
+  [CharacterClass.ShadowBlade]: { name: 'Bóng Ma Hắc Ám', desc: 'Nhát chém chí mạng từ hư không.', bonuses: '+15% Sát thương, +10% Tỷ lệ chí mạng' },
+  [CharacterClass.AlchemistMage]: { name: 'Giả Kim Pháp Sư', desc: 'Tri thức là sức mạnh tuyệt đối.', bonuses: '+20% Hiệu quả chế tác, +10% May mắn' }
+};
+
+export const EQUIPMENT_TALENTS: EquipmentTalent[] = [
+  { name: 'Sức Mạnh Thần Thánh', desc: 'Gây thêm 20% sát thương lên Boss khu vực.' },
+  { name: 'Hào Quang Hồi Phục', desc: 'Hồi 1% máu mỗi khi tung đòn đánh.' },
+  { name: 'Khát Máu', desc: 'Chuyển hóa 10% sát thương gây ra thành sinh lực.' },
+  { name: 'Giáp Gai', desc: 'Phản lại 15% sát thương cận chiến nhận vào.' }
+];
+
+export const SKILLS: Skill[] = [
+  // Kỹ năng chung
+  { id: 'gen_luck', name: 'Vận May Thợ Rèn', branch: SkillBranch.WeaponSmith, description: 'Tăng nhẹ tỉ lệ rèn được trang bị cấp cao.', maxLevel: 10, cost: 1, effectValue: 1 },
+  
+  // Hộ Vệ Thủ Lĩnh
+  { id: 'hs_armor', name: 'Bản Lĩnh Thép', branch: SkillBranch.ArmorSmith, description: 'Cường hóa độ bền của Giáp Trụ, tăng 5% thủ cơ bản.', maxLevel: 10, cost: 2, effectValue: 5, reqClass: CharacterClass.HeavySentinel },
+  { id: 'hs_reflect', name: 'Khiên Phản Kích', branch: SkillBranch.ArmorSmith, description: 'Có tỉ lệ phản lại sát thương khi rèn được đồ Thần Thoại.', maxLevel: 5, cost: 3, effectValue: 4, reqClass: CharacterClass.HeavySentinel },
+  { id: 'hs_wall', name: 'Bức Tường Bất Tận', branch: SkillBranch.ArmorSmith, description: 'Tăng vĩnh viễn 2% Máu tối đa mỗi cấp.', maxLevel: 10, cost: 2, effectValue: 2, reqClass: CharacterClass.HeavySentinel },
+  
+  // Bóng Ma Hắc Ám
+  { id: 'sb_crit', name: 'Nhát Chém Hư Vô', branch: SkillBranch.WeaponSmith, description: 'Vũ khí rèn ra mang theo sát thương chí mạng cực cao.', maxLevel: 10, cost: 2, effectValue: 3, reqClass: CharacterClass.ShadowBlade },
+  { id: 'sb_dodge', name: 'Bộ Pháp Ảnh Diệt', branch: SkillBranch.WeaponSmith, description: 'Tăng khả năng né tránh cơ bản thêm 2%.', maxLevel: 10, cost: 2, effectValue: 2, reqClass: CharacterClass.ShadowBlade },
+  { id: 'sb_execute', name: 'Nhát Chém Khai Tử', branch: SkillBranch.WeaponSmith, description: 'Tăng 5% sát thương lên kẻ địch có máu dưới 30%.', maxLevel: 10, cost: 3, effectValue: 5, reqClass: CharacterClass.ShadowBlade },
+  
+  // Giả Kim Pháp Sư
+  { id: 'am_essence', name: 'Dòng Chảy Tinh Hoa', branch: SkillBranch.Enchanting, description: 'Ngọc khảm vào trang bị tăng thêm 10% hiệu quả.', maxLevel: 10, cost: 2, effectValue: 10, reqClass: CharacterClass.AlchemistMage },
+  { id: 'am_myth', name: 'Tri Thức Cấm Kỵ', branch: SkillBranch.Alchemy, description: 'Phá bỏ giới hạn, tăng tỉ lệ rèn đồ cấp Vũ Trụ.', maxLevel: 5, cost: 4, effectValue: 0.5, reqClass: CharacterClass.AlchemistMage },
+  { id: 'am_transmute', name: 'Chuyển Hóa Vật Chất', branch: SkillBranch.Alchemy, description: 'Tăng 5% lượng vàng nhận được từ quái vật.', maxLevel: 10, cost: 2, effectValue: 5, reqClass: CharacterClass.AlchemistMage }
+];
+
+export const ETERNAL_UPGRADES: EternalUpgrade[] = [
+  { id: EternalUpgradeId.LatentPower, name: 'Sức Mạnh Tiềm Ẩn', description: 'Khai mở tiềm năng vĩnh hằng của linh hồn.', baseCost: 100, costMultiplier: 2, maxLevel: 50, effectValue: 0.1 }
+];
+
+export const GEM_STATS: Record<GemType, Record<GemTier, number>> = {
+  [GemType.Ruby]: { [GemTier.T1]: 10, [GemTier.T2]: 25, [GemTier.T3]: 60 },
+  [GemType.Sapphire]: { [GemTier.T1]: 5, [GemTier.T2]: 15, [GemTier.T3]: 40 },
+  [GemType.Topaz]: { [GemTier.T1]: 50, [GemTier.T2]: 150, [GemTier.T3]: 400 },
+};
+
+export const ENCHANT_STATS: Record<string, { desc: string }> = {
+  [EnchantmentType.Sharpness]: { desc: 'Tăng 15% Sát thương vật lý của trang bị.' },
+  [EnchantmentType.Protection]: { desc: 'Tăng 15% Chỉ số phòng ngự của trang bị.' },
 };

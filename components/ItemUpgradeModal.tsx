@@ -26,13 +26,14 @@ export const ItemUpgradeModal: React.FC<ItemUpgradeModalProps> = ({
       return player.gemInventory[key] || 0;
   };
 
-  const gemIcons = {
+  // Explicitly type record keys to fix index errors
+  const gemIcons: Record<GemType, React.ElementType> = {
       [GemType.Ruby]: Sword,
       [GemType.Sapphire]: Shield,
       [GemType.Topaz]: Heart
   };
 
-  const gemColors = {
+  const gemColors: Record<GemType, string> = {
       [GemType.Ruby]: 'text-red-500',
       [GemType.Sapphire]: 'text-blue-500',
       [GemType.Topaz]: 'text-yellow-500'
@@ -115,11 +116,11 @@ export const ItemUpgradeModal: React.FC<ItemUpgradeModalProps> = ({
                     <div>
                         <h3 className="font-bold text-slate-300 mb-3 border-b border-slate-700 pb-1">Ngọc Trong Kho</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                             {Object.values(GemType).map(type => (
-                                 Object.values(GemTier).filter(t => typeof t === 'number').map(tier => {
-                                     const count = getGemCount(type, tier as GemTier);
+                             {(Object.values(GemType) as GemType[]).map(type => (
+                                 (Object.values(GemTier).filter(t => typeof t === 'number') as GemTier[]).map(tier => {
+                                     const count = getGemCount(type, tier);
                                      if (count <= 0) return null;
-                                     const statVal = GEM_STATS[type][tier as GemTier];
+                                     const statVal = GEM_STATS[type][tier];
                                      const Icon = gemIcons[type];
 
                                      return (
@@ -156,7 +157,7 @@ export const ItemUpgradeModal: React.FC<ItemUpgradeModalProps> = ({
                 <div className="space-y-6">
                     <div className="bg-purple-900/20 p-6 rounded-xl border border-purple-500/30 text-center">
                         <div className="text-slate-400 text-sm uppercase mb-2">Phù Phép Hiện Tại</div>
-                        {item.enchantment ? (
+                        {item.enchantment && item.enchantment !== EnchantmentType.None ? (
                              <div>
                                  <div className="text-2xl font-bold text-purple-400 mb-1">{item.enchantment}</div>
                                  <div className="text-purple-300/70 text-sm">{ENCHANT_STATS[item.enchantment]?.desc}</div>
@@ -169,7 +170,7 @@ export const ItemUpgradeModal: React.FC<ItemUpgradeModalProps> = ({
                     <div>
                         <h3 className="font-bold text-slate-300 mb-3 border-b border-slate-700 pb-1">Chọn Phù Phép Mới</h3>
                         <div className="space-y-2">
-                            {Object.values(EnchantmentType).filter(e => e !== EnchantmentType.None).map(ench => (
+                            {(Object.values(EnchantmentType) as EnchantmentType[]).filter(e => e !== EnchantmentType.None).map(ench => (
                                 <button 
                                     key={ench}
                                     onClick={() => onEnchant(ench)}

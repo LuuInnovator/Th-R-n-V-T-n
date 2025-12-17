@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Blueprint, Rarity } from '../../types';
-import { Info, Flame, Shield, Sword, AlertTriangle } from 'lucide-react';
+import { Sword, Shield, Sparkles } from 'lucide-react';
 import { RARITY_MULTIPLIER, RARITY_COLOR } from '../../constants';
 
 interface CraftingStatsProps {
@@ -11,132 +11,71 @@ interface CraftingStatsProps {
 }
 
 export const CraftingStats: React.FC<CraftingStatsProps> = ({ blueprint, useOverheat, onToggleOverheat }) => {
-  const overheatMult = useOverheat ? 2.5 : 1.0;
-
   const calculateStat = (min: number, max: number, rarity: Rarity) => {
-      const mult = RARITY_MULTIPLIER[rarity] * overheatMult;
-      return {
-          min: Math.floor(min * mult),
-          max: Math.floor(max * mult)
-      };
+      const mult = RARITY_MULTIPLIER[rarity] * (useOverheat ? 2.5 : 1.0);
+      return { min: Math.floor(min * mult), max: Math.floor(max * mult) };
   };
 
-  const hasAtk = blueprint.baseStats.maxAtk > 0;
-  const hasDef = blueprint.baseStats.maxDef > 0;
-
-  // Hàm xác định tỷ lệ % dựa trên chế độ
-  const getProbability = (rarity: Rarity, isOverheat: boolean) => {
-      if (isOverheat) {
-          switch (rarity) {
-              case Rarity.Common: return 0;
-              case Rarity.Rare: return 0;
-              case Rarity.Epic: return 10;
-              case Rarity.Legendary: return 10;
-              case Rarity.Mythic: return 5;
-              default: return 0;
-          }
-      } else {
-          switch (rarity) {
-              case Rarity.Common: return 60;
-              case Rarity.Rare: return 25;
-              case Rarity.Epic: return 10;
-              case Rarity.Legendary: return 4;
-              case Rarity.Mythic: return 1;
-              default: return 0;
-          }
-      }
+  const getProb = (rarity: Rarity, isOverheat: boolean) => {
+    if (isOverheat) {
+        if (rarity === Rarity.Cosmic) return 2;
+        if (rarity === Rarity.Mythic) return 8;
+        if (rarity === Rarity.Legendary) return 15;
+        if (rarity === Rarity.Epic) return 75;
+        return 0;
+    }
+    const probs = { [Rarity.Common]: 60, [Rarity.Rare]: 25, [Rarity.Epic]: 10, [Rarity.Legendary]: 4, [Rarity.Mythic]: 0.9, [Rarity.Cosmic]: 0.1 };
+    return probs[rarity];
   };
 
   return (
-    <div className="flex flex-col gap-3 h-full overflow-hidden">
-       {/* Nút Tăng Nhiệt */}
+    <div className="flex flex-col gap-2">
       <button 
         onClick={onToggleOverheat}
-        className={`
-          w-full p-3 rounded-xl border transition-all duration-300 relative overflow-hidden group select-none active:scale-95 text-left shrink-0
-          ${useOverheat 
-            ? 'bg-red-900/20 border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.3)]' 
-            : 'bg-slate-800 border-slate-600 hover:border-slate-500'}
-        `}
+        className={`p-2 rounded-lg border transition-all duration-200 flex items-center justify-between
+            ${useOverheat ? 'bg-red-600/10 border-red-500/50 shadow-md' : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'}`}
       >
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-full ${useOverheat ? 'bg-red-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
-              <Flame size={20} className={useOverheat ? 'animate-pulse' : ''} />
+        <div className="flex items-center gap-2">
+            <div className={`p-1 rounded ${useOverheat ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-800 text-slate-500'}`}>
+                <Sparkles size={12} />
             </div>
-            <div>
-              <div className={`font-bold text-sm ${useOverheat ? 'text-red-400' : 'text-slate-300'}`}>Tăng Nhiệt Lò Rèn</div>
-              <div className="text-[10px] text-slate-500">
-                  {useOverheat ? 'Chỉ số x2.5 • Nguy hiểm cao' : 'Chế tạo an toàn'}
-              </div>
+            <div className="text-left">
+                <span className={`font-black text-[9px] uppercase tracking-tighter block ${useOverheat ? 'text-red-400' : 'text-slate-400'}`}>Đốt Nhiệt</span>
             </div>
-          </div>
-          <div className={`w-5 h-5 rounded border flex items-center justify-center ${useOverheat ? 'bg-red-500 border-red-400' : 'border-slate-500'}`}>
-            {useOverheat && <div className="w-2 h-2 bg-white rounded-full" />}
-          </div>
         </div>
+        <div className={`font-mono text-[9px] font-black px-1.5 py-0.5 rounded ${useOverheat ? 'bg-red-500 text-white' : 'bg-slate-800 text-slate-500'}`}>Cường Hóa x2.5</div>
       </button>
 
-      {/* Danh sách Chỉ số & Tỷ lệ (Gộp chung) */}
-      <div className="bg-slate-900/50 rounded-xl border border-slate-700 flex-1 overflow-y-auto scrollbar-thin p-2">
-        <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest mb-2 px-2 flex items-center gap-2 sticky top-0 bg-slate-900/95 py-2 z-10 border-b border-slate-800">
-            <Info size={14} /> Tỷ Lệ & Chỉ Số {useOverheat && <span className="text-red-400 ml-auto text-[10px] border border-red-500/30 px-1 rounded bg-red-900/20">x2.5 STATS</span>}
-        </h4>
-        
-        <div className="space-y-2 pb-2">
-            {/* Cảnh báo nổ lò khi Overheat */}
-            {useOverheat && (
-                <div className="flex items-center justify-between text-xs p-3 rounded bg-red-900/20 border border-red-500/50 mb-4 animate-pulse">
-                    <div className="flex items-center gap-2 text-red-400 font-bold">
-                        <AlertTriangle size={16} />
-                        <span>NỔ LÒ (Mất đồ)</span>
-                    </div>
-                    <span className="font-black text-red-500 text-sm">75%</span>
-                </div>
-            )}
+      <div className="bg-slate-900/40 rounded-lg border border-slate-800 divide-y divide-slate-800/30">
+        {(Object.values(Rarity) as Rarity[]).reverse().map(rarity => {
+            const prob = getProb(rarity, useOverheat);
+            if (prob === 0) return null;
+            const stats = calculateStat(blueprint.baseStats.minAtk, blueprint.baseStats.maxAtk, rarity);
+            const defs = calculateStat(blueprint.baseStats.minDef, blueprint.baseStats.maxDef, rarity);
 
-            {Object.values(Rarity).map(rarity => {
-                const atk = calculateStat(blueprint.baseStats.minAtk, blueprint.baseStats.maxAtk, rarity);
-                const def = calculateStat(blueprint.baseStats.minDef, blueprint.baseStats.maxDef, rarity);
-                const chance = getProbability(rarity, useOverheat);
-                const isZeroChance = chance === 0;
-
-                return (
-                    <div 
-                        key={rarity} 
-                        className={`
-                            flex flex-col gap-1 text-xs p-2 rounded border transition-colors
-                            ${isZeroChance ? 'bg-slate-900/20 border-slate-800 opacity-40 order-last' : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800/80'}
-                            ${rarity === Rarity.Mythic && !isZeroChance ? 'border-red-900/30 bg-red-900/5' : ''}
-                        `}
-                    >
-                        {/* Tên độ hiếm + Tỷ lệ % */}
-                        <div className="flex justify-between items-center">
-                            <span className={`font-bold ${RARITY_COLOR[rarity]}`}>{rarity}</span>
-                            <span className={`font-mono font-bold ${isZeroChance ? 'text-slate-600' : 'text-slate-200'} ${rarity === Rarity.Mythic && !isZeroChance ? 'text-red-400 text-sm' : ''}`}>
-                                {chance}%
-                            </span>
+            return (
+                <div key={rarity} className="p-2 flex items-center justify-between group hover:bg-slate-800/20 transition-colors">
+                    <div className="flex flex-col">
+                        <span className={`font-black text-[9px] uppercase tracking-wider ${RARITY_COLOR[rarity]}`}>{rarity}</span>
+                        <div className="flex gap-2 mt-0.5 opacity-60">
+                            {blueprint.baseStats.maxAtk > 0 && (
+                                <div className="flex items-center gap-1">
+                                    <Sword size={8} className="text-red-500" />
+                                    <span className="text-[8px] text-slate-400 font-mono font-bold">{stats.min}-{stats.max}</span>
+                                </div>
+                            )}
+                            {blueprint.baseStats.maxDef > 0 && (
+                                <div className="flex items-center gap-1">
+                                    <Shield size={8} className="text-blue-500" />
+                                    <span className="text-[8px] text-slate-400 font-mono font-bold">{defs.min}-{defs.max}</span>
+                                </div>
+                            )}
                         </div>
-
-                        {/* Chỉ số dự đoán (Chỉ hiện nếu có tỷ lệ) */}
-                        {!isZeroChance && (hasAtk || hasDef) && (
-                            <div className="flex gap-2 font-mono text-slate-300 justify-end mt-1 border-t border-slate-700/30 pt-1">
-                                {hasAtk && (
-                                     <span className="flex items-center gap-1 text-[10px] text-red-300">
-                                        <Sword size={10} /> {atk.min}-{atk.max}
-                                     </span>
-                                )}
-                                {hasDef && (
-                                     <span className="flex items-center gap-1 text-[10px] text-blue-300">
-                                        <Shield size={10} /> {def.min}-{def.max}
-                                     </span>
-                                )}
-                            </div>
-                        )}
                     </div>
-                );
-            })}
-        </div>
+                    <div className="text-[9px] font-mono font-black text-slate-600">{prob}%</div>
+                </div>
+            );
+        })}
       </div>
     </div>
   );

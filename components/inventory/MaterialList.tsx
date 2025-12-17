@@ -1,12 +1,13 @@
 
 import React from 'react';
-import { Material, Rarity } from '../../types';
-import { RARITY_COLOR } from '../../constants';
-import { Gem, Box, ArrowUpCircle } from 'lucide-react';
+import { Material } from '../../types';
+import { Box, Package, ArrowUp } from 'lucide-react';
 import { Card } from '../Card';
+import { Button } from '../Button';
 
 interface MaterialListProps {
   materials: Material[];
+  // Thêm prop onUpgrade để xử lý nâng cấp nguyên liệu
   onUpgrade?: (id: string) => void;
 }
 
@@ -14,50 +15,43 @@ export const MaterialList: React.FC<MaterialListProps> = ({ materials, onUpgrade
   return (
     <Card className="h-full">
       <div className="flex items-center gap-2 mb-4 border-b border-slate-700 pb-2">
-        <Box className="text-green-500" size={20} />
+        <Package className="text-green-500" size={20} />
         <h3 className="font-bold text-lg text-slate-200">Kho Nguyên Liệu</h3>
       </div>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 overflow-y-auto pr-2 max-h-[calc(100vh-300px)] scrollbar-thin">
         {materials.length === 0 && (
-          <div className="col-span-full text-center text-slate-500 py-8 italic">
-            Kho nguyên liệu trống rỗng
+          <div className="col-span-full text-center text-slate-500 py-8 italic text-sm">
+            Túi nguyên liệu trống rỗng. Hãy đi săn quái vật!
           </div>
         )}
-        {materials.map((mat) => {
-            const canUpgrade = mat.quantity >= 5 && mat.rarity !== Rarity.Mythic;
-            
-            return (
-              <div 
-                key={mat.id} 
-                className="bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex flex-col items-center text-center hover:border-slate-500 transition-colors relative group"
+        {materials.map((mat) => (
+          <div 
+            key={mat.id} 
+            className="bg-slate-900/50 p-4 rounded-xl border border-slate-700 flex flex-col items-center text-center hover:border-blue-500/50 transition-all group"
+          >
+            <div className="p-3 rounded-full bg-slate-800 mb-3 group-hover:scale-110 transition-transform">
+              <Box size={24} className="text-blue-400" />
+            </div>
+            <div className="text-sm font-bold text-slate-200 mb-1">
+              {mat.name}
+            </div>
+            <div className="mt-2 bg-slate-950 px-4 py-1.5 rounded-full text-xs font-mono font-bold text-blue-400 border border-blue-900/30">
+              x{mat.quantity}
+            </div>
+            {/* Hiển thị nút nâng cấp nếu có hàm xử lý */}
+            {onUpgrade && (
+              <Button 
+                size="xs" 
+                variant="outline" 
+                className="mt-3 w-full"
+                onClick={() => onUpgrade(mat.id)}
               >
-                <div className={`p-3 rounded-full bg-slate-800 mb-2 shadow-inner`}>
-                  <Gem size={20} className={RARITY_COLOR[mat.rarity]} />
-                </div>
-                <div className={`text-xs font-bold mb-1 ${RARITY_COLOR[mat.rarity]}`}>
-                  {mat.name}
-                </div>
-                <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-2">
-                  {mat.type}
-                </div>
-                <div className="mt-auto flex items-center justify-between w-full gap-2">
-                    <div className="bg-slate-800 px-3 py-1 rounded-full text-xs text-white font-mono flex-1">
-                      x{mat.quantity}
-                    </div>
-                    {onUpgrade && canUpgrade && (
-                        <button 
-                            onClick={() => onUpgrade(mat.id)}
-                            className="bg-purple-600 hover:bg-purple-500 text-white p-1 rounded-full shadow-lg animate-pulse hover:animate-none"
-                            title="Ghép 5 nguyên liệu thành 1 cao cấp hơn"
-                        >
-                            <ArrowUpCircle size={14} />
-                        </button>
-                    )}
-                </div>
-              </div>
-            );
-        })}
+                <ArrowUp size={12} /> Nâng Cấp
+              </Button>
+            )}
+          </div>
+        ))}
       </div>
     </Card>
   );

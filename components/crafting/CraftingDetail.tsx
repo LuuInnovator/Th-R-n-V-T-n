@@ -1,9 +1,8 @@
 
 import React, { useState } from 'react';
-import { Blueprint, Material, MaterialType } from '../../types';
+import { Blueprint, Material } from '../../types';
 import { Button } from '../Button';
-import { Hammer, ArrowLeft } from 'lucide-react';
-import { Card } from '../Card';
+import { Hammer, AlertCircle, Sparkles, X } from 'lucide-react';
 import { CraftingStats } from './CraftingStats';
 import { CraftingMaterials } from './CraftingMaterials';
 
@@ -17,7 +16,6 @@ interface CraftingDetailProps {
 export const CraftingDetail: React.FC<CraftingDetailProps> = ({ blueprint, materials, onCraft, onClose }) => {
   const [useOverheat, setUseOverheat] = useState(false);
 
-  // Logic kiểm tra đủ nguyên liệu (vẫn giữ ở đây để disable nút bấm)
   const checkRequirements = (bp: Blueprint) => {
     return bp.requiredMaterials.every(req => {
       const totalQty = materials.filter(m => m.type === req.type).reduce((acc, curr) => acc + curr.quantity, 0);
@@ -27,77 +25,83 @@ export const CraftingDetail: React.FC<CraftingDetailProps> = ({ blueprint, mater
 
   if (!blueprint) {
     return (
-      <Card className="h-full flex flex-col items-center justify-center text-center p-12 bg-transparent md:bg-slate-900/40 border-none shadow-none md:border md:shadow-xl">
-        <div className="hidden md:block">
-            <div className="p-6 bg-slate-800 rounded-full mb-6 animate-pulse-slow inline-block">
-                <Hammer size={48} className="text-slate-600" />
-            </div>
+      <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-slate-950/20">
+        <div className="p-8 bg-slate-900/40 rounded-full mb-6 border border-slate-800 shadow-inner">
+            <Hammer size={48} className="text-slate-700" />
         </div>
-        <h3 className="text-xl font-bold text-slate-300 mb-2">Xưởng Rèn</h3>
-        <p className="text-slate-500 text-sm">Chọn bản thiết kế để xem thông số chi tiết.</p>
-      </Card>
+        <h3 className="text-xl font-black text-slate-500 uppercase tracking-tighter">Sẵn sàng đúc rèn</h3>
+        <p className="text-slate-600 text-[10px] mt-2 italic uppercase tracking-widest">Chọn bản vẽ từ danh sách</p>
+      </div>
     );
   }
 
   const canCraft = checkRequirements(blueprint);
 
   return (
-    <Card className="h-full flex flex-col relative overflow-hidden border-none shadow-none md:border md:shadow-xl bg-slate-950 md:bg-slate-900/40">
-        {/* Header - Mobile Only Back Button */}
-        <div className="md:hidden flex items-center gap-3 mb-4 pb-3 border-b border-slate-800 bg-slate-950 sticky top-0 z-20 pt-2 px-2">
-            <button onClick={onClose} className="p-2 bg-slate-800 rounded-lg text-slate-300 hover:bg-slate-700 active:scale-95 transition-transform">
-                <ArrowLeft size={20} />
-            </button>
-            <span className="font-bold text-slate-200 text-lg truncate flex-1">{blueprint.name}</span>
-        </div>
+    <div className="h-full flex flex-col bg-slate-950 relative overflow-hidden">
+        <button onClick={onClose} className="md:hidden absolute top-4 right-4 z-50 p-2 bg-slate-800 rounded-full text-slate-400">
+            <X size={20} />
+        </button>
 
-        {/* Background Effect */}
-        <div className={`absolute top-0 right-0 p-40 blur-3xl rounded-full pointer-events-none transition-colors duration-500 opacity-30 ${useOverheat ? 'bg-red-500' : 'bg-blue-500'}`}></div>
+        <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-6 md:px-8 pb-32">
+            <div className="max-w-3xl mx-auto">
+                <div className="text-center mb-6">
+                    <div className="inline-flex items-center gap-2 px-2 py-0.5 bg-slate-900 border border-slate-800 rounded-md mb-2">
+                        <Sparkles size={10} className="text-amber-500" />
+                        <span className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em]">Lò Rèn Thần Binh</span>
+                    </div>
+                    <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tighter mb-3 drop-shadow-md">
+                        {blueprint.name}
+                    </h2>
+                    <div className={`px-4 py-1.5 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all
+                        ${useOverheat ? 'bg-red-500/10 border-red-500/30 text-red-500' : 'bg-slate-900 border-slate-800 text-slate-500'}`}>
+                        {useOverheat ? '🔥 CHẾ ĐỘ ĐỐT NHIỆT 🔥' : '🔨 CHẾ ĐỘ TIÊU CHUẨN 🔨'}
+                    </div>
+                </div>
 
-        <div className="relative z-10 flex-1 flex flex-col overflow-y-auto scrollbar-thin px-2 md:px-0 pb-24 md:pb-0">
-            {/* Title Section (Desktop) */}
-            <div className="hidden md:block text-center mb-6">
-                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-yellow-500 mb-1">
-                    {blueprint.name}
-                </h2>
-                <div className="text-xs text-slate-500 uppercase tracking-widest font-bold">Bản Thiết Kế Cấp {useOverheat ? 'Quá Tải' : 'Tiêu Chuẩn'}</div>
-            </div>
-
-            {/* Main Content Grid */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-6">
-                {/* Cột 1: Thông số & Điều khiển */}
-                <CraftingStats 
-                    blueprint={blueprint} 
-                    useOverheat={useOverheat} 
-                    onToggleOverheat={() => setUseOverheat(!useOverheat)} 
-                />
-
-                {/* Cột 2: Nguyên liệu */}
-                <CraftingMaterials 
-                    blueprint={blueprint} 
-                    materials={materials} 
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                    <div className="space-y-4">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1 flex items-center gap-2">
+                             Dự Đoán Kết Quả
+                        </div>
+                        <CraftingStats blueprint={blueprint} useOverheat={useOverheat} onToggleOverheat={() => setUseOverheat(!useOverheat)} />
+                    </div>
+                    <div className="space-y-4">
+                        <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1 flex items-center gap-2">
+                             Nguyên Liệu Cần Có
+                        </div>
+                        <CraftingMaterials blueprint={blueprint} materials={materials} />
+                    </div>
+                </div>
             </div>
         </div>
         
-        {/* Footer Action Button */}
-        <div className="mt-auto pt-4 md:pt-4 pb-safe-area-bottom sticky bottom-0 bg-slate-950/90 md:bg-transparent p-4 md:p-0 z-20 border-t border-slate-800 md:border-none backdrop-blur-md">
-            <Button
-                size="xl"
-                fullWidth
-                disabled={!canCraft}
-                onClick={() => onCraft(blueprint, useOverheat)}
-                className={`
-                    shadow-2xl transition-all duration-300
-                    ${canCraft ? 'animate-pulse-slow hover:scale-[1.02]' : 'opacity-50 grayscale'}
-                    ${useOverheat ? 'bg-gradient-to-r from-red-600 to-orange-600 shadow-red-900/50 border border-red-500/50' : ''}
-                `}
-            >
-                {canCraft 
-                    ? (useOverheat ? 'RÈN CỰC HẠN (NGUY HIỂM!)' : 'CHẾ TẠO NGAY') 
-                    : 'THIẾU NGUYÊN LIỆU'}
-            </Button>
+        <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent z-40 border-t border-slate-800/10 backdrop-blur-md">
+            <div className="max-w-xl mx-auto flex flex-col items-center gap-3">
+                {!canCraft && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-950/30 border border-red-900/30 text-red-500 animate-pulse">
+                        <AlertCircle size={12} />
+                        <span className="text-[8px] font-black uppercase tracking-widest">Kho không đủ tài nguyên!</span>
+                    </div>
+                )}
+                
+                <Button
+                    size="lg"
+                    fullWidth
+                    disabled={!canCraft}
+                    onClick={() => onCraft(blueprint, useOverheat)}
+                    className={`
+                        py-4 rounded-xl text-sm font-black tracking-widest transition-all duration-300 border
+                        ${canCraft ? 'hover:scale-[1.01] active:scale-95' : 'opacity-30 grayscale'}
+                        ${useOverheat 
+                            ? 'bg-gradient-to-r from-red-600 to-orange-600 border-red-400' 
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-400'}
+                    `}
+                >
+                    {canCraft ? (useOverheat ? 'KHAI HỎA ĐỐT NHIỆT' : 'BẮT ĐẦU CHẾ TÁC') : 'THIẾU NGUYÊN LIỆU'}
+                </Button>
+            </div>
         </div>
-    </Card>
+    </div>
   );
 };

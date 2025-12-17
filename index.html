@@ -4,70 +4,59 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    
-    <!-- Cache Control: Ngăn trình duyệt lưu cache file HTML này -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-
-    <title>Thợ Rèn Vô Tận</title>
-    
-    <!-- CSS Fallback -->
+    <title>Thợ Rèn Vô Tận - Kỷ Nguyên Chế Tác</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;700;900&display=swap');
+      
+      :root {
+        --rarity-common: #9ca3af;
+        --rarity-rare: #3b82f6;
+        --rarity-epic: #a855f7;
+        --rarity-legendary: #eab308;
+        --rarity-mythic: #ef4444;
+        --rarity-cosmic: #22d3ee;
+      }
+
       body {
         background-color: #020617;
         color: #f1f5f9;
-        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-family: 'Lexend', sans-serif;
+        overflow: hidden;
       }
-      ::-webkit-scrollbar { width: 6px; height: 6px; }
-      ::-webkit-scrollbar-track { background: #0f172a; }
-      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-      ::-webkit-scrollbar-thumb:hover { background: #475569; }
-      
-      .glass-panel {
-        background: rgba(30, 41, 59, 0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+
+      /* Hiệu ứng kính mờ nâng cao */
+      .glass-card {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      }
+
+      /* Glow theo độ hiếm */
+      .glow-cosmic { box-shadow: 0 0 20px rgba(34, 211, 238, 0.4); border-color: rgba(34, 211, 238, 0.6); }
+      .glow-mythic { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); border-color: rgba(239, 68, 68, 0.6); }
+      .glow-legendary { box-shadow: 0 0 20px rgba(234, 179, 8, 0.4); border-color: rgba(234, 179, 8, 0.6); }
+
+      /* Animation cho các phần tử */
+      @keyframes floating {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-5px); }
+        100% { transform: translateY(0px); }
+      }
+      .animate-float { animation: floating 3s ease-in-out infinite; }
+
+      /* Scrollbar mỹ thuật */
+      ::-webkit-scrollbar { width: 5px; }
+      ::-webkit-scrollbar-track { background: transparent; }
+      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+      .custom-log-scroll {
+        mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
       }
     </style>
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              rarity: {
-                common: '#9ca3af',
-                rare: '#3b82f6',
-                epic: '#a855f7',
-                legendary: '#eab308',
-                mythic: '#ef4444'
-              }
-            },
-            animation: {
-              'fade-in': 'fadeIn 0.5s ease-out',
-              'slide-up': 'slideUp 0.3s ease-out',
-              'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            },
-            keyframes: {
-              fadeIn: {
-                '0%': { opacity: '0' },
-                '100%': { opacity: '1' },
-              },
-              slideUp: {
-                '0%': { transform: 'translateY(10px)', opacity: '0' },
-                '100%': { transform: 'translateY(0)', opacity: '1' },
-              }
-            }
-          }
-        }
-      }
-    </script>
-
-    <!-- Import Map -->
     <script type="importmap">
 {
   "imports": {
@@ -82,16 +71,8 @@
 </script>
   <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-slate-950 text-slate-100 font-sans antialiased overflow-hidden selection:bg-blue-500 selection:text-white">
-    <!-- Background Container (Nằm ngoài root để không bị React xóa) -->
-    <div class="fixed inset-0 z-0 pointer-events-none">
-        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1605806616949-1e87b487bc2a?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center opacity-60"></div>
-        <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-[1px]"></div>
-    </div>
-
-    <!-- React App Root -->
-    <div id="root" class="relative z-10 h-screen w-screen flex flex-col overflow-hidden"></div>
-    
+  <body class="selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div id="root"></div>
     <script type="module" src="/index.js"></script>
   <script type="module" src="/index.tsx"></script>
 </body>
