@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Blueprint, Material } from '../../types';
 import { Button } from '../Button';
-import { Hammer, AlertCircle, Sparkles, X, Flame } from 'lucide-react';
+import { Hammer, AlertCircle, Sparkles, X, Flame, AlertTriangle } from 'lucide-react';
 import { CraftingStats } from './CraftingStats';
 import { CraftingMaterials } from './CraftingMaterials';
 
@@ -62,6 +62,13 @@ export const CraftingDetail: React.FC<CraftingDetailProps> = ({ blueprint, mater
                         {useOverheat ? <Flame size={12} className="animate-pulse" /> : null}
                         {useOverheat ? '🔥 ĐANG ĐỐT NHIỆT 🔥' : '🔨 CHẾ ĐỘ TIÊU CHUẨN 🔨'}
                     </button>
+                    
+                    {useOverheat && (
+                        <div className="mt-3 flex items-center justify-center gap-2 text-red-500 animate-bounce">
+                            <AlertTriangle size={14} />
+                            <span className="text-[10px] font-black uppercase tracking-widest">CẢNH BÁO: THẤT BẠI SẼ MẤT ĐỒ!</span>
+                        </div>
+                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
@@ -103,7 +110,7 @@ export const CraftingDetail: React.FC<CraftingDetailProps> = ({ blueprint, mater
                             : 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-400'}
                     `}
                 >
-                    {canCraft ? (useOverheat ? 'KHAI HỎA ĐỐT NHIỆT' : 'BẮT ĐẦU CHẾ TÁC') : 'THIẾU NGUYÊN LIỆU'}
+                    {canCraft ? (useOverheat ? 'KHAI HỎA (70% MẤT ĐỒ)' : 'BẮT ĐẦU CHẾ TÁC') : 'THIẾU NGUYÊN LIỆU'}
                 </Button>
             </div>
         </div>

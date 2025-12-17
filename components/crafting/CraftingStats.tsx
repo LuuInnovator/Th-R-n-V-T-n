@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Blueprint, Rarity } from '../../types';
-import { Sword, Shield, Sparkles } from 'lucide-react';
+import { Sword, Shield, Sparkles, Flame, AlertTriangle } from 'lucide-react';
 import { RARITY_MULTIPLIER, RARITY_COLOR } from '../../constants';
 
 interface CraftingStatsProps {
@@ -18,10 +18,11 @@ export const CraftingStats: React.FC<CraftingStatsProps> = ({ blueprint, useOver
 
   const getProb = (rarity: Rarity, isOverheat: boolean) => {
     if (isOverheat) {
+        // Tổng tỉ lệ thành công là 30%
         if (rarity === Rarity.Cosmic) return 2;
-        if (rarity === Rarity.Mythic) return 8;
-        if (rarity === Rarity.Legendary) return 15;
-        if (rarity === Rarity.Epic) return 75;
+        if (rarity === Rarity.Mythic) return 5;
+        if (rarity === Rarity.Legendary) return 8;
+        if (rarity === Rarity.Epic) return 15;
         return 0;
     }
     const probs = { [Rarity.Common]: 60, [Rarity.Rare]: 25, [Rarity.Epic]: 10, [Rarity.Legendary]: 4, [Rarity.Mythic]: 0.9, [Rarity.Cosmic]: 0.1 };
@@ -37,16 +38,33 @@ export const CraftingStats: React.FC<CraftingStatsProps> = ({ blueprint, useOver
       >
         <div className="flex items-center gap-2">
             <div className={`p-1 rounded ${useOverheat ? 'bg-red-500 text-white animate-pulse' : 'bg-slate-800 text-slate-500'}`}>
-                <Sparkles size={12} />
+                <Flame size={12} />
             </div>
             <div className="text-left">
-                <span className={`font-black text-[9px] uppercase tracking-tighter block ${useOverheat ? 'text-red-400' : 'text-slate-400'}`}>Đốt Nhiệt</span>
+                <span className={`font-black text-[9px] uppercase tracking-tighter block ${useOverheat ? 'text-red-400' : 'text-slate-400'}`}>Chế Độ Đốt Nhiệt</span>
             </div>
         </div>
-        <div className={`font-mono text-[9px] font-black px-1.5 py-0.5 rounded ${useOverheat ? 'bg-red-500 text-white' : 'bg-slate-800 text-slate-500'}`}>Cường Hóa x2.5</div>
+        <div className={`font-mono text-[9px] font-black px-1.5 py-0.5 rounded ${useOverheat ? 'bg-red-500 text-white' : 'bg-slate-800 text-slate-500'}`}>
+            {useOverheat ? 'Chỉ số x2.5' : 'Tiêu chuẩn'}
+        </div>
       </button>
 
+      {useOverheat && (
+          <div className="p-2 bg-red-950/20 border border-red-900/30 rounded-lg flex items-center gap-2">
+              <AlertTriangle size={14} className="text-red-500 shrink-0" />
+              <div className="text-[8px] font-black text-red-400 uppercase leading-tight">
+                  CẢNH BÁO: 70% THẤT BẠI SẼ LÀM MẤT TRẮNG VẬT PHẨM VÀ NGUYÊN LIỆU!
+              </div>
+          </div>
+      )}
+
       <div className="bg-slate-900/40 rounded-lg border border-slate-800 divide-y divide-slate-800/30">
+        {useOverheat && (
+            <div className="p-2 flex items-center justify-between bg-red-900/10">
+                <span className="font-black text-[9px] uppercase tracking-wider text-red-500">THẤT BẠI (MẤT ĐỒ)</span>
+                <span className="text-[9px] font-mono font-black text-red-500">70%</span>
+            </div>
+        )}
         {(Object.values(Rarity) as Rarity[]).reverse().map(rarity => {
             const prob = getProb(rarity, useOverheat);
             if (prob === 0) return null;

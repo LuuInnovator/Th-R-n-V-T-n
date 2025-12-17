@@ -34,7 +34,7 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
 };
 
 export const INITIAL_BLUEPRINTS: Blueprint[] = [
-  // ⚔️ VŨ KHÍ (Yêu cầu NL theo bậc quái)
+  // ⚔️ VŨ KHÍ
   { id: 'bp_legacy', name: 'Kiếm Thánh Kế Thừa', resultType: EquipmentType.Weapon, evolutionLevel: 0, 
     requiredMaterials: [
         { type: MaterialType.MemoryGem, amount: 5 }, 
@@ -50,7 +50,7 @@ export const INITIAL_BLUEPRINTS: Blueprint[] = [
   { id: 'bp_w_4', name: 'Kiếm Băng Giá', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.SnowCrystal, amount: 12 }, { type: MaterialType.PureIronOre, amount: 25 }], baseStats: { minAtk: 250, maxAtk: 400, minDef: 0, maxDef: 0 }, unlocked: true },
   { id: 'bp_w_5', name: 'Thương Thành Cổ', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.BrokenSwordFragment, amount: 10 }, { type: MaterialType.BlueSoul, amount: 30 }], baseStats: { minAtk: 700, maxAtk: 1100, minDef: 0, maxDef: 0 }, unlocked: true },
 
-  // 🛡️ GIÁP (Giáp trụ, Mũ, Giày, Găng)
+  // 🛡️ GIÁP
   { id: 'bp_a_1', name: 'Áo Da Sói', resultType: EquipmentType.Armor, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.WolfSkin, amount: 15 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 25, maxDef: 45 }, unlocked: true },
   { id: 'bp_a_2', name: 'Mũ Nấm Độc', resultType: EquipmentType.Helmet, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.MushroomCap, amount: 12 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 15, maxDef: 25 }, unlocked: true },
   { id: 'bp_a_3', name: 'Giáp Vảy Sắt', resultType: EquipmentType.Armor, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.IronScale, amount: 30 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 120, maxDef: 200 }, unlocked: true },
@@ -60,24 +60,36 @@ export const INITIAL_BLUEPRINTS: Blueprint[] = [
   { id: 'bp_a_7', name: 'Giày Tuyết Yeti', resultType: EquipmentType.Boots, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.YetiFur, amount: 15 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 90, maxDef: 160 }, unlocked: true },
   { id: 'bp_a_8', name: 'Găng Hư Không', resultType: EquipmentType.Gloves, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.VoidShard, amount: 15 }, { type: MaterialType.VoidCore, amount: 1 }], baseStats: { minAtk: 200, maxAtk: 350, minDef: 200, maxDef: 350 }, unlocked: true },
 
-  // 💍 TRANG SỨC (Sức)
+  // 💍 TRANG SỨC
   { id: 'bp_s_1', name: 'Nhẫn Thạch Anh', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.GemStone, amount: 20 }], baseStats: { minAtk: 10, maxAtk: 20, minDef: 10, maxDef: 20 }, unlocked: true },
   { id: 'bp_s_2', name: 'Dây Chuyền Linh Hồn', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.BlueSoul, amount: 30 }], baseStats: { minAtk: 100, maxAtk: 200, minDef: 100, maxDef: 200 }, unlocked: true },
   { id: 'bp_s_3', name: 'Bùa May Mắn', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.MemoryGem, amount: 2 }, { type: MaterialType.StarDust, amount: 20 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }, unlocked: true },
   { id: 'bp_s_4', name: 'Vòng Tay Pha Lê', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.SnowCrystal, amount: 30 }], baseStats: { minAtk: 80, maxAtk: 150, minDef: 50, maxDef: 100 }, unlocked: true },
 
-  // 🧪 DÙNG (Tiêu hao)
+  // 🧪 DÙNG
   { id: 'bp_c_1', name: 'Bình Hồi Phục', resultType: 'VẬT PHẨM', evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.SlimeResin, amount: 8 }, { type: MaterialType.WildHerb, amount: 15 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }, unlocked: true },
   { id: 'bp_c_2', name: 'Thuốc Giải Độc', resultType: 'VẬT PHẨM', evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.PoisonSpore, amount: 20 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }, unlocked: true },
   { id: 'bp_c_3', name: 'Đá Mài Cường Hóa', resultType: 'VẬT PHẨM', evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.PureIronOre, amount: 10 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }, unlocked: true }
 ];
 
 export const SKILLS: Skill[] = [
+  // BÍ KỸ CHUNG
   { id: 'wp_atk', name: 'Sắc Bén Cực Hạn', branch: SkillBranch.WeaponSmith, description: 'Tăng 5% sát thương vật lý cơ bản.', maxLevel: 10, cost: 2, effectValue: 5, reqLevel: 5 },
   { id: 'wp_crit', name: 'Nhãn Lực Thợ Rèn', branch: SkillBranch.WeaponSmith, description: 'Tăng 2% tỷ lệ chí mạng khi chiến đấu.', maxLevel: 10, cost: 3, effectValue: 2, reqLevel: 15 },
   { id: 'gen_exp', name: 'Hào Quang Kinh Nghiệm', branch: SkillBranch.Alchemy, description: 'Tăng 5% điểm EXP nhận được.', maxLevel: 10, cost: 3, effectValue: 5, reqLevel: 10 },
-  { id: 'gen_luck', name: 'Vận May Thợ Rèn', branch: SkillBranch.Enchanting, description: 'Tăng 2% tỷ lệ rơi vật phẩm quý hiếm.', maxLevel: 10, cost: 4, effectValue: 2, reqLevel: 20 },
-  { id: 'gen_gold', name: 'Bàn Tay Midas', branch: SkillBranch.Alchemy, description: 'Tăng 10% ngân lượng nhận được.', maxLevel: 10, cost: 2, effectValue: 10, reqLevel: 15 }
+  { id: 'gen_gold', name: 'Bàn Tay Midas', branch: SkillBranch.Alchemy, description: 'Tăng 10% ngân lượng nhận được.', maxLevel: 10, cost: 2, effectValue: 10, reqLevel: 15 },
+  
+  // BÍ KỸ HỘ VỆ THỦ LĨNH
+  { id: 'hv_hp', name: 'Huyết Mạch Hộ Vệ', branch: SkillBranch.ArmorSmith, description: 'Tăng 10% HP tối đa.', maxLevel: 10, cost: 4, effectValue: 10, reqLevel: 20, reqClass: CharacterClass.HeavySentinel },
+  { id: 'hv_def', name: 'Khiên Chắn Bất Diệt', branch: SkillBranch.ArmorSmith, description: 'Tăng 15% chỉ số phòng thủ.', maxLevel: 10, cost: 5, effectValue: 15, reqLevel: 30, reqClass: CharacterClass.HeavySentinel },
+  
+  // BÍ KỸ BÓNG MA HẮC ÁM
+  { id: 'bm_atk', name: 'Lưỡi Dao Hư Không', branch: SkillBranch.WeaponSmith, description: 'Tăng 10% sát thương xuyên thấu.', maxLevel: 10, cost: 4, effectValue: 10, reqLevel: 20, reqClass: CharacterClass.ShadowBlade },
+  { id: 'bm_crit_dmg', name: 'Sát Ý Vô Hình', branch: SkillBranch.WeaponSmith, description: 'Tăng 20% sát thương chí mạng.', maxLevel: 10, cost: 5, effectValue: 20, reqLevel: 30, reqClass: CharacterClass.ShadowBlade },
+
+  // BÍ KỸ GIẢ KIM PHÁP SƯ
+  { id: 'gk_craft', name: 'Tinh Hoa Vật Chất', branch: SkillBranch.Alchemy, description: 'Tăng 10% chỉ số khi rèn đồ.', maxLevel: 10, cost: 4, effectValue: 10, reqLevel: 20, reqClass: CharacterClass.AlchemistMage },
+  { id: 'gk_luck', name: 'Chúc Phúc Đại Sư', branch: SkillBranch.Enchanting, description: 'Tăng 5% tỷ lệ ra đồ cực phẩm.', maxLevel: 10, cost: 5, effectValue: 5, reqLevel: 30, reqClass: CharacterClass.AlchemistMage }
 ];
 
 export const ETERNAL_UPGRADES: EternalUpgrade[] = [

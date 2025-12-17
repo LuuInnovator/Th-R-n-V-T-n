@@ -81,6 +81,12 @@ export default function App() {
   const handleCraft = (bp: Blueprint, overheat: boolean) => {
     consumeMaterials(bp.requiredMaterials);
     
+    // Logic Đốt nhiệt mới: 70% thất bại mất đồ
+    if (overheat && Math.random() < 0.7) {
+        addLog(`🔥 Lò rèn quá nóng! Trang bị đã bị thiêu rụi hoàn toàn...`);
+        return;
+    }
+
     // Nếu là Vật phẩm tiêu hao
     if (bp.resultType === 'VẬT PHẨM') {
         addMaterial(bp.name as any, 1);
@@ -91,15 +97,17 @@ export default function App() {
     // Nếu là Trang bị
     const evolBonus = (player.blueprintLevels[bp.id] || 0) * 0.25;
     const memoryBonus = bp.id === 'bp_legacy' ? player.memoryGemPotential : 0;
-    const finalRarity = rollRarity((player.skills['gen_luck'] || 0) * 0.01 + (overheat ? 0.2 : 0));
+    const finalRarity = rollRarity((player.skills['gen_luck'] || 0) * 0.01 + (overheat ? 0.4 : 0));
     
     let talent;
     if (finalRarity === Rarity.Legendary || finalRarity === Rarity.Mythic || finalRarity === Rarity.Cosmic) {
         talent = EQUIPMENT_TALENTS[randomInt(0, EQUIPMENT_TALENTS.length - 1)];
     }
 
-    const itemAtk = bp.baseStats.maxAtk ? Math.floor(bp.baseStats.maxAtk * (1 + evolBonus) + memoryBonus) : 0;
-    const itemDef = bp.baseStats.maxDef ? Math.floor(bp.baseStats.maxDef * (1 + evolBonus)) : 0;
+    // Nếu đốt nhiệt thành công, chỉ số x2.5
+    const overheatMult = overheat ? 2.5 : 1.0;
+    const itemAtk = bp.baseStats.maxAtk ? Math.floor((bp.baseStats.maxAtk * (1 + evolBonus) + memoryBonus) * overheatMult) : 0;
+    const itemDef = bp.baseStats.maxDef ? Math.floor((bp.baseStats.maxDef * (1 + evolBonus)) * overheatMult) : 0;
 
     const item: Equipment = {
         id: generateId(),
