@@ -2,8 +2,7 @@
 import React from 'react';
 import { Player, Skill, SkillBranch } from '../types';
 import { SKILLS } from '../constants';
-import { Card } from './Card';
-import { Zap, Shield, Beaker, Sparkles, Target, Info, Star } from 'lucide-react';
+import { Zap, Shield, Beaker, Sparkles, Target, Star } from 'lucide-react';
 import { SkillCard } from './skills/SkillCard';
 
 interface SkillTreeViewProps {
@@ -29,7 +28,7 @@ export const SkillTreeView: React.FC<SkillTreeViewProps> = ({ player, onUpgrade 
                     <Target size={32} className="text-white" />
                 </div>
                 <div>
-                    <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tighter italic leading-none">Bí Pháp Thợ Rèn</h2>
+                    <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tighter italic leading-none">Bí Kỹ Thợ Rèn</h2>
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-2 flex items-center gap-2">
                        Hệ phái: <span className="text-amber-500 bg-amber-500/5 px-3 py-1 rounded-full border border-amber-500/20">{player.characterClass}</span>
                     </div>
@@ -37,7 +36,7 @@ export const SkillTreeView: React.FC<SkillTreeViewProps> = ({ player, onUpgrade 
             </div>
             
             <div className="bg-slate-950 px-8 py-4 rounded-3xl border border-slate-800 flex flex-col items-center justify-center min-w-[200px] shadow-inner">
-                <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mb-1">Điểm Tiềm Năng</span>
+                <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mb-1">Điểm Bí Kỹ</span>
                 <div className="text-3xl font-black text-blue-400 tabular-nums drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">
                     {player.skillPoints} <span className="text-xs text-slate-600 font-bold ml-1">SP</span>
                 </div>
@@ -71,6 +70,7 @@ export const SkillTreeView: React.FC<SkillTreeViewProps> = ({ player, onUpgrade 
                                   skill={skill}
                                   currentLevel={player.skills[skill.id] || 0}
                                   skillPoints={player.skillPoints}
+                                  playerLevel={player.level}
                                   onUpgrade={onUpgrade}
                                   isClassSkill={!!skill.reqClass}
                                 />
@@ -83,7 +83,7 @@ export const SkillTreeView: React.FC<SkillTreeViewProps> = ({ player, onUpgrade 
             {/* Empty state hint */}
             <div className="bg-slate-900/20 border border-dashed border-slate-800 p-12 rounded-3xl text-center">
                 <Star size={40} className="mx-auto text-slate-800 mb-4" />
-                <p className="text-xs text-slate-600 font-black uppercase tracking-[0.3em]">Cấp độ 90 là giới hạn hiện tại của bí pháp</p>
+                <p className="text-xs text-slate-600 font-black uppercase tracking-[0.3em]">Cấp độ 90 là giới hạn tối cao của nhân giới</p>
             </div>
         </div>
       </div>

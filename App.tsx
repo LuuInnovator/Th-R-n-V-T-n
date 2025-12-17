@@ -34,14 +34,10 @@ export default function App() {
   const { player, setPlayer, gainExp, updateHp, rebirth, buyEternalUpgrade, getStatMultiplier, selectClass, allocateStat, resetStats, addGold, upgradeSkill, setGameSpeed, upgradeBlueprint, updateMemoryPotential, saveGame, loadGame } = usePlayer(addLog);
   const { materials, equipments, equipped, addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, handleRebirth: performInventoryRebirth } = useInventory(addLog);
   
-  // HỆ THỐNG FILE
   const { exportSaveFile, importSaveFile } = useFileSystem(setPlayer, addLog);
 
   useEffect(() => {
-    const saved = localStorage.getItem('thoren_vontat_save_v2');
-    if (saved) {
-      loadGame();
-    }
+    loadGame();
   }, []);
 
   const calculatedStats = useMemo(() => calculatePlayerStats(player, equipped, getStatMultiplier), [player, equipped, getStatMultiplier]);
@@ -80,6 +76,43 @@ export default function App() {
         case 'settings': return 'Cài Đặt';
         default: return '';
     }
+  };
+
+  const handleCraft = (bp: Blueprint, overheat: boolean) => {
+    consumeMaterials(bp.requiredMaterials);
+    
+    // Nếu là Vật phẩm tiêu hao
+    if (bp.resultType === 'VẬT PHẨM') {
+        addMaterial(bp.name as any, 1);
+        addLog(`🧪 Chế tạo thành công: ${bp.name}`);
+        return;
+    }
+
+    // Nếu là Trang bị
+    const evolBonus = (player.blueprintLevels[bp.id] || 0) * 0.25;
+    const memoryBonus = bp.id === 'bp_legacy' ? player.memoryGemPotential : 0;
+    const finalRarity = rollRarity((player.skills['gen_luck'] || 0) * 0.01 + (overheat ? 0.2 : 0));
+    
+    let talent;
+    if (finalRarity === Rarity.Legendary || finalRarity === Rarity.Mythic || finalRarity === Rarity.Cosmic) {
+        talent = EQUIPMENT_TALENTS[randomInt(0, EQUIPMENT_TALENTS.length - 1)];
+    }
+
+    const itemAtk = bp.baseStats.maxAtk ? Math.floor(bp.baseStats.maxAtk * (1 + evolBonus) + memoryBonus) : 0;
+    const itemDef = bp.baseStats.maxDef ? Math.floor(bp.baseStats.maxDef * (1 + evolBonus)) : 0;
+
+    const item: Equipment = {
+        id: generateId(),
+        name: bp.name + (player.blueprintLevels[bp.id] ? ` (+${player.blueprintLevels[bp.id]})` : ""),
+        type: bp.resultType as EquipmentType,
+        rarity: finalRarity,
+        stats: {
+            attack: itemAtk,
+            defense: itemDef
+        },
+        value: 100, isEquipped: false, sockets: 1, socketedGems: [], talent
+    };
+    addEquipment(item);
   };
 
   return (
@@ -123,30 +156,7 @@ export default function App() {
                     <CraftingView 
                         blueprints={INITIAL_BLUEPRINTS.map(bp => ({ ...bp, evolutionLevel: player.blueprintLevels[bp.id] || 0 }))} 
                         materials={materials} 
-                        onCraft={(bp, overheat) => {
-                            consumeMaterials(bp.requiredMaterials);
-                            const evolBonus = (player.blueprintLevels[bp.id] || 0) * 0.25;
-                            const memoryBonus = bp.name.includes("Kế Thừa") ? player.memoryGemPotential : 0;
-                            const finalRarity = rollRarity((player.skills['gen_luck'] || 0) * 0.01 + (overheat ? 0.2 : 0));
-                            
-                            let talent;
-                            if (finalRarity === Rarity.Legendary || finalRarity === Rarity.Mythic || finalRarity === Rarity.Cosmic) {
-                                talent = EQUIPMENT_TALENTS[randomInt(0, EQUIPMENT_TALENTS.length - 1)];
-                            }
-
-                            const item: Equipment = {
-                                id: generateId(),
-                                name: bp.name + (player.blueprintLevels[bp.id] ? ` (+${player.blueprintLevels[bp.id]})` : ""),
-                                type: bp.resultType as EquipmentType,
-                                rarity: finalRarity,
-                                stats: {
-                                    attack: bp.baseStats.maxAtk ? Math.floor(bp.baseStats.maxAtk * (1 + evolBonus) + memoryBonus) : 0,
-                                    defense: bp.baseStats.maxDef ? Math.floor(bp.baseStats.maxDef * (1 + evolBonus)) : 0
-                                },
-                                value: 100, isEquipped: false, sockets: 1, socketedGems: [], talent
-                            };
-                            addEquipment(item);
-                        }} 
+                        onCraft={handleCraft} 
                         craftingSkill={1} 
                         onUpgradeBlueprint={upgradeBlueprint}
                         eternalPoints={player.eternalPoints}

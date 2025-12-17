@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Zone, Blueprint, MaterialType } from '../types';
 import { ENEMIES_DB, EQUIPMENT_TALENTS } from '../constants';
-import { Map, Target, Skull, ChevronDown, ChevronUp, Search, Heart, Zap, Shield, Sparkles, Coins, Hammer, Star } from 'lucide-react';
+import { Map, Target, Skull, ChevronDown, ChevronUp, Heart, Zap, Shield, Sparkles, Coins, Hammer, Star, Box } from 'lucide-react';
 
 interface WikiViewProps {
   zones: Zone[];
@@ -62,27 +62,31 @@ export const WikiView: React.FC<WikiViewProps> = ({ zones, blueprints }) => {
             {/* Main Content Monsters */}
             <div className="flex-1 overflow-y-auto p-4 md:p-6 scrollbar-thin">
                <div className="max-w-2xl mx-auto space-y-3 pb-12">
-                   {enemies.map(enemy => (
-                        <div key={enemy.id} className={`rounded-xl border transition-all overflow-hidden ${expandedEnemyId === enemy.id ? 'bg-slate-900 border-slate-700' : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'}`}>
+                   {enemies.length === 0 ? (
+                       <div className="text-center py-20 text-slate-600 italic text-xs uppercase tracking-widest">
+                           Chưa có thông tin quái vật khu vực này
+                       </div>
+                   ) : enemies.map(enemy => (
+                        <div key={enemy.id} className={`rounded-xl border transition-all overflow-hidden ${expandedEnemyId === enemy.id ? 'bg-slate-900 border-slate-700 shadow-2xl' : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'}`}>
                             <button 
                                 onClick={() => setExpandedEnemyId(expandedEnemyId === enemy.id ? null : enemy.id)}
-                                className="w-full p-3 flex items-center justify-between"
+                                className="w-full p-4 flex items-center justify-between"
                             >
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-1.5 rounded-lg ${enemy.isBoss ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-500'}`}>
-                                        {enemy.isBoss ? <Skull size={14} /> : <Target size={14} />}
+                                <div className="flex items-center gap-4">
+                                    <div className={`p-2 rounded-xl ${enemy.isBoss ? 'bg-red-600 text-white' : 'bg-slate-800 text-slate-500'}`}>
+                                        {enemy.isBoss ? <Skull size={18} /> : <Target size={18} />}
                                     </div>
                                     <div className="text-left">
-                                        <div className={`font-black text-xs ${enemy.isBoss ? 'text-red-400' : 'text-slate-300'}`}>{enemy.name}</div>
-                                        <div className="text-[8px] font-bold text-slate-600 uppercase">Lv.{enemy.level}</div>
+                                        <div className={`font-black text-sm uppercase tracking-tight ${enemy.isBoss ? 'text-red-400' : 'text-slate-200'}`}>{enemy.name}</div>
+                                        <div className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">Cấp {enemy.level} • {enemy.element}</div>
                                     </div>
                                 </div>
-                                {expandedEnemyId === enemy.id ? <ChevronUp size={14} className="text-slate-600" /> : <ChevronDown size={14} className="text-slate-600" />}
+                                {expandedEnemyId === enemy.id ? <ChevronUp size={16} className="text-slate-600" /> : <ChevronDown size={16} className="text-slate-600" />}
                             </button>
 
                             {expandedEnemyId === enemy.id && (
-                                <div className="px-4 pb-4 animate-fade-in border-t border-slate-800 pt-3">
-                                    <div className="grid grid-cols-5 gap-2 mb-4">
+                                <div className="px-5 pb-6 animate-fade-in border-t border-slate-800/50 pt-4 space-y-6">
+                                    <div className="grid grid-cols-5 gap-2">
                                         {[
                                             { label: 'HP', val: enemy.maxHp, icon: Heart, color: 'text-red-500' },
                                             { label: 'ATK', val: enemy.attack, icon: Zap, color: 'text-orange-400' },
@@ -90,30 +94,39 @@ export const WikiView: React.FC<WikiViewProps> = ({ zones, blueprints }) => {
                                             { label: 'EXP', val: enemy.expReward, icon: Sparkles, color: 'text-cyan-400' },
                                             { label: 'Vàng', val: enemy.goldReward, icon: Coins, color: 'text-yellow-500' },
                                         ].map((s, i) => (
-                                            <div key={i} className="bg-slate-950/50 p-1 rounded-lg border border-slate-800 flex flex-col items-center">
-                                                <s.icon size={10} className={s.color} />
-                                                <div className="text-[9px] font-mono font-bold text-slate-400 mt-0.5">{s.val}</div>
+                                            <div key={i} className="bg-slate-950 p-2 rounded-xl border border-slate-800 flex flex-col items-center shadow-inner">
+                                                <s.icon size={12} className={s.color} />
+                                                <div className="text-[10px] font-mono font-black text-slate-300 mt-1">{s.val}</div>
                                             </div>
                                         ))}
                                     </div>
 
-                                    <div className="space-y-2">
-                                        <div className="text-[8px] font-black text-slate-600 uppercase tracking-widest flex items-center gap-2">CHẾ TÁC</div>
+                                    <div className="space-y-3">
+                                        <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2 mb-2">
+                                            <Box size={12} className="text-blue-500" /> Danh mục rơi đồ & Chế tác
+                                        </div>
                                         {enemy.dropTable.map((drop, idx) => {
                                             const usages = getUsages(drop.materialType);
                                             return (
-                                                <div key={idx} className="bg-slate-950/40 border border-slate-800 p-2 rounded-lg">
-                                                    <div className="flex justify-between items-center mb-1">
-                                                        <div className="text-[10px] font-black text-slate-300">{drop.materialType}</div>
-                                                        <div className="text-amber-500 font-mono text-[10px]">{(drop.chance * 100).toFixed(0)}%</div>
+                                                <div key={idx} className="bg-slate-950/60 border border-slate-800 p-4 rounded-xl flex flex-col gap-3">
+                                                    <div className="flex justify-between items-center">
+                                                        <div className="flex flex-col">
+                                                            <span className="text-xs font-black text-slate-200 uppercase tracking-tight">{drop.materialType}</span>
+                                                            <span className="text-[9px] text-slate-600 font-bold">Số lượng: {drop.minQty}-{drop.maxQty}</span>
+                                                        </div>
+                                                        <div className="text-blue-400 font-mono text-sm font-black">{(drop.chance * 100).toFixed(0)}%</div>
                                                     </div>
-                                                    <div className="flex flex-wrap gap-1">
-                                                        {usages.map(bp => (
-                                                            <span key={bp.id} className="text-[8px] px-1.5 py-0.5 bg-blue-900/10 border border-blue-800/30 text-blue-400 rounded font-bold">
-                                                                {bp.name}
-                                                            </span>
-                                                        ))}
-                                                    </div>
+                                                    
+                                                    {usages.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1.5 pt-2 border-t border-slate-800/50">
+                                                            <div className="w-full text-[8px] font-black text-slate-700 uppercase mb-1">Dùng để chế tạo:</div>
+                                                            {usages.map(bp => (
+                                                                <span key={bp.id} className="text-[9px] px-2 py-0.5 bg-blue-600/5 border border-blue-500/20 text-blue-500 rounded-full font-bold">
+                                                                    {bp.name}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}
@@ -127,24 +140,24 @@ export const WikiView: React.FC<WikiViewProps> = ({ zones, blueprints }) => {
         </div>
       ) : (
         /* Talents Tab Content */
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
-            <div className="max-w-2xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3 pb-12">
+        <div className="flex-1 overflow-y-auto p-6 md:p-10 scrollbar-thin">
+            <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 pb-12">
                 {EQUIPMENT_TALENTS.map((talent, idx) => (
-                    <div key={idx} className="bg-slate-900/40 border border-slate-800 p-4 rounded-xl group hover:border-amber-500/50 transition-all">
-                        <div className="flex items-center gap-3 mb-2">
-                            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500 group-hover:scale-110 transition-transform">
-                                <Sparkles size={16} />
+                    <div key={idx} className="bg-slate-900/40 border border-slate-800 p-6 rounded-2xl group hover:border-amber-500/50 transition-all shadow-lg hover:shadow-amber-900/10">
+                        <div className="flex items-center gap-4 mb-3">
+                            <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500 group-hover:scale-110 transition-transform shadow-inner">
+                                <Sparkles size={20} />
                             </div>
-                            <h4 className="font-black text-slate-100 text-sm uppercase tracking-tighter">{talent.name}</h4>
+                            <h4 className="font-black text-slate-100 text-base uppercase tracking-tight italic">{talent.name}</h4>
                         </div>
-                        <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">
                             {talent.desc}
                         </p>
                     </div>
                 ))}
-                <div className="col-span-full mt-6 bg-slate-900/20 border border-dashed border-slate-800 p-6 rounded-2xl text-center">
-                    <Hammer className="mx-auto text-slate-700 mb-2" size={32} />
-                    <p className="text-[10px] text-slate-600 font-bold uppercase tracking-widest italic">
+                <div className="col-span-full mt-8 bg-slate-900/20 border border-dashed border-slate-800 p-8 rounded-3xl text-center">
+                    <Hammer className="mx-auto text-slate-700 mb-3" size={40} />
+                    <p className="text-[11px] text-slate-600 font-black uppercase tracking-[0.4em] italic">
                         "Thiên phú xuất hiện ngẫu nhiên khi rèn được trang bị cấp Hiếm trở lên"
                     </p>
                 </div>

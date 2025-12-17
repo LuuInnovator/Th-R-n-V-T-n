@@ -1,11 +1,10 @@
 
 import React from 'react';
-import { Lock, Unlock } from 'lucide-react';
-import { Card } from '../Card';
-import { Button } from '../Button';
+import { Gem, Sparkles } from 'lucide-react';
 import { ETERNAL_UPGRADES } from '../../constants';
 import { Player, EternalUpgrade } from '../../types';
 import { formatNumber } from '../../utils';
+import { EternalUpgradeCard } from './EternalUpgradeCard';
 
 interface EternalShopProps {
   player: Player;
@@ -14,54 +13,46 @@ interface EternalShopProps {
 
 export const EternalShop: React.FC<EternalShopProps> = ({ player, onBuyUpgrade }) => {
   return (
-    <div className="flex flex-col h-full animate-fade-in">
-      <div className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800 mb-6 flex justify-between items-center sticky top-0 z-10 backdrop-blur-xl shrink-0">
-        <div className="flex flex-col">
-          <h3 className="text-xl font-black text-amber-500 uppercase tracking-tighter">Thiên Phú Vĩnh Cửu</h3>
-          <span className="text-[10px] text-slate-500 font-bold">Nâng cấp tồn tại vĩnh viễn qua mọi kiếp luân hồi</span>
+    <div className="h-full flex flex-col bg-slate-950 overflow-hidden animate-fade-in">
+      {/* Header đồng bộ style Bí Kỹ */}
+      <div className="bg-slate-900/50 p-6 rounded-3xl border border-slate-800 mb-8 flex flex-col md:flex-row justify-between items-center sticky top-0 z-10 backdrop-blur-xl shrink-0 gap-6">
+        <div className="flex items-center gap-5">
+            <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl flex items-center justify-center border border-white/10 shadow-lg shadow-amber-900/20">
+                <Sparkles size={32} className="text-slate-950" />
+            </div>
+            <div className="flex flex-col">
+                <h3 className="text-2xl font-black text-amber-500 uppercase tracking-tighter italic leading-none">Thiên Phú Vĩnh Cửu</h3>
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-2">Dấu ấn thợ rèn không bao giờ phai nhạt</span>
+            </div>
         </div>
-        <div className="text-right">
-          <div className="text-[9px] text-slate-500 uppercase font-black tracking-widest">Điểm EP Hiện Có</div>
-          <div className="text-3xl font-black text-purple-400 tabular-nums">{formatNumber(player.eternalPoints)}</div>
+
+        <div className="bg-slate-950 px-8 py-4 rounded-3xl border border-slate-800 flex flex-col items-center justify-center min-w-[220px] shadow-inner">
+          <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em] mb-1">Tinh Hoa Luân Hồi</span>
+          <div className="text-3xl font-black text-purple-400 tabular-nums drop-shadow-[0_0_15px_rgba(168,85,247,0.3)] flex items-center gap-2">
+            {formatNumber(player.eternalPoints)} <span className="text-xs text-slate-600 font-bold">EP</span>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-10">
-        {ETERNAL_UPGRADES.map(upgrade => {
-          const currentLevel = player.eternalUpgrades[upgrade.id] || 0;
-          const isMax = currentLevel >= upgrade.maxLevel;
-          const cost = Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, currentLevel));
-          const canBuy = !isMax && player.eternalPoints >= cost;
-
-          return (
-            <Card key={upgrade.id} className={`relative group transition-all duration-300 border-slate-800 ${isMax ? 'bg-amber-500/5' : 'bg-slate-900/40'}`}>
-               <div className="flex justify-between items-start mb-4">
-                   <div className="flex items-center gap-3">
-                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isMax ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-800 text-slate-500 group-hover:bg-slate-700'}`}>
-                           {isMax ? <Lock size={20} /> : <Unlock size={20} />}
-                       </div>
-                       <div>
-                           <h4 className="font-black text-slate-200 uppercase text-xs tracking-tight">{upgrade.name}</h4>
-                           <div className="text-[10px] font-mono text-purple-400 font-bold">Cấp {currentLevel} / {upgrade.maxLevel}</div>
-                       </div>
-                   </div>
-               </div>
-               <p className="text-[11px] text-slate-400 mb-6 leading-relaxed h-8">{upgrade.description}</p>
-               <div className="mt-auto">
-                   <Button 
-                       size="sm" 
-                       fullWidth
-                       variant={canBuy ? 'primary' : 'outline'} 
-                       disabled={!canBuy}
-                       onClick={() => onBuyUpgrade(upgrade)}
-                       className="font-black text-[10px] tracking-widest"
-                   >
-                       {isMax ? 'ĐÃ ĐẠT TỐI ĐA' : `NÂNG CẤP (${formatNumber(cost)} EP)`}
-                   </Button>
-               </div>
-            </Card>
-          );
-        })}
+      {/* Grid 2 cột đồng bộ style Bí Kỹ */}
+      <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
+            {ETERNAL_UPGRADES.map(upgrade => (
+                <EternalUpgradeCard 
+                    key={upgrade.id}
+                    upgrade={upgrade}
+                    currentLevel={player.eternalUpgrades[upgrade.id] || 0}
+                    eternalPoints={player.eternalPoints}
+                    onBuy={onBuyUpgrade}
+                />
+            ))}
+        </div>
+        
+        {/* Empty state / Hint */}
+        <div className="bg-slate-900/20 border border-dashed border-slate-800 p-12 rounded-3xl text-center mb-10">
+            <Gem size={40} className="mx-auto text-slate-800 mb-4" />
+            <p className="text-xs text-slate-600 font-black uppercase tracking-[0.3em]">Mỗi điểm EP là kết tinh của một kiếp tu hành</p>
+        </div>
       </div>
     </div>
   );

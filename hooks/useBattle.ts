@@ -1,6 +1,6 @@
 
 import { useCallback, Dispatch, SetStateAction } from 'react';
-import { Enemy, Player, Equipment, EternalUpgradeId, Rarity } from '../types';
+import { Enemy, Player, Equipment, EternalUpgradeId, Rarity, MutationType, MonsterAbility } from '../types';
 import { ENEMIES_DB, EQUIPMENT_TALENTS } from '../constants';
 import { randomInt, generateId, rollRarity } from '../utils';
 
@@ -9,7 +9,6 @@ export const useBattle = (
   calculatedStats: any,
   activeZone: any,
   currentEnemy: Enemy | null,
-  // Fix: Use Dispatch and SetStateAction from react to support functional updates for the enemy state
   setCurrentEnemy: Dispatch<SetStateAction<Enemy | null>>,
   updateHp: (hp: number) => void,
   gainExp: (exp: number) => void,
@@ -20,25 +19,41 @@ export const useBattle = (
   gameSpeed: number
 ) => {
   const handleExplore = useCallback(() => {
-    const zoneEnemies = ENEMIES_DB[activeZone.id] || [];
-    if (zoneEnemies.length === 0) return;
-    const base = zoneEnemies[randomInt(0, zoneEnemies.length - 1)];
+    let zoneEnemies = ENEMIES_DB[activeZone.id] || [];
+    
+    // Lọc quái vật dựa trên Rebirth
+    const availableEnemies = zoneEnemies.filter(e => {
+        const minRB = e.minRebirth || 0;
+        // Nếu người chơi đã Rebirth, ưu tiên các biến thể RebirthVariant (Slime Axit, Sói Ảnh Hệ...)
+        if (player.rebirthCount > 0 && e.mutation === MutationType.RebirthVariant) {
+            return player.rebirthCount >= minRB;
+        }
+        // Nếu là Zone đặc biệt (Zone 6, 7), kiểm tra điều kiện Rebirth
+        if (activeZone.minRebirth > 0) {
+            return player.rebirthCount >= activeZone.minRebirth;
+        }
+        // Mặc định: Trả về quái bình thường
+        return !e.mutation || e.mutation === MutationType.None;
+    });
+
+    const finalPool = availableEnemies.length > 0 ? availableEnemies : zoneEnemies.filter(e => !e.mutation || e.mutation === MutationType.None);
+    
+    if (finalPool.length === 0) {
+        addLog(`⚠️ Khu vực này quá nguy hiểm cho tu vi hiện tại của bạn!`);
+        return;
+    }
+    
+    const base = finalPool[randomInt(0, finalPool.length - 1)];
     let enemy: Enemy = { ...base };
     enemy.hp = enemy.maxHp;
     setCurrentEnemy(enemy);
-    addLog(`🔍 Phát hiện ${enemy.name}!`);
-  }, [activeZone, addLog, setCurrentEnemy]);
+    addLog(`🔍 Phát hiện ${enemy.name}! ${enemy.mutation === MutationType.RebirthVariant ? '🔥 BIẾN DỊ 🔥' : ''}`);
+  }, [activeZone, player.rebirthCount, addLog, setCurrentEnemy]);
 
   const handleAttack = useCallback(() => {
     if (!currentEnemy) return;
 
-    // --- LOGIC TẤN CÔNG (BÍ KỸ) ---
     let playerAtk = calculatedStats.totalAtk;
-    const executeBonus = (player.skills['sb_execute'] || 0) * 0.1;
-    if (executeBonus > 0 && (currentEnemy.hp / currentEnemy.maxHp) < 0.3) {
-      playerAtk *= (1 + executeBonus);
-    }
-
     const playerDamage = Math.max(1, Math.floor(playerAtk - currentEnemy.defense));
     const isCrit = Math.random() < (calculatedStats.critChance / 100);
     const finalDamage = isCrit ? Math.floor(playerDamage * (calculatedStats.critDamage / 100)) : playerDamage;
@@ -47,13 +62,10 @@ export const useBattle = (
 
     if (newEnemyHp <= 0) {
       addLog(`⚔️ Hạ gục ${currentEnemy.name}!`);
-      
-      // HỒI MÁU TỰ ĐỘNG KHI THẮNG
       updateHp(calculatedStats.totalHp);
 
-      const goldBonus = (player.skills['am_transmute'] || 0) * 0.05;
       gainExp(currentEnemy.expReward);
-      addGold(Math.floor(currentEnemy.goldReward * (1 + goldBonus)));
+      addGold(currentEnemy.goldReward);
 
       currentEnemy.dropTable.forEach(drop => {
         if (Math.random() < (drop.chance + calculatedStats.dropRateBonus)) {
@@ -62,14 +74,13 @@ export const useBattle = (
       });
 
       setCurrentEnemy(null);
-      // Tiếp tục auto nếu đang bật
       if (isAutoAttacking) {
         setTimeout(handleExplore, 400 / gameSpeed);
       }
     } else {
       setCurrentEnemy({ ...currentEnemy, hp: newEnemyHp });
 
-      // --- LOGIC PHÒNG THỦ (BÍ KỸ) ---
+      // Né đòn
       const dodgeChance = (player.skills['sb_dodge'] || 0) * 0.02;
       if (Math.random() < dodgeChance) {
         addLog("💨 Bạn đã né đòn!");
@@ -77,22 +88,24 @@ export const useBattle = (
       }
 
       let enemyDamage = Math.max(1, currentEnemy.attack - calculatedStats.totalDef);
-      const reflectChance = (player.skills['hs_reflect'] || 0) * 0.05;
-      if (Math.random() < reflectChance) {
-        const reflected = Math.floor(enemyDamage * 0.5);
-        // Fix: Now correctly using functional update supported by Dispatch<SetStateAction<...>>
-        setCurrentEnemy(prev => prev ? { ...prev, hp: Math.max(0, prev.hp - reflected) } : null);
-        addLog(`🛡️ Phản đòn: ${reflected}!`);
+      
+      // Hiệu ứng đặc biệt của quái
+      if (currentEnemy.abilities?.includes(MonsterAbility.ArmorBreak)) {
+          enemyDamage = Math.floor(enemyDamage * 1.3); // Axit phá giáp +30%
+      }
+
+      if (currentEnemy.abilities?.includes(MonsterAbility.Reflect)) {
+          const reflected = Math.floor(finalDamage * 0.1);
+          updateHp(player.hp - reflected);
+          addLog(`🛡️ Phản đòn: Bạn nhận ${reflected} sát thương!`);
       }
 
       const newPlayerHp = player.hp - enemyDamage;
       
       if (newPlayerHp <= 0) {
-        addLog(`💀 Bạn gục ngã... Hồi sinh ngay lập tức!`);
-        // HỒI MÁU TỰ ĐỘNG KHI CHẾT
+        addLog(`💀 Bạn gục ngã... Hồi sinh tại Rừng Khởi Nguyên.`);
         updateHp(calculatedStats.totalHp);
         setCurrentEnemy(null);
-        // DUY TRÌ AUTO FARM KỂ CẢ KHI CHẾT
         if (isAutoAttacking) {
           setTimeout(handleExplore, 600 / gameSpeed);
         }

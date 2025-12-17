@@ -15,33 +15,37 @@ export enum MaterialTier {
 }
 
 export enum MaterialType {
-  Ore = 'Quặng Thô',
+  SlimeResin = 'Nhựa Slime',
+  BlueCoreFragment = 'Mảnh Lõi Xanh',
+  PoisonSpore = 'Bào Tử Độc',
+  MushroomCap = 'Mũ Nấm',
+  WolfSkin = 'Da Sói',
+  WolfFang = 'Răng Nanh',
+  BatWing = 'Cánh Dơi',
+  Flint = 'Đá Lửa',
+  IronScale = 'Vảy Sắt',
+  RawCopperOre = 'Quặng Đồng Thô',
+  GolemCore = 'Lõi Golem',
+  PureIronOre = 'Quặng Sắt Tinh Khiết',
+  SnowCrystal = 'Tinh Thể Tuyết',
+  WarmFur = 'Lông Thú Ấm',
+  OldBone = 'Xương Mục',
+  BrokenSwordFragment = 'Mảnh Kiếm Gãy',
+  BlueSoul = 'Linh Hồn Xanh',
+  VoidCore = 'Lõi Hư Không',
+  StarDust = 'Bụi Sao',
+  MemoryGem = 'Ngọc Ký Ức',
+  FissionCrystal = 'Tinh Thể Nhiệt Hạch',
+  IronScraps = 'Mảnh Sắt Vụn',
   Wood = 'Gỗ Rừng',
   Leather = 'Da Thú',
-  Gem = 'Đá Quý',
-  Essence = 'Tinh Hoa',
-  FissionCrystal = 'Tinh Thể Nhiệt Hạch',
-  SoulDust = 'Bụi Linh Hồn',
-  CondensedTimesand = 'Cát Thời Gian',
-  MemoryShard = 'Mảnh Vỡ Ký Ức',
-  IronScraps = 'Mảnh Sắt Vụn',
-  StoneSharpener = 'Đá Mài Cường Hóa',
-  Ice = 'Băng Thạch',
-  TemperedSteel = 'Thép Tôi Luyện',
-  DragonHide = 'Da Rồng',
-  ElementalCrystal = 'Tinh Thể Nguyên Tố',
-  StarDust = 'Bụi Sao',
-  VoidCore = 'Lõi Hư Không',
-  TimeFragment = 'Mảnh Vỡ Thời Gian',
-  MemoryGem = 'Ngọc Ký Ức'
-}
-
-export enum ElementType {
-  Physical = 'Vật Lý',
-  Fire = 'Lửa',
-  Ice = 'Băng',
-  Lightning = 'Sét',
-  Acid = 'Axit'
+  Ore = 'Quặng Thô',
+  ForestWood = 'Gỗ Khởi Nguyên',
+  WildHerb = 'Thảo Mộc Rừng',
+  YetiFur = 'Lông Yeti',
+  GoldOre = 'Quặng Vàng',
+  VoidShard = 'Mảnh Vỡ Hư Không',
+  GemStone = 'Đá Quý'
 }
 
 export interface Material {
@@ -51,28 +55,13 @@ export interface Material {
   quantity: number;
 }
 
-export enum EquipmentType {
-  Weapon = 'Vũ Khí',
-  Armor = 'Giáp Trụ',
-  Accessory = 'Trang Sức',
-  Helmet = 'Mũ Giáp',
-  Boots = 'Giày',
-  Gloves = 'Găng Tay'
-}
-
-export interface Blueprint {
-  id: string;
-  name: string;
-  resultType: EquipmentType | 'VẬT PHẨM';
-  requiredMaterials: { type: MaterialType; amount: number }[];
-  baseStats: {
-    minAtk: number;
-    maxAtk: number;
-    minDef: number;
-    maxDef: number;
-  };
-  unlocked: boolean;
-  evolutionLevel: number;
+export enum ElementType {
+  Physical = 'Vật Lý',
+  Fire = 'Lửa',
+  Ice = 'Băng',
+  Lightning = 'Sét',
+  Acid = 'Axit',
+  Void = 'Hư Không'
 }
 
 export enum MonsterAbility {
@@ -80,17 +69,17 @@ export enum MonsterAbility {
   LifeSteal = 'Hút Máu',
   ArmorBreak = 'Phá Giáp',
   Reflect = 'Phản Đòn',
-  Invisibility = 'Tàng Hình',
+  Stun = 'Gây Choáng',
+  Freeze = 'Đông Cứng',
+  Regen = 'Hồi Phục'
 }
 
 export enum MutationType {
   None = 'Bình Thường',
-  Empowered = 'Cường Hóa',
-  Resistant = 'Kháng Nguyên Tố',
-  Reflective = 'Phản Chiếu',
+  RebirthVariant = 'Biến Dị Tái Sinh',
   Void = 'Vô Định',
-  Stalker = 'Kẻ Săn Đuổi',
-  Corrupted = 'Tha Hóa'
+  Corrupted = 'Tha Hóa',
+  Stalker = 'Kẻ Săn Đuổi'
 }
 
 export interface Enemy {
@@ -107,6 +96,7 @@ export interface Enemy {
   abilities?: MonsterAbility[];
   expReward: number;
   goldReward: number;
+  minRebirth?: number;
   dropTable: {
     materialType: MaterialType;
     chance: number;
@@ -115,37 +105,20 @@ export interface Enemy {
   }[];
 }
 
+export interface EquipmentTalent {
+  name: string;
+  desc: string;
+}
+
 export enum SetId {
-  PrimalHunter = 'Thợ Săn Nguyên Thủy',
-  InfinityChrono = 'Vòng Lặp Vĩnh Hằng'
+  PrimalHunter = 'PrimalHunter',
+  InfinityChrono = 'InfinityChrono'
 }
 
 export enum EnchantmentType {
   None = 'Không',
   Sharpness = 'Sắc Bén',
   Protection = 'Bảo Vệ'
-}
-
-export enum GemType {
-  Ruby = 'Hồng Ngọc',
-  Sapphire = 'Lam Ngọc',
-  Topaz = 'Hoàng Ngọc'
-}
-
-export enum GemTier {
-  T1 = 1,
-  T2 = 2,
-  T3 = 3
-}
-
-export interface SocketedGem {
-  type: GemType;
-  tier: GemTier;
-}
-
-export interface EquipmentTalent {
-  name: string;
-  desc: string;
 }
 
 export interface Equipment {
@@ -162,11 +135,37 @@ export interface Equipment {
   };
   sockets: number;
   socketedGems: SocketedGem[];
+  talent?: EquipmentTalent;
   setId?: SetId;
   enchantment?: EnchantmentType;
   element?: ElementType;
-  inheritedPotential?: number;
-  talent?: EquipmentTalent;
+}
+
+export enum EquipmentType {
+  Weapon = 'Vũ Khí',
+  Armor = 'Giáp Trụ',
+  Accessory = 'Trang Sức',
+  Helmet = 'Mũ Giáp',
+  Boots = 'Giày',
+  Gloves = 'Găng Tay'
+}
+
+export interface SocketedGem {
+  type: GemType;
+  tier: GemTier;
+}
+
+export enum GemType { Ruby = 'Hồng Ngọc', Sapphire = 'Lam Ngọc', Topaz = 'Hoàng Ngọc' }
+export enum GemTier { T1 = 1, T2 = 2, T3 = 3 }
+
+export interface Blueprint {
+  id: string;
+  name: string;
+  resultType: EquipmentType | 'VẬT PHẨM';
+  evolutionLevel: number;
+  requiredMaterials: { type: MaterialType; amount: number }[];
+  baseStats: { minAtk: number; maxAtk: number; minDef: number; maxDef: number };
+  unlocked: boolean;
 }
 
 export interface Zone {
@@ -175,18 +174,19 @@ export interface Zone {
   description: string;
   recommendedLevel: number;
   materials: MaterialType[];
+  minRebirth?: number;
 }
 
 export enum EternalUpgradeId {
   LatentPower = 'suc_manh_tiem_an',
   ResourceRetention = 'bao_toan_tai_nguyen',
   BlueprintMastery = 'bac_thay_ban_ve',
-  EternalBlood = 'huyet_mach_vinh_hang', // Thiên phú vĩnh hằng mới
-  DeepSight = 'thau_thi_sau' // Thiên phú vĩnh hằng mới
+  EternalBlood = 'huyet_mach_vinh_hang',
+  DeepSight = 'thau_thi_sau'
 }
 
 export interface EternalUpgrade {
-  id: EternalUpgradeId;
+  id: EternalUpgradeId | string;
   name: string;
   description: string;
   baseCost: number;
@@ -200,13 +200,6 @@ export enum CharacterClass {
   HeavySentinel = 'Hộ Vệ Thủ Lĩnh',
   ShadowBlade = 'Bóng Ma Hắc Ám',
   AlchemistMage = 'Giả Kim Pháp Sư'
-}
-
-export interface Guild {
-  name: string;
-  level: number;
-  fame: number;
-  blueprints: string[];
 }
 
 export enum SkillBranch {
@@ -224,7 +217,15 @@ export interface Skill {
   maxLevel: number;
   cost: number;
   effectValue: number;
+  reqLevel: number;
   reqClass?: CharacterClass;
+}
+
+export interface Guild {
+  name: string;
+  level: number;
+  fame: number;
+  blueprints: string[];
 }
 
 export interface Player {

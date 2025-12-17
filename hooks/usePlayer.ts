@@ -32,7 +32,6 @@ export const usePlayer = (addLog: (msg: string) => void) => {
   const [player, setPlayer] = useState<Player>(INITIAL_PLAYER);
 
   const saveGame = useCallback(() => {
-    // Lưu vào localStorage của trình duyệt
     localStorage.setItem(SAVE_KEY, JSON.stringify(player));
     addLog("💾 Ký ức thợ rèn đã được ghi lại thành công vào trình duyệt!");
   }, [player, addLog]);
@@ -42,11 +41,9 @@ export const usePlayer = (addLog: (msg: string) => void) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // Merge state để đảm bảo nếu có trường mới trong INITIAL_PLAYER thì không bị mất
         setPlayer(prev => ({
           ...INITIAL_PLAYER,
           ...parsed,
-          // Đảm bảo các object lồng nhau cũng được merge
           stats: { ...INITIAL_PLAYER.stats, ...parsed.stats },
           skills: { ...parsed.skills },
           eternalUpgrades: { ...parsed.eternalUpgrades },
@@ -76,7 +73,7 @@ export const usePlayer = (addLog: (msg: string) => void) => {
         blueprintLevels: { ...prev.blueprintLevels, [bpId]: currentLevel + 1 }
       };
     });
-    addLog(`📘 Bản vẽ nâng lên cấp ${ (player.blueprintLevels[bpId] || 0) + 1}!`);
+    addLog(`📘 Bản vẽ nâng lên cấp ${(player.blueprintLevels[bpId] || 0) + 1}!`);
   }, [player.blueprintLevels, addLog]);
 
   const updateMemoryPotential = useCallback((potential: number) => {
@@ -128,7 +125,6 @@ export const usePlayer = (addLog: (msg: string) => void) => {
         const savedRebirthCount = prev.rebirthCount + 1;
         const savedClass = prev.characterClass; 
         const savedBpLevels = prev.blueprintLevels;
-        const savedPotential = prev.memoryGemPotential;
 
         return {
           ...INITIAL_PLAYER,
@@ -145,11 +141,22 @@ export const usePlayer = (addLog: (msg: string) => void) => {
 
   const upgradeSkill = useCallback((skill: Skill) => {
     setPlayer(prev => {
+      // Kiểm tra cấp độ yêu cầu
+      if (prev.level < skill.reqLevel) {
+          addLog(`❌ Cần Cấp ${skill.reqLevel} để mở khóa Bí Kỹ này!`);
+          return prev;
+      }
       const currentLevel = prev.skills[skill.id] || 0;
       if (currentLevel >= skill.maxLevel || prev.skillPoints < skill.cost) return prev;
-      return { ...prev, skillPoints: prev.skillPoints - skill.cost, skills: { ...prev.skills, [skill.id]: currentLevel + 1 } };
+      
+      addLog(`✨ Lĩnh hội thành công Bí Kỹ: ${skill.name}`);
+      return { 
+        ...prev, 
+        skillPoints: prev.skillPoints - skill.cost, 
+        skills: { ...prev.skills, [skill.id]: currentLevel + 1 } 
+      };
     });
-  }, []);
+  }, [addLog]);
 
   const buyEternalUpgrade = useCallback((upgrade: EternalUpgrade) => {
     setPlayer(prev => {
