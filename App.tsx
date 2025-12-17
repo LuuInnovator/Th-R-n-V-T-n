@@ -1,6 +1,6 @@
 
 /* ... (Imports remain same) ... */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Zone, Enemy, Blueprint, EquipmentType, Equipment, SetId, EternalUpgradeId, ElementType, MaterialType, Rarity, CharacterClass, GemType, GemTier, EnchantmentType } from './types';
 import { ZONES, ENEMIES_DB, INITIAL_BLUEPRINTS, RARITY_MULTIPLIER, GEM_STATS, ENCHANT_STATS } from './constants';
 import { randomInt, rollRarity, generateId, formatNumber } from './utils';
@@ -52,6 +52,16 @@ export default function App() {
     });
     return activeSets;
   }, [equipped]);
+
+  // --- CALCULATE DROP RATE BONUS (For display and logic) ---
+  const dropRateBonus = useMemo(() => {
+    const huntersEyeLevel = player.eternalUpgrades[EternalUpgradeId.HuntersEye] || 0;
+    let bonus = huntersEyeLevel * 0.01;
+    Object.values(equipped).forEach(i => { if (i?.enchantment === EnchantmentType.Fortune) bonus += 0.2; });
+    if (player.characterClass === CharacterClass.HeavySentinel) bonus += 0.1;
+    return bonus;
+  }, [player.eternalUpgrades, player.characterClass, equipped]);
+
 
   // --- GUILD HANDLERS ---
   const handleUnlockBlueprint = (bp: Blueprint) => {
@@ -295,11 +305,7 @@ export default function App() {
       gainExp(currentEnemy.expReward);
       addGold(currentEnemy.goldReward);
       
-      const huntersEyeLevel = player.eternalUpgrades[EternalUpgradeId.HuntersEye] || 0;
-      let dropRateBonus = huntersEyeLevel * 0.01;
-      Object.values(equipped).forEach(i => { if (i?.enchantment === EnchantmentType.Fortune) dropRateBonus += 0.2; });
-      if (player.characterClass === CharacterClass.HeavySentinel) dropRateBonus += 0.1;
-      
+      // Use calculated dropRateBonus
       currentEnemy.dropTable.forEach(drop => {
         let specificBonus = 0;
         if (player.characterClass === CharacterClass.AlchemistMage && (drop.materialType === MaterialType.SoulDust || drop.materialType === MaterialType.Essence)) {
@@ -367,7 +373,7 @@ export default function App() {
         setCurrentEnemy({ ...currentEnemy, hp: newEnemyHp });
       }
     }
-  }, [currentEnemy, player, equipped, addLog, gainExp, addGold, addMaterial, updateHp, setFullHp, getActiveSets, hasRevivedInBattle, calculateTotalStats, addGem, materials, consumeMaterials, bossPhase, rustStacks]);
+  }, [currentEnemy, player, equipped, addLog, gainExp, addGold, addMaterial, updateHp, setFullHp, getActiveSets, hasRevivedInBattle, calculateTotalStats, addGem, materials, consumeMaterials, bossPhase, rustStacks, dropRateBonus]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
@@ -625,6 +631,8 @@ export default function App() {
               isAutoAttacking={isAutoAttacking} 
               onToggleAutoAttack={() => setIsAutoAttacking(!isAutoAttacking)}
               decoyCount={materials.find(m => m.type === MaterialType.DecoyItem)?.quantity || 0}
+              blueprints={[...INITIAL_BLUEPRINTS].filter(bp => !bp.isGuildBlueprint || player.guild.blueprints.includes(bp.id))}
+              dropRateBonus={dropRateBonus} // Pass bonus down
             />
           )}
           

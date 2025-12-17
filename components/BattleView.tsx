@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Zone, Enemy, Player, MaterialType } from '../types';
+import { Zone, Enemy, Player, MaterialType, Blueprint } from '../types';
 import { ZoneList } from './battle/ZoneList';
 import { EnemyDisplay } from './battle/EnemyDisplay';
 import { BattleLog } from './battle/BattleLog';
@@ -19,8 +19,9 @@ interface BattleViewProps {
   onClearLogs?: () => void;
   isAutoAttacking?: boolean;
   onToggleAutoAttack?: () => void;
-  // Nhận thêm danh sách nguyên liệu để đếm Decoy Item
-  decoyCount?: number; 
+  decoyCount?: number;
+  blueprints?: Blueprint[]; // Add blueprints prop
+  dropRateBonus?: number; // New prop
 }
 
 export const BattleView: React.FC<BattleViewProps> = ({
@@ -35,7 +36,9 @@ export const BattleView: React.FC<BattleViewProps> = ({
   onClearLogs,
   isAutoAttacking = false,
   onToggleAutoAttack = () => {},
-  decoyCount = 0
+  decoyCount = 0,
+  blueprints = [],
+  dropRateBonus = 0
 }) => {
   return (
     <div className="relative h-full w-full overflow-hidden flex flex-col bg-slate-950">
@@ -44,7 +47,13 @@ export const BattleView: React.FC<BattleViewProps> = ({
 
       {/* --- TOP BAR: ZONE SELECTION --- */}
       <div className="relative z-20 p-2 shrink-0 bg-slate-900/50 backdrop-blur-sm border-b border-slate-800">
-        <ZoneList zones={zones} activeZone={activeZone} onSelect={onSelectZone} />
+        <ZoneList 
+            zones={zones} 
+            activeZone={activeZone} 
+            onSelect={onSelectZone} 
+            blueprints={blueprints} 
+            dropRateBonus={dropRateBonus}
+        />
       </div>
       
       {/* --- MAIN BATTLE AREA (HUD LAYOUT) --- */}
