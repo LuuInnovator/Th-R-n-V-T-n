@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Player, Blueprint, Equipment, Rarity } from '../types';
 import { Button } from './Button';
 import { Card } from './Card';
-import { Users, BookOpen, Star, RefreshCcw, Lock, Check } from 'lucide-react';
+import { ShoppingBag, Star, RefreshCcw, Lock, Check, Store } from 'lucide-react';
 import { RARITY_COLOR } from '../constants';
 
 interface GuildViewProps {
@@ -30,15 +30,15 @@ export const GuildView: React.FC<GuildViewProps> = ({
         <div className="bg-slate-900/80 p-4 rounded-xl border border-amber-600/30 flex items-center justify-between shrink-0">
              <div className="flex items-center gap-4">
                  <div className="bg-amber-600 p-3 rounded-full shadow-lg shadow-amber-900/50">
-                     <Users className="text-white" size={24} />
+                     <Store className="text-white" size={24} />
                  </div>
                  <div>
-                     <h2 className="text-2xl font-bold text-slate-100">{player.guild.name}</h2>
-                     <div className="text-slate-400 text-sm">Cấp {player.guild.level} • Thành viên: 1 (Bạn)</div>
+                     <h2 className="text-2xl font-bold text-slate-100">Cửa Hàng Thương Hội</h2>
+                     <div className="text-slate-400 text-sm">Cấp {player.guild.level} • Hạng: Khách VIP</div>
                  </div>
              </div>
              <div className="text-right bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
-                 <div className="text-xs text-slate-500 uppercase font-bold mb-1">Danh Tiếng (Fame)</div>
+                 <div className="text-xs text-slate-500 uppercase font-bold mb-1">Điểm Uy Tín</div>
                  <div className="text-xl font-black text-amber-500 flex items-center justify-end gap-1">
                      <Star size={16} fill="currentColor" /> {player.guild.fame}
                  </div>
@@ -50,13 +50,13 @@ export const GuildView: React.FC<GuildViewProps> = ({
                 onClick={() => setTab('library')}
                 className={`flex items-center gap-2 px-4 py-2 font-bold transition-all border-b-2 ${tab === 'library' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
              >
-                 <BookOpen size={18} /> Thư Viện Bản Vẽ
+                 <ShoppingBag size={18} /> Hàng Độc Quyền
              </button>
              <button 
                 onClick={() => setTab('trader')}
                 className={`flex items-center gap-2 px-4 py-2 font-bold transition-all border-b-2 ${tab === 'trader' ? 'border-green-500 text-green-500' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
              >
-                 <RefreshCcw size={18} /> Thương Lái Du Mục
+                 <RefreshCcw size={18} /> Thu Mua Vật Phẩm
              </button>
         </div>
 
@@ -77,7 +77,7 @@ export const GuildView: React.FC<GuildViewProps> = ({
                                 
                                 <div className="mt-auto flex items-center justify-between">
                                     <div className="text-amber-500 font-bold text-sm">
-                                        {bp.guildFameCost} Fame
+                                        {bp.guildFameCost} Uy Tín
                                     </div>
                                     <Button 
                                         size="sm" 
@@ -85,13 +85,13 @@ export const GuildView: React.FC<GuildViewProps> = ({
                                         onClick={() => onUnlockBlueprint(bp)}
                                         className={isUnlocked ? 'invisible' : ''}
                                     >
-                                        Mở Khóa
+                                        Mua Bản Vẽ
                                     </Button>
                                 </div>
                             </Card>
                         );
                     })}
-                    {guildBlueprints.length === 0 && <div className="text-slate-500 italic">Chưa có bản vẽ Bang hội nào khả dụng.</div>}
+                    {guildBlueprints.length === 0 && <div className="text-slate-500 italic">Cửa hàng đang nhập kho...</div>}
                 </div>
             )}
 
@@ -102,15 +102,15 @@ export const GuildView: React.FC<GuildViewProps> = ({
                             <div className="w-24 h-24 bg-slate-800 rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-slate-600">
                                 <span className="text-4xl">👳‍♂️</span>
                             </div>
-                            <h3 className="text-xl font-bold text-slate-200">Thương Lái Du Mục</h3>
+                            <h3 className="text-xl font-bold text-slate-200">Chủ Cửa Hàng</h3>
                             <p className="text-sm text-slate-400 mt-2">
-                                "Ta thu mua những món đồ hiếm (Rare+). Đổi lại, ta sẽ cho ngươi điểm Danh Tiếng để xây dựng Bang Hội."
+                                "Ta thu mua những món đồ hiếm (Rare+). Đổi lại, ta sẽ cho ngươi điểm Uy Tín để mua các bản vẽ độc quyền."
                             </p>
                         </div>
                         <div className="text-left text-sm space-y-2 bg-slate-950 p-4 rounded-lg">
-                            <div className="flex justify-between text-blue-400"><span>Đồ Hiếm (Rare)</span> <span>+10 Fame</span></div>
-                            <div className="flex justify-between text-purple-400"><span>Đồ Sử Thi (Epic)</span> <span>+50 Fame</span></div>
-                            <div className="flex justify-between text-yellow-400"><span>Huyền Thoại (Legend)</span> <span>+250 Fame</span></div>
+                            <div className="flex justify-between text-blue-400"><span>Đồ Hiếm (Rare)</span> <span>+10 Uy Tín</span></div>
+                            <div className="flex justify-between text-purple-400"><span>Đồ Sử Thi (Epic)</span> <span>+50 Uy Tín</span></div>
+                            <div className="flex justify-between text-yellow-400"><span>Huyền Thoại (Legend)</span> <span>+250 Uy Tín</span></div>
                         </div>
                     </div>
 

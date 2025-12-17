@@ -1,14 +1,16 @@
+
 import React from 'react';
-import { Material } from '../../types';
+import { Material, Rarity } from '../../types';
 import { RARITY_COLOR } from '../../constants';
-import { Gem, Box } from 'lucide-react';
+import { Gem, Box, ArrowUpCircle } from 'lucide-react';
 import { Card } from '../Card';
 
 interface MaterialListProps {
   materials: Material[];
+  onUpgrade?: (id: string) => void;
 }
 
-export const MaterialList: React.FC<MaterialListProps> = ({ materials }) => {
+export const MaterialList: React.FC<MaterialListProps> = ({ materials, onUpgrade }) => {
   return (
     <Card className="h-full">
       <div className="flex items-center gap-2 mb-4 border-b border-slate-700 pb-2">
@@ -22,25 +24,40 @@ export const MaterialList: React.FC<MaterialListProps> = ({ materials }) => {
             Kho nguyên liệu trống rỗng
           </div>
         )}
-        {materials.map((mat) => (
-          <div 
-            key={mat.id} 
-            className="bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex flex-col items-center text-center hover:border-slate-500 transition-colors"
-          >
-            <div className={`p-3 rounded-full bg-slate-800 mb-2 shadow-inner`}>
-              <Gem size={20} className={RARITY_COLOR[mat.rarity]} />
-            </div>
-            <div className={`text-xs font-bold mb-1 ${RARITY_COLOR[mat.rarity]}`}>
-              {mat.name}
-            </div>
-            <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-2">
-              {mat.type}
-            </div>
-            <div className="mt-auto bg-slate-800 px-3 py-1 rounded-full text-xs text-white font-mono">
-              x{mat.quantity}
-            </div>
-          </div>
-        ))}
+        {materials.map((mat) => {
+            const canUpgrade = mat.quantity >= 5 && mat.rarity !== Rarity.Mythic;
+            
+            return (
+              <div 
+                key={mat.id} 
+                className="bg-slate-900/50 p-3 rounded-lg border border-slate-700 flex flex-col items-center text-center hover:border-slate-500 transition-colors relative group"
+              >
+                <div className={`p-3 rounded-full bg-slate-800 mb-2 shadow-inner`}>
+                  <Gem size={20} className={RARITY_COLOR[mat.rarity]} />
+                </div>
+                <div className={`text-xs font-bold mb-1 ${RARITY_COLOR[mat.rarity]}`}>
+                  {mat.name}
+                </div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wide mb-2">
+                  {mat.type}
+                </div>
+                <div className="mt-auto flex items-center justify-between w-full gap-2">
+                    <div className="bg-slate-800 px-3 py-1 rounded-full text-xs text-white font-mono flex-1">
+                      x{mat.quantity}
+                    </div>
+                    {onUpgrade && canUpgrade && (
+                        <button 
+                            onClick={() => onUpgrade(mat.id)}
+                            className="bg-purple-600 hover:bg-purple-500 text-white p-1 rounded-full shadow-lg animate-pulse hover:animate-none"
+                            title="Ghép 5 nguyên liệu thành 1 cao cấp hơn"
+                        >
+                            <ArrowUpCircle size={14} />
+                        </button>
+                    )}
+                </div>
+              </div>
+            );
+        })}
       </div>
     </Card>
   );

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Zone, Blueprint, MaterialType } from '../types';
 import { ENEMIES_DB } from '../constants';
 import { Card } from './Card';
-import { Map, Target, Skull, ChevronDown, ChevronUp, Search, Percent, Hammer } from 'lucide-react';
+import { Map, Target, Skull, ChevronDown, ChevronUp, Search, Percent, Hammer, Shield, Zap, Coins, Sparkles } from 'lucide-react';
 
 interface WikiViewProps {
   zones: Zone[];
@@ -35,7 +35,7 @@ export const WikiView: React.FC<WikiViewProps> = ({ zones, blueprints }) => {
               <Search className="text-blue-500" size={24} />
               <h2 className="text-xl font-bold text-slate-100">Từ Điển Sinh Vật</h2>
           </div>
-          <p className="text-sm text-slate-400">Tra cứu thông tin quái vật và tỷ lệ rơi đồ.</p>
+          <p className="text-sm text-slate-400">Tra cứu thông tin quái vật, chỉ số và tỷ lệ rơi đồ.</p>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
@@ -101,7 +101,7 @@ export const WikiView: React.FC<WikiViewProps> = ({ zones, blueprints }) => {
                                              {enemy.name}
                                              {enemy.isBoss && <span className="text-[9px] bg-red-600 text-white px-1.5 py-0.5 rounded font-black">BOSS</span>}
                                          </div>
-                                         <div className="text-xs text-slate-500">Lv.{enemy.level} • {enemy.element} • HP: {enemy.maxHp}</div>
+                                         <div className="text-xs text-slate-500">Lv.{enemy.level} • HP: {enemy.maxHp}</div>
                                      </div>
                                  </div>
                                  <div className="text-slate-500">
@@ -109,43 +109,71 @@ export const WikiView: React.FC<WikiViewProps> = ({ zones, blueprints }) => {
                                  </div>
                              </button>
 
-                             {/* Expanded Drop Table */}
+                             {/* Expanded Content */}
                              {expandedEnemyId === enemy.id && (
-                                 <div className="p-4 border-t border-slate-800/50 bg-slate-900/60 animate-fade-in">
-                                     <div className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
-                                         <Search size={14} /> Danh Sách Vật Phẩm Rơi
+                                 <div className="border-t border-slate-800/50 bg-slate-900/60 animate-fade-in divide-y divide-slate-800/50">
+                                     
+                                     {/* FULL STATS GRID */}
+                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 text-center">
+                                         <div className="bg-slate-800/50 p-2 rounded border border-slate-700/50">
+                                             <div className="text-[10px] text-slate-500 uppercase font-bold mb-1 flex items-center justify-center gap-1"><Zap size={10} className="text-red-400"/> Tấn Công</div>
+                                             <div className="font-mono text-red-300 font-bold">{enemy.attack}</div>
+                                         </div>
+                                         <div className="bg-slate-800/50 p-2 rounded border border-slate-700/50">
+                                             <div className="text-[10px] text-slate-500 uppercase font-bold mb-1 flex items-center justify-center gap-1"><Shield size={10} className="text-blue-400"/> Phòng Thủ</div>
+                                             <div className="font-mono text-blue-300 font-bold">{enemy.defense}</div>
+                                         </div>
+                                         <div className="bg-slate-800/50 p-2 rounded border border-slate-700/50">
+                                             <div className="text-[10px] text-slate-500 uppercase font-bold mb-1 flex items-center justify-center gap-1"><Sparkles size={10} className="text-cyan-400"/> Kinh Nghiệm</div>
+                                             <div className="font-mono text-cyan-300 font-bold">{enemy.expReward} EXP</div>
+                                         </div>
+                                         <div className="bg-slate-800/50 p-2 rounded border border-slate-700/50">
+                                             <div className="text-[10px] text-slate-500 uppercase font-bold mb-1 flex items-center justify-center gap-1"><Coins size={10} className="text-yellow-400"/> Vàng</div>
+                                             <div className="font-mono text-yellow-300 font-bold">{enemy.goldReward}</div>
+                                         </div>
+                                         <div className="col-span-2 md:col-span-4 bg-slate-800/50 p-2 rounded border border-slate-700/50">
+                                             <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">Hệ Nguyên Tố</div>
+                                             <div className="font-bold text-slate-300">{enemy.element}</div>
+                                         </div>
                                      </div>
-                                     <div className="overflow-x-auto">
-                                         <table className="w-full text-left min-w-[500px]">
-                                             <thead>
-                                                 <tr className="text-xs text-slate-500 border-b border-slate-700/50">
-                                                     <th className="pb-2 font-medium w-[30%]">Vật Phẩm</th>
-                                                     <th className="pb-2 font-medium w-[15%] text-center">Tỷ Lệ</th>
-                                                     <th className="pb-2 font-medium w-[55%]">Sử Dụng Để Chế Tạo</th>
-                                                 </tr>
-                                             </thead>
-                                             <tbody className="divide-y divide-slate-800/50 text-sm">
-                                                 {enemy.dropTable.map((drop, idx) => (
-                                                     <tr key={idx}>
-                                                         <td className="py-3 pr-2">
-                                                             <div className="font-bold text-slate-200">{drop.materialType}</div>
-                                                             <div className="text-[10px] text-slate-500">Số lượng: {drop.minQty}-{drop.maxQty}</div>
-                                                         </td>
-                                                         <td className="py-3 px-2 text-center">
-                                                             <div className="inline-flex items-center gap-1 font-mono font-bold text-yellow-500 bg-yellow-900/10 px-2 py-1 rounded border border-yellow-900/30">
-                                                                 <Percent size={10} /> {(drop.chance * 100).toFixed(0)}%
-                                                             </div>
-                                                         </td>
-                                                         <td className="py-3 pl-2 text-slate-400 text-xs leading-relaxed">
-                                                             <div className="flex items-start gap-1.5">
-                                                                 <Hammer size={12} className="mt-0.5 text-blue-500 shrink-0" />
-                                                                 <span>{getUsage(drop.materialType)}</span>
-                                                             </div>
-                                                         </td>
-                                                     </tr>
-                                                 ))}
-                                             </tbody>
-                                         </table>
+
+                                     {/* DROP TABLE */}
+                                     <div className="p-4">
+                                        <div className="text-xs font-bold text-slate-500 uppercase mb-3 flex items-center gap-2">
+                                            <Search size={14} /> Danh Sách Vật Phẩm Rơi
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left min-w-[500px]">
+                                                <thead>
+                                                    <tr className="text-xs text-slate-500 border-b border-slate-700/50">
+                                                        <th className="pb-2 font-medium w-[30%]">Vật Phẩm</th>
+                                                        <th className="pb-2 font-medium w-[15%] text-center">Tỷ Lệ</th>
+                                                        <th className="pb-2 font-medium w-[55%]">Sử Dụng Để Chế Tạo</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-slate-800/50 text-sm">
+                                                    {enemy.dropTable.map((drop, idx) => (
+                                                        <tr key={idx}>
+                                                            <td className="py-3 pr-2">
+                                                                <div className="font-bold text-slate-200">{drop.materialType}</div>
+                                                                <div className="text-[10px] text-slate-500">Số lượng: {drop.minQty}-{drop.maxQty}</div>
+                                                            </td>
+                                                            <td className="py-3 px-2 text-center">
+                                                                <div className="inline-flex items-center gap-1 font-mono font-bold text-yellow-500 bg-yellow-900/10 px-2 py-1 rounded border border-yellow-900/30">
+                                                                    <Percent size={10} /> {(drop.chance * 100).toFixed(0)}%
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-3 pl-2 text-slate-400 text-xs leading-relaxed">
+                                                                <div className="flex items-start gap-1.5">
+                                                                    <Hammer size={12} className="mt-0.5 text-blue-500 shrink-0" />
+                                                                    <span>{getUsage(drop.materialType)}</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                      </div>
                                  </div>
                              )}

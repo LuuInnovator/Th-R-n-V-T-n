@@ -47,26 +47,26 @@ export const ZONES: Zone[] = [
   }
 ];
 
-// Danh sách quái vật (Đã cân bằng lại: Tỷ lệ rơi thấp hơn để tăng độ khó)
+// Danh sách quái vật (Đã update tỷ lệ Boss cao hơn)
 export const ENEMIES_DB: Record<string, Enemy[]> = {
   'z1': [
     {
       id: 'e1_1', name: 'Sói Xám', level: 1, hp: 60, maxHp: 60, attack: 8, defense: 2, isBoss: false, element: ElementType.Physical,
       expReward: 23, goldReward: 5,
-      dropTable: [{ materialType: MaterialType.Leather, chance: 0.15, minQty: 1, maxQty: 1 }] // Giảm từ 25% xuống 15%
+      dropTable: [{ materialType: MaterialType.Leather, chance: 0.15, minQty: 1, maxQty: 1 }]
     },
     {
       id: 'e1_2', name: 'Mộc Tinh', level: 3, hp: 100, maxHp: 100, attack: 12, defense: 4, isBoss: false, element: ElementType.Physical,
       expReward: 38, goldReward: 8,
-      dropTable: [{ materialType: MaterialType.Wood, chance: 0.15, minQty: 1, maxQty: 2 }] // Giảm từ 25% xuống 15%
+      dropTable: [{ materialType: MaterialType.Wood, chance: 0.15, minQty: 1, maxQty: 2 }]
     },
     {
       id: 'e1_boss', name: 'Vua Sói Ma (Boss)', level: 10, hp: 800, maxHp: 800, attack: 55, defense: 15, isBoss: true, element: ElementType.Physical,
       expReward: 525, goldReward: 100,
       dropTable: [
-        { materialType: MaterialType.Leather, chance: 0.40, minQty: 3, maxQty: 5 }, // Giảm chance và số lượng
-        { materialType: MaterialType.Gem, chance: 0.08, minQty: 1, maxQty: 1 }, // Rất hiếm
-        { materialType: MaterialType.SoulDust, chance: 0.02, minQty: 1, maxQty: 1 } // Cực hiếm
+        { materialType: MaterialType.Leather, chance: 0.60, minQty: 3, maxQty: 6 }, // Tăng từ 0.40
+        { materialType: MaterialType.Gem, chance: 0.25, minQty: 1, maxQty: 1 }, // Tăng từ 0.08
+        { materialType: MaterialType.SoulDust, chance: 0.10, minQty: 1, maxQty: 1 } // Tăng từ 0.02
       ]
     }
   ],
@@ -80,9 +80,9 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
       id: 'e2_boss', name: 'Người Khổng Lồ Đá (Boss)', level: 20, hp: 2500, maxHp: 2500, attack: 180, defense: 90, isBoss: true, element: ElementType.Physical,
       expReward: 1200, goldReward: 300,
       dropTable: [
-          { materialType: MaterialType.Ore, chance: 0.50, minQty: 5, maxQty: 10 }, 
-          { materialType: MaterialType.Gem, chance: 0.15, minQty: 1, maxQty: 2 },
-          { materialType: MaterialType.SoulDust, chance: 0.05, minQty: 1, maxQty: 2 }
+          { materialType: MaterialType.Ore, chance: 0.75, minQty: 8, maxQty: 15 }, // Buff mạnh
+          { materialType: MaterialType.Gem, chance: 0.35, minQty: 2, maxQty: 3 }, // Buff mạnh
+          { materialType: MaterialType.SoulDust, chance: 0.15, minQty: 1, maxQty: 3 } // Buff mạnh
       ]
     }
   ],
@@ -90,15 +90,15 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
     {
       id: 'e3_1', name: 'Quỷ Lửa', level: 28, hp: 1000, maxHp: 1000, attack: 130, defense: 40, isBoss: false, element: ElementType.Fire,
       expReward: 270, goldReward: 50,
-      dropTable: [{ materialType: MaterialType.Essence, chance: 0.10, minQty: 1, maxQty: 1 }] // Khó kiếm Essence
+      dropTable: [{ materialType: MaterialType.Essence, chance: 0.10, minQty: 1, maxQty: 1 }]
     },
     {
       id: 'e3_boss', name: 'Rồng Hỏa Tinh (World Boss)', level: 50, hp: 20000, maxHp: 20000, attack: 950, defense: 350, isBoss: true, element: ElementType.Fire,
       expReward: 12000, goldReward: 2000,
       dropTable: [
-          { materialType: MaterialType.Essence, chance: 0.5, minQty: 3, maxQty: 5 }, 
-          { materialType: MaterialType.Gem, chance: 0.3, minQty: 2, maxQty: 5 },
-          { materialType: MaterialType.SoulDust, chance: 0.2, minQty: 2, maxQty: 5 }
+          { materialType: MaterialType.Essence, chance: 0.8, minQty: 5, maxQty: 10 }, 
+          { materialType: MaterialType.Gem, chance: 0.5, minQty: 3, maxQty: 6 },
+          { materialType: MaterialType.SoulDust, chance: 0.4, minQty: 3, maxQty: 6 }
       ]
     }
   ],
@@ -112,9 +112,9 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
         id: 'e4_boss', name: 'Cự Thạch Nham Thạch', level: 20, hp: 100000, maxHp: 100000, attack: 3000, defense: 1200, isBoss: true, element: ElementType.Fire,
         expReward: 37500, goldReward: 10000,
         dropTable: [
-            { materialType: MaterialType.FissionCrystal, chance: 0.2, minQty: 1, maxQty: 1 }, // Rất khó rơi
-            { materialType: MaterialType.Ore, chance: 0.8, minQty: 20, maxQty: 50 },
-             { materialType: MaterialType.SoulDust, chance: 0.3, minQty: 5, maxQty: 10 }
+            { materialType: MaterialType.FissionCrystal, chance: 0.3, minQty: 1, maxQty: 1 }, // Tăng nhẹ từ 0.2
+            { materialType: MaterialType.Ore, chance: 1.0, minQty: 50, maxQty: 100 }, // Chắc chắn rơi nhiều quặng
+             { materialType: MaterialType.SoulDust, chance: 0.5, minQty: 10, maxQty: 20 }
         ]
     }
   ],
@@ -123,9 +123,9 @@ export const ENEMIES_DB: Record<string, Enemy[]> = {
           id: 'e5_boss', name: 'Kẻ Gìn Giữ Thời Gian (Final Boss)', level: 99, hp: 666666, maxHp: 666666, attack: 12000, defense: 6000, isBoss: true, element: ElementType.Lightning,
           expReward: 150000, goldReward: 50000,
           dropTable: [
-              { materialType: MaterialType.CondensedTimesand, chance: 0.05, minQty: 1, maxQty: 1 }, // 5% cơ hội
-              { materialType: MaterialType.SoulDust, chance: 0.5, minQty: 10, maxQty: 20 },
-              { materialType: MaterialType.Gem, chance: 0.5, minQty: 5, maxQty: 10 }
+              { materialType: MaterialType.CondensedTimesand, chance: 0.1, minQty: 1, maxQty: 1 }, // Tăng từ 0.05 lên 0.1
+              { materialType: MaterialType.SoulDust, chance: 0.8, minQty: 20, maxQty: 40 },
+              { materialType: MaterialType.Gem, chance: 0.8, minQty: 10, maxQty: 20 }
           ]
       }
   ]
@@ -200,8 +200,9 @@ export const SETS: Record<SetId, { name: string, bonuses: Record<number, string>
   }
 };
 
-// Kỹ Năng (Giữ nguyên)
+// Kỹ Năng - Cập nhật Class Requirement
 export const SKILLS: Skill[] = [
+  // --- KỸ NĂNG CHUNG ---
   {
     id: 'wp_mastery',
     name: 'Bậc Thầy Vũ Khí',
@@ -210,15 +211,6 @@ export const SKILLS: Skill[] = [
     maxLevel: 10,
     cost: 1,
     effectValue: 2
-  },
-  {
-    id: 'wp_crit',
-    name: 'Điểm Yếu Tinh Xảo',
-    description: 'Tăng cơ hội chí mạng khi sử dụng vũ khí.',
-    branch: SkillBranch.WeaponSmith,
-    maxLevel: 5,
-    cost: 2,
-    effectValue: 1
   },
   {
     id: 'ar_mastery',
@@ -230,15 +222,6 @@ export const SKILLS: Skill[] = [
     effectValue: 2 
   },
   {
-    id: 'al_efficiency',
-    name: 'Tiết Kiệm Nguyên Liệu',
-    description: 'Giảm lượng nguyên liệu cần thiết (mô phỏng bằng cách hoàn trả).',
-    branch: SkillBranch.Alchemy,
-    maxLevel: 5,
-    cost: 3,
-    effectValue: 5
-  },
-  {
     id: 'en_overheat',
     name: 'Kiểm Soát Nhiệt',
     description: 'Giảm rủi ro thất bại khi Tăng Nhiệt Lò Rèn.',
@@ -246,6 +229,72 @@ export const SKILLS: Skill[] = [
     maxLevel: 5,
     cost: 2,
     effectValue: 5
+  },
+
+  // --- KỸ NĂNG RIÊNG: CHIẾN BINH GIÁP NẶNG (HeavySentinel) ---
+  {
+      id: 'sentinel_shield',
+      name: 'Khiên Thần (Class)',
+      description: 'Tăng cường khả năng phòng thủ cho mọi giáp nặng.',
+      branch: SkillBranch.ArmorSmith,
+      maxLevel: 5,
+      cost: 2,
+      effectValue: 5,
+      reqClass: CharacterClass.HeavySentinel
+  },
+  {
+      id: 'sentinel_tenacity',
+      name: 'Kiên Cường (Class)',
+      description: 'Tăng khả năng sống sót khi HP thấp.',
+      branch: SkillBranch.Enchanting,
+      maxLevel: 5,
+      cost: 3,
+      effectValue: 2,
+      reqClass: CharacterClass.HeavySentinel
+  },
+
+  // --- KỸ NĂNG RIÊNG: SÁT THỦ BÓNG ĐÊM (ShadowBlade) ---
+  {
+    id: 'wp_crit',
+    name: 'Điểm Yếu Tinh Xảo (Class)',
+    description: 'Tăng mạnh cơ hội chí mạng khi sử dụng vũ khí.',
+    branch: SkillBranch.WeaponSmith,
+    maxLevel: 5,
+    cost: 2,
+    effectValue: 2, // Buffed for assassin
+    reqClass: CharacterClass.ShadowBlade
+  },
+  {
+      id: 'shadow_swiftness',
+      name: 'Thần Tốc (Class)',
+      description: 'Giảm thêm thời gian hồi chiêu khi rèn vũ khí nhẹ.',
+      branch: SkillBranch.WeaponSmith,
+      maxLevel: 5,
+      cost: 3,
+      effectValue: 1,
+      reqClass: CharacterClass.ShadowBlade
+  },
+
+  // --- KỸ NĂNG RIÊNG: PHÁP SƯ LUYỆN KIM (AlchemistMage) ---
+  {
+    id: 'al_efficiency',
+    name: 'Tiết Kiệm Nguyên Liệu (Class)',
+    description: 'Giảm lượng nguyên liệu cần thiết (mô phỏng hoàn trả).',
+    branch: SkillBranch.Alchemy,
+    maxLevel: 5,
+    cost: 2, // Cheaper for Mage
+    effectValue: 8, // Stronger for Mage
+    reqClass: CharacterClass.AlchemistMage
+  },
+  {
+      id: 'mage_transmute',
+      name: 'Chuyển Hóa Vàng (Class)',
+      description: 'Tăng lượng vàng nhận được khi bán vật phẩm.',
+      branch: SkillBranch.Alchemy,
+      maxLevel: 5,
+      cost: 2,
+      effectValue: 5,
+      reqClass: CharacterClass.AlchemistMage
   }
 ];
 

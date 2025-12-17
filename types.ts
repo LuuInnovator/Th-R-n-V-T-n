@@ -165,6 +165,14 @@ export interface Zone {
   materials: MaterialType[];
 }
 
+// LỚP NHÂN VẬT (Di chuyển lên trên để dùng trong Skill)
+export enum CharacterClass {
+  None = 'Chưa chọn',
+  HeavySentinel = 'Chiến Binh Giáp Nặng',
+  ShadowBlade = 'Sát Thủ Bóng Đêm',
+  AlchemistMage = 'Pháp Sư Luyện Kim'
+}
+
 // Kỹ năng thường
 export enum SkillBranch {
   Alchemy = 'Luyện Kim',
@@ -181,6 +189,7 @@ export interface Skill {
   maxLevel: number;
   cost: number;
   effectValue: number;
+  reqClass?: CharacterClass; // New: Yêu cầu lớp nhân vật
 }
 
 // --- HỆ THỐNG VĨNH HẰNG (ETERNAL SYSTEM) ---
@@ -201,14 +210,6 @@ export interface EternalUpgrade {
   effectValue: number; 
 }
 
-// --- LỚP NHÂN VẬT ---
-export enum CharacterClass {
-  None = 'Chưa chọn',
-  HeavySentinel = 'Chiến Binh Giáp Nặng',
-  ShadowBlade = 'Sát Thủ Bóng Đêm',
-  AlchemistMage = 'Pháp Sư Luyện Kim'
-}
-
 // --- BANG HỘI ---
 export interface Guild {
   name: string;
@@ -225,17 +226,34 @@ export interface Player {
   maxExp: number;
   hp: number;
   maxHp: number;
-  attack: number;
-  defense: number;
+  attack: number; // Đây là base ATK từ trang bị/cơ bản, chưa cộng chỉ số
+  defense: number; // Đây là base DEF
   gold: number;
   eternalPoints: number;
   rebirthCount: number;
+  
+  // Skill System (Kỹ năng nghề)
   skillPoints: number;
   skills: Record<string, number>;
+  
+  // Eternal System
   eternalUpgrades: Record<string, number>;
+  
+  // Gem System
   gemInventory: Record<string, number>; 
   
-  guild: Guild; // New: Thông tin bang hội
+  // Guild System
+  guild: Guild; 
+
+  // --- STATS ALLOCATION SYSTEM (THE CORE FIVE) ---
+  statPoints: number; // Điểm tiềm năng chưa cộng
+  stats: {
+      strength: number;    // Sức mạnh: Atk, Weight(Flavor)
+      dexterity: number;   // Khéo léo: Crit Chance, Attack Speed (Cooldown reduction)
+      intelligence: number;// Trí tuệ: MP (Flavor), Skill Effect, Magic Def
+      vitality: number;    // Thể lực: HP, Def
+      luck: number;        // May mắn: Drop Rate, Crit Dmg
+  };
 }
 
 // Nhật ký game

@@ -25,7 +25,17 @@ const INITIAL_PLAYER: Player = {
   skills: {},
   eternalUpgrades: {},
   gemInventory: {}, 
-  guild: INITIAL_GUILD
+  guild: INITIAL_GUILD,
+  
+  // Stats Allocation System
+  statPoints: 5, // Tặng 5 điểm ban đầu
+  stats: {
+      strength: 1,
+      dexterity: 1,
+      intelligence: 1,
+      vitality: 1,
+      luck: 1
+  }
 };
 
 export const usePlayer = (addLog: (msg: string) => void) => {
@@ -38,31 +48,39 @@ export const usePlayer = (addLog: (msg: string) => void) => {
     // 1. Eternal Upgrade: Latent Power
     const latentPowerLevel = player.eternalUpgrades[EternalUpgradeId.LatentPower] || 0;
     multiplier += latentPowerLevel * 0.05;
-
-    // 2. Class Bonuses
-    if (player.characterClass === CharacterClass.HeavySentinel) {
-        // Placeholder for future stats logic
-    }
     
     return Math.floor(base * multiplier);
-  }, [player.eternalUpgrades, player.characterClass]);
+  }, [player.eternalUpgrades]);
 
   // Hàm chọn Class
   const selectClass = useCallback((cls: CharacterClass) => {
-      setPlayer(prev => ({
-          ...prev,
-          characterClass: cls,
-          // Cộng chỉ số khởi đầu tùy class
-          attack: cls === CharacterClass.ShadowBlade ? prev.attack + 5 : prev.attack,
-          defense: cls === CharacterClass.HeavySentinel ? prev.defense + 5 : prev.defense,
-          maxHp: cls === CharacterClass.AlchemistMage ? prev.maxHp + 20 : prev.maxHp,
-          hp: cls === CharacterClass.AlchemistMage ? prev.maxHp + 20 : prev.hp
-      }));
+      setPlayer(prev => {
+          // Bonus stats based on class
+          const newStats = { ...prev.stats };
+          if (cls === CharacterClass.HeavySentinel) { newStats.strength += 5; newStats.vitality += 5; }
+          if (cls === CharacterClass.ShadowBlade) { newStats.dexterity += 5; newStats.luck += 5; }
+          if (cls === CharacterClass.AlchemistMage) { newStats.intelligence += 5; newStats.luck += 5; }
+
+          return {
+            ...prev,
+            characterClass: cls,
+            stats: newStats,
+            attack: cls === CharacterClass.ShadowBlade ? prev.attack + 5 : prev.attack,
+            defense: cls === CharacterClass.HeavySentinel ? prev.defense + 5 : prev.defense,
+            maxHp: cls === CharacterClass.AlchemistMage ? prev.maxHp + 20 : prev.maxHp,
+            hp: cls === CharacterClass.AlchemistMage ? prev.maxHp + 20 : prev.hp
+        };
+      });
       addLog(`✨ Bạn đã chọn lớp nhân vật: ${cls}`);
   }, [addLog]);
 
   const gainExp = useCallback((amount: number) => {
     setPlayer(prev => {
+      // GIỚI HẠN LEVEL 90
+      if (prev.level >= 90) {
+          return prev; // Không nhận thêm exp hoặc lên cấp nếu đã max
+      }
+
       let newExp = prev.currentExp + amount;
       let newLevel = prev.level;
       let newMaxHp = prev.maxHp;
@@ -70,21 +88,26 @@ export const usePlayer = (addLog: (msg: string) => void) => {
       let newDef = prev.defense;
       let newMaxExp = prev.maxExp;
       let newSP = prev.skillPoints;
+      let newStatPoints = prev.statPoints;
       let leveledUp = false;
 
-      while (newExp >= newMaxExp) {
+      while (newExp >= newMaxExp && newLevel < 90) { // Check max level inside loop
         newExp -= newMaxExp;
         newLevel++;
         newMaxExp = Math.floor(newMaxExp * 1.5);
-        newMaxHp += 20;
-        newAtk += 2;
+        newMaxHp += 10; // Giảm lượng HP cộng cứng để ưu tiên cộng qua Vitality
+        newAtk += 1;    // Giảm ATK cứng để ưu tiên Strength
         newDef += 1;
         newSP += 1; 
+        newStatPoints += 3; // +3 điểm tiềm năng mỗi cấp
         leveledUp = true;
       }
 
       if (leveledUp) {
-        addLog(`🎉 CHÚC MỪNG! Bạn đã lên cấp ${newLevel}! (+1 SP, +20 HP)`);
+        addLog(`🎉 LÊN CẤP ${newLevel}! (+3 Điểm Tiềm Năng, +1 SP)`);
+        if (newLevel === 90) {
+            addLog("🏆 BẠN ĐÃ ĐẠT CẤP ĐỘ TỐI ĐA (90)!");
+        }
       }
 
       return {
@@ -93,17 +116,80 @@ export const usePlayer = (addLog: (msg: string) => void) => {
         level: newLevel,
         maxExp: newMaxExp,
         maxHp: newMaxHp,
-        hp: newMaxHp,
+        hp: newMaxHp, // Hồi đầy máu khi lên cấp
         attack: newAtk,
         defense: newDef,
-        skillPoints: newSP
+        skillPoints: newSP,
+        statPoints: newStatPoints
       };
     });
   }, [addLog]);
 
+  const allocateStat = useCallback((statName: keyof Player['stats'], amount: number = 1) => {
+      setPlayer(prev => {
+          if (prev.statPoints < amount) return prev;
+          
+          // GIỚI HẠN CHỈ SỐ 90
+          if (prev.stats[statName] >= 90) {
+              addLog(`⚠️ Chỉ số ${statName} đã đạt giới hạn tối đa (90)!`);
+              return prev;
+          }
+
+          return {
+              ...prev,
+              statPoints: prev.statPoints - amount,
+              stats: {
+                  ...prev.stats,
+                  [statName]: prev.stats[statName] + amount
+              }
+          };
+      });
+  }, [addLog]);
+
+  const resetStats = useCallback(() => {
+      setPlayer(prev => {
+          // Tính tổng điểm đã cộng (trừ đi 1 điểm gốc mỗi dòng)
+          const totalSpent = (prev.stats.strength - 1) + 
+                             (prev.stats.dexterity - 1) + 
+                             (prev.stats.intelligence - 1) + 
+                             (prev.stats.vitality - 1) + 
+                             (prev.stats.luck - 1);
+          
+          // Class bonus points không reset được (giữ nguyên logic đơn giản là reset về 1 rồi cộng lại base points)
+          // Để đơn giản cho MVP: Reset về 1 hết, trả lại toàn bộ điểm (bao gồm cả điểm từ Class ban đầu coi như free respec class bonus stat)
+          const refundedPoints = prev.statPoints + totalSpent;
+          
+          // Cost: Miễn phí dưới cấp 10, sau đó tốn vàng
+          const cost = prev.level <= 10 ? 0 : prev.level * 100;
+          
+          if (prev.level > 10 && prev.gold < cost) {
+              addLog(`❌ Cần ${cost} Vàng để Tẩy Điểm!`);
+              return prev;
+          }
+
+          if (cost > 0) addLog(`💸 Đã dùng ${cost} Vàng để Tẩy Điểm.`);
+          addLog("🔄 Đã đặt lại toàn bộ chỉ số!");
+
+          return {
+              ...prev,
+              gold: prev.gold - cost,
+              statPoints: refundedPoints,
+              stats: {
+                  strength: 1,
+                  dexterity: 1,
+                  intelligence: 1,
+                  vitality: 1,
+                  luck: 1
+              }
+          };
+      });
+  }, [addLog]);
+
   const updateHp = useCallback((newHp: number) => {
-    setPlayer(p => ({ ...p, hp: Math.min(Math.max(0, newHp), getStatMultiplier(p.maxHp)) }));
-  }, [getStatMultiplier]);
+    // Lưu ý: Cần tính maxHp thực tế (bao gồm Vitality) ở component cha hoặc truyền vào
+    // Ở đây tạm thời dùng prev.maxHp cơ bản, logic battle sẽ handle việc cap HP
+    setPlayer(p => ({ ...p, hp: Math.max(0, newHp) })); 
+  }, []);
 
   const addGold = useCallback((amount: number) => {
     setPlayer(p => ({ ...p, gold: p.gold + amount }));
@@ -156,7 +242,7 @@ export const usePlayer = (addLog: (msg: string) => void) => {
         const savedPoints = prev.eternalPoints;
         const savedRebirthCount = prev.rebirthCount + 1;
         const savedClass = prev.characterClass; 
-        const savedGuild = prev.guild; // Guild stays
+        const savedGuild = prev.guild; 
         
         // Base stats sau Rebirth
         const baseAttack = INITIAL_PLAYER.attack + (savedRebirthCount * 5);
@@ -170,14 +256,19 @@ export const usePlayer = (addLog: (msg: string) => void) => {
           eternalUpgrades: savedUpgrades,
           attack: baseAttack,
           defense: baseDefense,
-          guild: savedGuild
+          guild: savedGuild,
+          // Reset stats allocation
+          statPoints: 5 + (savedRebirthCount * 5), // Bonus start points for rebirth
+          stats: INITIAL_PLAYER.stats
         };
     });
   }, []);
 
   const setFullHp = useCallback(() => {
-    setPlayer(p => ({ ...p, hp: getStatMultiplier(p.maxHp) }));
-  }, [getStatMultiplier]);
+      // Logic hồi máu sẽ được xử lý ở UI component dựa trên MaxHP tính toán
+      // Hack: Đặt HP thành một số rất lớn, component sẽ clamp lại
+      setPlayer(p => ({ ...p, hp: 9999999 }));
+  }, []);
 
   // Gem Helpers
   const addGem = useCallback((key: string, qty: number) => {
@@ -228,6 +319,7 @@ export const usePlayer = (addLog: (msg: string) => void) => {
   }, []);
 
   return { 
-      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem, addGuildFame, unlockGuildBlueprint 
+      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem, addGuildFame, unlockGuildBlueprint,
+      allocateStat, resetStats
   };
 };

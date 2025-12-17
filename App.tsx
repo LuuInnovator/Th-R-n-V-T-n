@@ -9,6 +9,7 @@ import { randomInt, rollRarity, generateId, formatNumber } from './utils';
 import { usePlayer } from './hooks/usePlayer';
 import { useInventory } from './hooks/useInventory';
 import { useGameLog } from './hooks/useGameLog';
+import { calculatePlayerStats } from './utils/statCalculator'; // Import mới
 
 // Components
 import { InventoryView } from './components/InventoryView';
@@ -19,8 +20,8 @@ import { SkillTreeView } from './components/SkillTreeView';
 import { CharacterStatsModal } from './components/CharacterStatsModal'; 
 import { ClassSelectionModal } from './components/ClassSelectionModal';
 import { GuildView } from './components/GuildView'; 
-import { WikiView } from './components/WikiView'; // Import mới
-import { User, Shield, Sword, Hammer, RefreshCw, Save, Upload, Zap, BarChart2, Users, Book } from 'lucide-react'; // Import Book icon
+import { WikiView } from './components/WikiView'; 
+import { User, Shield, Sword, Hammer, RefreshCw, Save, Upload, Zap, BarChart2, ShoppingBag, Book, Store } from 'lucide-react'; 
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'battle' | 'craft' | 'inventory' | 'rebirth' | 'skills' | 'guild' | 'wiki'>('battle');
@@ -28,11 +29,12 @@ export default function App() {
   
   const { logs, addLog, clearLogs } = useGameLog();
   const { 
-      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem, addGuildFame, unlockGuildBlueprint 
+      player, setPlayer, gainExp, updateHp, addGold, rebirth, setFullHp, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, addGem, removeGem, addGuildFame, unlockGuildBlueprint,
+      allocateStat, resetStats // New hooks
   } = usePlayer(addLog);
   const { 
     materials, equipments, equipped, 
-    addMaterial, consumeMaterials, addEquipment, removeEquipment, updateEquipment, equipItem, resetInventory, loadInventory 
+    addMaterial, consumeMaterials, addEquipment, removeEquipment, updateEquipment, equipItem, resetInventory, loadInventory, upgradeMaterial 
   } = useInventory(addLog);
 
   const [currentZone, setCurrentZone] = useState<Zone>(ZONES[0]);
@@ -46,32 +48,27 @@ export default function App() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  // Use calculatePlayerStats helper for centralized logic
+  const calculatedStats = useMemo(() => calculatePlayerStats(player, equipped, getStatMultiplier), [player, equipped, getStatMultiplier]);
+
   const getActiveSets = useCallback(() => {
-    const activeSets: Record<SetId, number> = {} as any;
-    Object.values(equipped).forEach(item => {
-      if (item && item.setId) activeSets[item.setId] = (activeSets[item.setId] || 0) + 1;
-    });
-    return activeSets;
-  }, [equipped]);
+    return calculatedStats.activeSets;
+  }, [calculatedStats]);
 
   // --- CALCULATE DROP RATE BONUS (For display and logic) ---
   const dropRateBonus = useMemo(() => {
-    const huntersEyeLevel = player.eternalUpgrades[EternalUpgradeId.HuntersEye] || 0;
-    let bonus = huntersEyeLevel * 0.01;
-    Object.values(equipped).forEach(i => { if (i?.enchantment === EnchantmentType.Fortune) bonus += 0.2; });
-    if (player.characterClass === CharacterClass.HeavySentinel) bonus += 0.1;
-    return bonus;
-  }, [player.eternalUpgrades, player.characterClass, equipped]);
+    return calculatedStats.dropRateBonus;
+  }, [calculatedStats]);
 
 
   // --- GUILD HANDLERS ---
   const handleUnlockBlueprint = (bp: Blueprint) => {
       if ((bp.guildFameCost || 0) > player.guild.fame) {
-          addLog("❌ Không đủ Danh Tiếng Bang Hội!");
+          addLog("❌ Không đủ Uy Tín Cửa Hàng!");
           return;
       }
       unlockGuildBlueprint(bp.id, bp.guildFameCost || 0);
-      addLog(`📖 Đã mở khóa bản vẽ Bang Hội: ${bp.name}`);
+      addLog(`📖 Đã mở khóa bản vẽ Đặc Biệt: ${bp.name}`);
   };
 
   const handleTradeItem = (item: Equipment) => {
@@ -83,7 +80,7 @@ export default function App() {
 
       removeEquipment(item.id);
       addGuildFame(fameGain);
-      addLog(`🤝 Đã đổi ${item.name} lấy ${fameGain} Fame.`);
+      addLog(`🤝 Đã đổi ${item.name} lấy ${fameGain} Uy Tín.`);
   };
 
   // --- ITEM UPGRADE HANDLERS (Giữ nguyên) ---
@@ -128,45 +125,6 @@ export default function App() {
   };
 
   // --- BATTLE LOGIC ---
-  const calculateTotalStats = useCallback(() => {
-      let totalAtk = getStatMultiplier(player.attack);
-      let totalDef = getStatMultiplier(player.defense);
-      let totalHp = getStatMultiplier(player.maxHp);
-
-      Object.values(equipped).forEach(item => {
-        if(item) {
-            let itemAtk = item.stats.attack || 0;
-            let itemDef = item.stats.defense || 0;
-            if (item.enchantment === EnchantmentType.Sharpness) itemAtk *= (1 + ENCHANT_STATS[item.enchantment].multAtk!);
-            if (item.enchantment === EnchantmentType.Protection) itemDef *= (1 + ENCHANT_STATS[item.enchantment].multDef!);
-
-            totalAtk += Math.floor(itemAtk);
-            totalDef += Math.floor(itemDef);
-
-            item.socketedGems.forEach(gem => {
-                const stats = GEM_STATS[gem.type][gem.tier];
-                if (gem.type === GemType.Ruby) totalAtk += stats;
-                if (gem.type === GemType.Sapphire) totalDef += stats;
-                if (gem.type === GemType.Topaz) totalHp += stats;
-            });
-        }
-      });
-      
-      const weaponMasteryLevel = player.skills['wp_mastery'] || 0;
-      const armorMasteryLevel = player.skills['ar_mastery'] || 0;
-      totalAtk += weaponMasteryLevel * 2;
-      totalDef += armorMasteryLevel * 2;
-
-      // New Set: Infinity Chrono Bonus (Time Lord)
-      const activeSets = getActiveSets();
-      if ((activeSets[SetId.InfinityChrono] || 0) >= 6) {
-          // Mocking time scaling: +5% stats flat for now as "time passes"
-          totalAtk *= 1.05;
-      }
-
-      return { totalAtk, totalDef, totalHp };
-  }, [player, equipped, getStatMultiplier, getActiveSets]);
-
   const canEnterZone = (zone: Zone) => !zone.reqRebirth || player.rebirthCount >= zone.reqRebirth;
 
   const handleSelectZone = (zone: Zone) => {
@@ -217,21 +175,18 @@ export default function App() {
 
   const handleAttack = useCallback(() => {
     if (!currentEnemy) return;
-    const { totalAtk, totalDef } = calculateTotalStats();
+    const { totalAtk, totalDef, weaponElement, activeSets, critChance, critDamage, dropRateBonus } = calculatedStats;
 
-    let weaponElement: ElementType = ElementType.Physical;
-    const weapon = equipped[EquipmentType.Weapon];
-    if (weapon && weapon.element) weaponElement = weapon.element;
-
-    const activeSets = getActiveSets();
     const forgeSpiritCount = activeSets[SetId.ForgeSpirit] || 0;
     const primalHunterCount = activeSets[SetId.PrimalHunter] || 0;
     const dragonfireCount = activeSets[SetId.DragonfireKeeper] || 0;
 
     let elementMult = 1.0;
-    if (weaponElement === ElementType.Ice && currentEnemy.element === ElementType.Fire) elementMult = 1.5;
-    if (weaponElement === ElementType.Fire && currentEnemy.element === ElementType.Ice) elementMult = 1.5;
-    if (weaponElement === currentEnemy.element && weaponElement !== ElementType.Physical) elementMult = 0.5;
+    // Cast weaponElement to ElementType to avoid TypeScript narrowing issues
+    const wElement = weaponElement as ElementType;
+    if (wElement === ElementType.Ice && currentEnemy.element === ElementType.Fire) elementMult = 1.5;
+    if (wElement === ElementType.Fire && currentEnemy.element === ElementType.Ice) elementMult = 1.5;
+    if (wElement === currentEnemy.element && wElement !== ElementType.Physical) elementMult = 0.5;
 
     let lifeSteal = 0;
     Object.values(equipped).forEach(i => { if (i?.enchantment === EnchantmentType.Vampirism) lifeSteal += 0.05; });
@@ -239,8 +194,10 @@ export default function App() {
     let damageMultiplier = 1;
     if (primalHunterCount >= 2 && currentEnemy.isBoss) damageMultiplier += 0.15;
     const ignoreDefense = forgeSpiritCount >= 4 ? 0.2 : 0;
-    const isCrit = Math.random() < 0.05 + (player.skills['wp_crit'] || 0) * 0.01;
-    const critMult = 1.5 + (primalHunterCount >= 6 ? 0.3 : 0);
+    
+    // Crit calculation using new stats
+    const isCrit = Math.random() < (critChance / 100);
+    const finalCritMult = critDamage / 100;
 
     // --- TIMEKEEPER BOSS MECHANICS ---
     let effectiveDef = totalDef;
@@ -287,7 +244,7 @@ export default function App() {
         else {
              setBossPhase(3);
              // Boss takes reduced damage unless element is opposite
-             if (weaponElement !== ElementType.Physical) { // Simplified weak check
+             if (wElement !== ElementType.Physical) { // Simplified weak check
                  addLog("⚡ Phá vỡ phòng thủ nguyên tố của Boss!");
              } else {
                  damageMultiplier *= 0.3; // 70% reduction if physical
@@ -298,7 +255,7 @@ export default function App() {
 
     const effectiveEnemyDef = currentEnemy.defense * (1 - ignoreDefense);
     const rawDmg = Math.max(1, (totalAtk - effectiveEnemyDef));
-    const finalDmg = Math.floor(rawDmg * damageMultiplier * elementMult * (isCrit ? critMult : 1));
+    const finalDmg = Math.floor(rawDmg * damageMultiplier * elementMult * (isCrit ? finalCritMult : 1));
     
     if (elementMult > 1) addLog("❄️ Khắc hệ! Sát thương tăng 50%.");
 
@@ -357,7 +314,7 @@ export default function App() {
 
       let dmgToPlayer = incomingDmg - effectiveDef;
       if (dmgToPlayer <= 0) {
-        const hitChance = 0.1;
+        const hitChance = 0.1; // Still small chance to hit for 1 dmg
         if (Math.random() < hitChance) {
              dmgToPlayer = 1;
              addLog(`🛡️ ${currentEnemy.name} tấn công sượt qua! (1 sát thương)`);
@@ -393,22 +350,20 @@ export default function App() {
         setCurrentEnemy({ ...currentEnemy, hp: newEnemyHp });
       }
     }
-  }, [currentEnemy, player, equipped, addLog, gainExp, addGold, addMaterial, updateHp, setFullHp, getActiveSets, hasRevivedInBattle, calculateTotalStats, addGem, materials, consumeMaterials, bossPhase, rustStacks, dropRateBonus]);
+  }, [currentEnemy, player, equipped, addLog, gainExp, addGold, addMaterial, updateHp, setFullHp, hasRevivedInBattle, addGem, materials, consumeMaterials, bossPhase, rustStacks, calculatedStats]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout>;
     if (isAutoAttacking && player.hp > 0) {
-      const activeSets = getActiveSets();
-      let cooldownRed = (activeSets[SetId.PrimalHunter] || 0) >= 4 ? 0.8 : 1; 
-      if ((activeSets[SetId.InfinityChrono] || 0) >= 2) cooldownRed -= 0.5; // Infinity Set Bonus
-
-      if (player.characterClass === CharacterClass.ShadowBlade) cooldownRed -= 0.1;
-      const attackSpeed = 1000 * Math.max(0.1, cooldownRed);
+      const { cooldownReduction } = calculatedStats;
+      const baseSpeed = 1000;
+      const attackSpeed = baseSpeed * (1 - cooldownReduction);
+      
       if (currentEnemy) timer = setTimeout(() => handleAttack(), attackSpeed);
       else timer = setTimeout(() => handleExplore(), 1500);
     }
     return () => clearTimeout(timer);
-  }, [isAutoAttacking, currentEnemy, player.hp, handleAttack, handleExplore, getActiveSets, player.characterClass]);
+  }, [isAutoAttacking, currentEnemy, player.hp, handleAttack, handleExplore, calculatedStats]);
 
   /* ... (Save/Load functions remain same) ... */
   const saveGame = useCallback(() => {
@@ -459,10 +414,27 @@ export default function App() {
     }
   };
 
+  // Auto Save Timer
   useEffect(() => {
     const autoSaveTimer = setInterval(() => saveGame(), 30000);
     return () => clearInterval(autoSaveTimer);
   }, [saveGame]);
+
+  // BEFORE UNLOAD WARNING (VIETNAMESE)
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        const message = "Những thay đổi của bạn có thể chưa được lưu. Bạn có chắc chắn muốn rời đi?";
+        e.returnValue = message; // Dành cho các trình duyệt cũ, trình duyệt mới sẽ hiển thị thông báo mặc định
+        return message;
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   const handleCraft = (bp: Blueprint, useOverheat: boolean) => {
     // ... (Old craft logic)
@@ -479,22 +451,26 @@ export default function App() {
     if (useOverheat) {
         const talentSafety = (player.eternalUpgrades[EternalUpgradeId.LearnFromFailure] || 0) * 0.02;
         const skillSafety = (player.skills['en_overheat'] || 0) * 0.05;
-        const failChance = Math.max(0.05, 0.30 - skillSafety - talentSafety);
+        const failChance = Math.max(0.05, 0.35 - skillSafety - talentSafety); // Tăng tỷ lệ rủi ro lên 35%
         if (Math.random() < failChance) {
             addLog("🔥 LÒ RÈN QUÁ NHIỆT! Thất bại và mất nguyên liệu.");
             return;
         }
     }
 
-    const rarityBonus = (player.rebirthCount * 0.1) + (useOverheat ? 0.3 : 0);
+    // Tăng tỷ lệ ra đồ hiếm khi Overheat
+    const rarityBonus = (player.rebirthCount * 0.1) + (useOverheat ? 0.6 : 0); // Tăng bonus từ 0.3 lên 0.6
     const rarity = rollRarity(rarityBonus); 
     const multiplier = RARITY_MULTIPLIER[rarity];
     
+    // Tăng Multiplier chỉ số khi Overheat (Mạnh hơn 2.5 lần nếu may mắn)
+    const overheatMult = useOverheat ? 2.5 : 1.0; 
+
     const atkBase = bp.baseStats.maxAtk > 0 ? randomInt(bp.baseStats.minAtk, bp.baseStats.maxAtk) : 0;
     const defBase = bp.baseStats.maxDef > 0 ? randomInt(bp.baseStats.minDef, bp.baseStats.maxDef) : 0;
 
-    const finalAtk = Math.floor(atkBase * multiplier);
-    const finalDef = Math.floor(defBase * multiplier);
+    const finalAtk = Math.floor(atkBase * multiplier * overheatMult);
+    const finalDef = Math.floor(defBase * multiplier * overheatMult);
 
     let sockets = 0;
     const socketRoll = Math.random();
@@ -517,7 +493,7 @@ export default function App() {
     };
 
     addEquipment(newItem);
-    if (useOverheat) addLog(`🔥 RÈN CỰC HẠN THÀNH CÔNG! Tạo ra ${newItem.name}`);
+    if (useOverheat) addLog(`🔥 RÈN CỰC HẠN THÀNH CÔNG! Tạo ra ${newItem.name} với sức mạnh đột biến!`);
   };
 
   const handleSell = (item: Equipment) => {
@@ -564,7 +540,16 @@ export default function App() {
   return (
     <div className="flex h-screen overflow-hidden backdrop-blur-sm">
       {player.characterClass === CharacterClass.None && <ClassSelectionModal onSelect={selectClass} />}
-      {showStatsModal && <CharacterStatsModal player={player} equipped={equipped} onClose={() => setShowStatsModal(false)} getStatMultiplier={getStatMultiplier}/>}
+      {showStatsModal && (
+          <CharacterStatsModal 
+            player={player} 
+            equipped={equipped} 
+            onClose={() => setShowStatsModal(false)} 
+            getStatMultiplier={getStatMultiplier}
+            onAllocate={allocateStat} // Pass new handlers
+            onRespec={resetStats}
+          />
+      )}
 
       <aside className="w-72 bg-slate-950/90 border-r border-slate-800 flex flex-col z-20 shadow-2xl hidden lg:flex">
         <div className="p-6 border-b border-slate-800/50 bg-gradient-to-b from-slate-900 to-slate-950">
@@ -581,11 +566,17 @@ export default function App() {
                 <div className="flex items-center justify-center gap-2 text-xs text-blue-400 font-bold mt-1">
                     <BarChart2 size={12} /> {player.characterClass}
                 </div>
+                {/* Stat Point Indicator */}
+                {player.statPoints > 0 && (
+                    <div className="mt-2 text-center text-xs font-bold text-yellow-400 animate-pulse bg-yellow-900/20 rounded py-1 border border-yellow-700/50">
+                        + {player.statPoints} Điểm Tiềm Năng
+                    </div>
+                )}
             </div>
             <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="bg-slate-900/50 p-2 rounded border border-slate-800 text-center">
                     <div className="text-[10px] text-slate-500 uppercase">HP</div>
-                    <div className="font-bold text-red-400">{getStatMultiplier(player.hp)}</div>
+                    <div className="font-bold text-red-400">{formatNumber(player.hp)}</div>
                 </div>
                 <div className="bg-slate-900/50 p-2 rounded border border-slate-800 text-center">
                     <div className="text-[10px] text-slate-500 uppercase">Vàng</div>
@@ -600,7 +591,7 @@ export default function App() {
           <SidebarButton id="inventory" icon={User} label="Túi Đồ" />
           <SidebarButton id="craft" icon={Hammer} label="Chế Tạo" />
           <SidebarButton id="skills" icon={Zap} label="Kỹ Năng" />
-          <SidebarButton id="guild" icon={Users} label="Bang Hội" colorClass="text-amber-400 hover:text-amber-300" />
+          <SidebarButton id="guild" icon={Store} label="Cửa Hàng" colorClass="text-amber-400 hover:text-amber-300" />
           <div className="my-4 border-t border-slate-800/50 mx-2"></div>
           <SidebarButton id="rebirth" icon={RefreshCw} label="Tái Sinh" colorClass="text-purple-400 hover:text-purple-300" />
         </nav>
@@ -611,15 +602,15 @@ export default function App() {
         <button onClick={() => setActiveTab('wiki')} className={`p-2 flex flex-col items-center ${activeTab === 'wiki' ? 'text-green-500' : 'text-slate-500'}`}><Book size={20} /><span className="text-[9px] font-bold mt-1">Từ Điển</span></button>
         <button onClick={() => setActiveTab('inventory')} className={`p-2 flex flex-col items-center ${activeTab === 'inventory' ? 'text-blue-500' : 'text-slate-500'}`}><User size={20} /><span className="text-[9px] font-bold mt-1">Túi Đồ</span></button>
         <button onClick={() => setActiveTab('craft')} className={`p-2 flex flex-col items-center ${activeTab === 'craft' ? 'text-blue-500' : 'text-slate-500'}`}><Hammer size={20} /><span className="text-[9px] font-bold mt-1">Chế Tạo</span></button>
-        {/* Combine Guild/Skills/Rebirth into a More menu later if needed, for now use scroll or fit */}
-         <button onClick={() => setActiveTab('rebirth')} className={`p-2 flex flex-col items-center ${activeTab === 'rebirth' ? 'text-purple-500' : 'text-slate-500'}`}><RefreshCw size={20} /><span className="text-[9px] font-bold mt-1">Tái Sinh</span></button>
+         <button onClick={() => setActiveTab('guild')} className={`p-2 flex flex-col items-center ${activeTab === 'guild' ? 'text-amber-500' : 'text-slate-500'}`}><Store size={20} /><span className="text-[9px] font-bold mt-1">Cửa Hàng</span></button>
       </div>
 
       <main className="flex-1 flex flex-col overflow-hidden relative z-10 pb-16 lg:pb-0">
         <header className="bg-slate-900/80 backdrop-blur-md p-4 border-b border-white/5 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center gap-2">
-             <div onClick={() => setShowStatsModal(true)} className="lg:hidden bg-slate-800 p-1.5 rounded border border-slate-700">
+             <div onClick={() => setShowStatsModal(true)} className="lg:hidden bg-slate-800 p-1.5 rounded border border-slate-700 relative">
                 <BarChart2 size={16} className="text-blue-400" />
+                {player.statPoints > 0 && <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>}
              </div>
              <h2 className="text-lg font-bold text-slate-200 tracking-wide flex items-center gap-2">
                 {activeTab === 'battle' && <><span className="text-blue-500">◈</span> THÁM HIỂM</>}
@@ -627,7 +618,7 @@ export default function App() {
                 {activeTab === 'inventory' && <><span className="text-green-500">◈</span> KHO ĐỒ</>}
                 {activeTab === 'craft' && <><span className="text-amber-500">◈</span> XƯỞNG RÈN</>}
                 {activeTab === 'skills' && <><span className="text-red-500">◈</span> CÂY KỸ NĂNG</>}
-                {activeTab === 'guild' && <><span className="text-amber-500">◈</span> BANG HỘI</>}
+                {activeTab === 'guild' && <><span className="text-amber-500">◈</span> CỬA HÀNG & HỘI</>}
                 {activeTab === 'rebirth' && <><span className="text-purple-500">◈</span> CỔNG TÁI SINH</>}
             </h2>
           </div>
@@ -674,6 +665,7 @@ export default function App() {
               onAddSocket={handleAddSocket} 
               onEnchant={handleEnchant}
               materials={materials} // Pass materials
+              onUpgradeMaterial={upgradeMaterial} // Pass new handler
             />
           )}
 

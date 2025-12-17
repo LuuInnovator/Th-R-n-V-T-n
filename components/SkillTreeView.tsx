@@ -4,7 +4,7 @@ import { Player, Skill, SkillBranch } from '../types';
 import { SKILLS } from '../constants';
 import { Button } from './Button';
 import { Card } from './Card';
-import { Zap, Shield, Beaker, Sparkles } from 'lucide-react';
+import { Zap, Shield, Beaker, Sparkles, Star } from 'lucide-react';
 
 interface SkillTreeViewProps {
   player: Player;
@@ -22,7 +22,10 @@ export const SkillTreeView: React.FC<SkillTreeViewProps> = ({ player, onUpgrade 
   return (
     <div className="h-full p-4 max-w-7xl mx-auto w-full overflow-y-auto">
       <div className="flex items-center justify-between mb-6 bg-slate-900/80 p-4 rounded-xl border border-slate-700 backdrop-blur-sm sticky top-0 z-10">
-        <h2 className="text-2xl font-bold text-slate-200">Cây Kỹ Năng</h2>
+        <div>
+            <h2 className="text-2xl font-bold text-slate-200">Cây Kỹ Năng</h2>
+            <p className="text-xs text-slate-400 mt-1">Lớp nhân vật hiện tại: <span className="text-amber-400 font-bold">{player.characterClass}</span></p>
+        </div>
         <div className="bg-blue-900/30 px-4 py-2 rounded-lg border border-blue-500/30">
           <span className="text-slate-400 text-sm uppercase mr-2">Điểm Kỹ Năng (SP):</span>
           <span className="text-2xl font-bold text-blue-300">{player.skillPoints}</span>
@@ -31,8 +34,14 @@ export const SkillTreeView: React.FC<SkillTreeViewProps> = ({ player, onUpgrade 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {branches.map(branch => {
-          const branchSkills = SKILLS.filter(s => s.branch === branch.id);
+          // Lọc kỹ năng: Bao gồm kỹ năng chung (không có reqClass) HOẶC kỹ năng đúng Class của người chơi
+          const branchSkills = SKILLS.filter(s => 
+              s.branch === branch.id && 
+              (!s.reqClass || s.reqClass === player.characterClass)
+          );
           const Icon = branch.icon;
+
+          if (branchSkills.length === 0) return null;
 
           return (
             <Card key={branch.id} className="relative overflow-hidden">
@@ -51,15 +60,19 @@ export const SkillTreeView: React.FC<SkillTreeViewProps> = ({ player, onUpgrade 
                    const currentLevel = player.skills[skill.id] || 0;
                    const isMax = currentLevel >= skill.maxLevel;
                    const canUpgrade = !isMax && player.skillPoints >= skill.cost;
+                   const isClassSkill = !!skill.reqClass;
 
                    return (
-                     <div key={skill.id} className="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+                     <div key={skill.id} className={`bg-slate-900/60 p-3 rounded-lg border ${isClassSkill ? 'border-amber-500/40 shadow-sm shadow-amber-900/20' : 'border-slate-700/50'}`}>
                        <div className="flex justify-between items-start mb-2">
                          <div>
-                           <div className="font-bold text-slate-200">{skill.name}</div>
+                           <div className="flex items-center gap-2">
+                               <div className={`font-bold ${isClassSkill ? 'text-amber-300' : 'text-slate-200'}`}>{skill.name}</div>
+                               {isClassSkill && <Star size={12} className="text-amber-400 fill-amber-400" />}
+                           </div>
                            <div className="text-xs text-slate-500">{skill.description}</div>
                          </div>
-                         <div className="text-xs font-mono bg-slate-800 px-2 py-1 rounded text-slate-400">
+                         <div className="text-xs font-mono bg-slate-800 px-2 py-1 rounded text-slate-400 shrink-0">
                            Lv {currentLevel}/{skill.maxLevel}
                          </div>
                        </div>
@@ -76,6 +89,7 @@ export const SkillTreeView: React.FC<SkillTreeViewProps> = ({ player, onUpgrade 
                            onClick={() => onUpgrade(skill)} 
                            disabled={!canUpgrade}
                            variant={canUpgrade ? 'primary' : 'ghost'}
+                           className={isClassSkill && canUpgrade ? 'bg-amber-600 hover:bg-amber-500 border-amber-500/50' : ''}
                          >
                            {isMax ? 'Tối Đa' : `Nâng cấp (${skill.cost} SP)`}
                          </Button>

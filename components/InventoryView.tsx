@@ -18,6 +18,7 @@ interface InventoryViewProps {
   onEnchant: (type: EnchantmentType, item: Equipment) => void;
   // Cần materials từ App
   materials?: Material[]; 
+  onUpgradeMaterial?: (id: string) => void; // New prop
 }
 
 const EQUIPMENT_ICONS: Record<EquipmentType, React.ElementType> = {
@@ -35,7 +36,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   onEquip,
   onSell,
   player, onSocketGem, onAddSocket, onEnchant,
-  materials = []
+  materials = [],
+  onUpgradeMaterial
 }) => {
   const [activeTab, setActiveTab] = useState<'equip' | 'material'>('equip');
 
@@ -132,7 +134,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
               )}
 
               {activeTab === 'material' && (
-                  <MaterialList materials={materials} />
+                  <MaterialList materials={materials} onUpgrade={onUpgradeMaterial} />
               )}
           </div>
       </div>

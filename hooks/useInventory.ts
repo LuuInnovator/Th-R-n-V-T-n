@@ -115,9 +115,53 @@ export const useInventory = (addLog: (msg: string) => void) => {
     setEquipped({...defaultEquipped, ...savedEquipped});
   }, []);
 
+  // --- TIER UP SYSTEM (Ghép Nguyên Liệu) ---
+  const upgradeMaterial = useCallback((matId: string) => {
+      setMaterials(prev => {
+          const material = prev.find(m => m.id === matId);
+          if (!material) return prev;
+          if (material.quantity < 5) {
+              addLog(`❌ Cần 5 nguyên liệu để ghép!`);
+              return prev;
+          }
+          if (material.rarity === Rarity.Mythic) {
+              addLog(`❌ Đã đạt cấp độ tối đa!`);
+              return prev;
+          }
+
+          // Determine next rarity
+          let nextRarity = Rarity.Common;
+          if (material.rarity === Rarity.Common) nextRarity = Rarity.Rare;
+          else if (material.rarity === Rarity.Rare) nextRarity = Rarity.Epic;
+          else if (material.rarity === Rarity.Epic) nextRarity = Rarity.Legendary;
+          else if (material.rarity === Rarity.Legendary) nextRarity = Rarity.Mythic;
+
+          // Remove 5 of current
+          const newQuantity = material.quantity - 5;
+          let newMaterials = prev.map(m => m.id === matId ? { ...m, quantity: newQuantity } : m).filter(m => m.quantity > 0);
+
+          // Add 1 of next rarity
+          const existingNext = newMaterials.find(m => m.type === material.type && m.rarity === nextRarity);
+          if (existingNext) {
+              newMaterials = newMaterials.map(m => m.id === existingNext.id ? { ...m, quantity: m.quantity + 1 } : m);
+          } else {
+              newMaterials.push({
+                  id: generateId(),
+                  name: `${material.type} ${nextRarity}`,
+                  type: material.type,
+                  rarity: nextRarity,
+                  quantity: 1
+              });
+          }
+
+          addLog(`💎 Ghép thành công: 5 ${material.rarity} -> 1 ${nextRarity}`);
+          return newMaterials;
+      });
+  }, [addLog]);
+
   return { 
     materials, equipments, equipped, 
     addMaterial, consumeMaterials, addEquipment, removeEquipment, updateEquipment, equipItem, resetInventory,
-    loadInventory 
+    loadInventory, upgradeMaterial 
   };
 };
