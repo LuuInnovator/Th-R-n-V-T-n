@@ -34,14 +34,14 @@ export const ClassSelectionModal: React.FC<ClassSelectionModalProps> = ({ onSele
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-8">
             {classes.map(cls => {
-                const info = CLASS_INFO[cls];
-                const Icon = icons[cls];
+                const info = CLASS_INFO[cls] || { name: 'Đang tải...', desc: 'Đang chuẩn bị sức mạnh...', bonuses: 'Vui lòng chờ' };
+                const Icon = icons[cls] || Sword;
                 return (
                     <div key={cls} className="bg-slate-900 border border-slate-700 rounded-2xl p-6 flex flex-col items-center text-center hover:border-slate-500 hover:bg-slate-800 transition-all duration-300 group hover:-translate-y-2 h-full relative overflow-hidden min-h-[500px]">
                         {/* Background Gradient Effect */}
-                        <div className={`absolute inset-0 bg-gradient-to-b ${colors[cls]} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`}></div>
+                        <div className={`absolute inset-0 bg-gradient-to-b ${colors[cls] || 'from-slate-600 to-slate-800'} opacity-0 group-hover:opacity-5 transition-opacity duration-500 pointer-events-none`}></div>
 
-                        <div className={`p-5 rounded-full bg-gradient-to-br ${colors[cls]} mb-6 shadow-lg shadow-black/50 group-hover:scale-110 transition-transform duration-300 relative z-10`}>
+                        <div className={`p-5 rounded-full bg-gradient-to-br ${colors[cls] || 'from-slate-600 to-slate-800'} mb-6 shadow-lg shadow-black/50 group-hover:scale-110 transition-transform duration-300 relative z-10`}>
                             <Icon size={40} className="text-white drop-shadow-md" />
                         </div>
                         

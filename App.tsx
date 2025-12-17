@@ -4,7 +4,7 @@ import { Rarity, EquipmentType, Blueprint, CharacterClass, Equipment, Zone, Enem
 import { ZONES, INITIAL_BLUEPRINTS, EQUIPMENT_TALENTS, RARITY_MULTIPLIER } from './constants';
 import { generateId, randomInt, rollRarity } from './utils';
 
-import { usePlayer } from './hooks/usePlayer';
+import { usePlayer, INITIAL_PLAYER } from './hooks/usePlayer';
 import { useInventory } from './hooks/useInventory';
 import { useGameLog } from './hooks/useGameLog';
 import { useBattle } from './hooks/useBattle';
@@ -23,134 +23,142 @@ import { SettingsView } from './components/settings/SettingsView';
 import { CharacterStatsModal } from './components/CharacterStatsModal';
 import { ClassSelectionModal } from './components/ClassSelectionModal';
 
+const SAVE_KEY_GLOBAL = 'infinity_blacksmith_save_v6';
+
+const INITIAL_EQUIPPED: Record<EquipmentType, Equipment | null> = {
+  [EquipmentType.Weapon]: null,
+  [EquipmentType.Armor]: null,
+  [EquipmentType.Accessory]: null,
+  [EquipmentType.Helmet]: null,
+  [EquipmentType.Gloves]: null,
+  [EquipmentType.Boots]: null
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<'battle' | 'inventory' | 'craft' | 'skills' | 'rebirth' | 'wiki' | 'settings'>('battle');
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [activeZone, setActiveZone] = useState<Zone>(ZONES[0]);
   const [currentEnemy, setCurrentEnemy] = useState<Enemy | null>(null);
   const [isAutoAttacking, setIsAutoAttacking] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const { addLog, logs, clearLogs } = useGameLog();
-  const { player, setPlayer, gainExp, updateHp, rebirth, buyEternalUpgrade, getStatMultiplier, selectClass, allocateStat, resetStats, addGold, upgradeSkill, setGameSpeed, upgradeBlueprint, updateMemoryPotential, saveGame, loadGame } = usePlayer(addLog);
-  const { materials, equipments, equipped, addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, handleRebirth: performInventoryRebirth } = useInventory(addLog);
+  const { player, setPlayer, gainExp, updateHp, rebirth, buyEternalUpgrade, getStatMultiplier, selectClass, allocateStat, resetStats, addGold, upgradeSkill, setGameSpeed, upgradeBlueprint, updateMemoryPotential } = usePlayer(addLog);
+  const { materials, setMaterials, equipments, setEquipments, equipped, setEquipped, addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, handleRebirth: performInventoryRebirth } = useInventory(addLog);
   
   const { exportSaveFile, importSaveFile } = useFileSystem(setPlayer, addLog);
 
+  const saveGame = useCallback(() => {
+    try {
+      const saveData = { player, materials, equipments, equipped };
+      localStorage.setItem(SAVE_KEY_GLOBAL, JSON.stringify(saveData));
+    } catch (e) {
+      console.error("Save error:", e);
+    }
+  }, [player, materials, equipments, equipped]);
+
   useEffect(() => {
-    loadGame();
+    const saved = localStorage.getItem(SAVE_KEY_GLOBAL);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data && data.player) {
+            setPlayer(prev => ({
+                ...INITIAL_PLAYER,
+                ...data.player,
+                stats: { ...INITIAL_PLAYER.stats, ...(data.player.stats || {}) },
+                skills: { ...data.player.skills || {} },
+                eternalUpgrades: { ...data.player.eternalUpgrades || {} },
+                blueprintLevels: { ...data.player.blueprintLevels || {} }
+            }));
+            if (data.materials) setMaterials(data.materials);
+            if (data.equipments) setEquipments(data.equipments);
+            if (data.equipped) setEquipped({ ...INITIAL_EQUIPPED, ...data.equipped });
+        }
+      } catch (e) {
+        console.error("Load Error:", e);
+        localStorage.removeItem(SAVE_KEY_GLOBAL);
+      }
+    }
+    setIsLoaded(true);
   }, []);
 
-  const calculatedStats = useMemo(() => calculatePlayerStats(player, equipped, getStatMultiplier), [player, equipped, getStatMultiplier]);
+  const calculatedStats = useMemo(() => {
+      return calculatePlayerStats(player, equipped, getStatMultiplier);
+  }, [player, equipped, getStatMultiplier]);
 
   const { handleAttack, handleExplore } = useBattle(
     player, calculatedStats, activeZone, currentEnemy, setCurrentEnemy, 
     updateHp, gainExp, addGold, addMaterial, addLog, 
-    isAutoAttacking, player.gameSpeed
+    isAutoAttacking, player.gameSpeed || 1
   );
 
   useEffect(() => {
     let interval: any;
-    if (isAutoAttacking && currentEnemy) {
-      interval = setInterval(handleAttack, 1000 / player.gameSpeed);
-    } else if (isAutoAttacking && !currentEnemy) {
-      handleExplore();
+    if (isAutoAttacking && isLoaded) {
+      if (currentEnemy) {
+        interval = setInterval(handleAttack, 1000 / (player.gameSpeed || 1));
+      } else {
+        interval = setTimeout(handleExplore, 500 / (player.gameSpeed || 1));
+      }
     }
-    return () => clearInterval(interval);
-  }, [isAutoAttacking, currentEnemy, handleAttack, handleExplore, player.gameSpeed]);
+    return () => { clearInterval(interval); clearTimeout(interval); };
+  }, [isAutoAttacking, currentEnemy, handleAttack, handleExplore, player.gameSpeed, isLoaded]);
 
   const onRebirthClick = () => {
-    const epReward = player.level * 10;
+    const epReward = player.level * 25; // Tăng thưởng EP
     performInventoryRebirth((player.eternalUpgrades[EternalUpgradeId.ResourceRetention] || 0) * 10, updateMemoryPotential);
     rebirth(epReward);
-    addLog(`✨ Tái sinh thành công! +${epReward} EP.`);
-  };
-
-  const getTabLabel = (id: string) => {
-    switch(id) {
-        case 'battle': return 'Viễn Chinh';
-        case 'inventory': return 'Hành Trang';
-        case 'craft': return 'Lò Rèn';
-        case 'skills': return 'Bí Pháp';
-        case 'rebirth': return 'Luân Hồi';
-        case 'wiki': return 'Cổ Thư';
-        case 'settings': return 'Cài Đặt';
-        default: return '';
-    }
+    addLog(`✨ Tái sinh thành công! Bạn cảm thấy một nguồn sức mạnh cổ xưa chảy trong huyết quản...`);
   };
 
   const handleCraft = (bp: Blueprint, overheat: boolean) => {
     consumeMaterials(bp.requiredMaterials);
-    
-    // Logic Đốt nhiệt: 70% thất bại mất sạch nguyên liệu và vật phẩm
     if (overheat && Math.random() < 0.7) {
-        addLog(`🔥 LÒ RÈN QUÁ NÓNG! Vật phẩm đã bị thiêu rụi hoàn toàn... Thật đáng tiếc!`);
+        addLog(`🔥 THẤT BẠI! Sức nóng lò rèn đã thiêu rụi mọi thứ...`);
         return;
     }
 
-    // Nếu là Vật phẩm tiêu hao
-    if (bp.resultType === 'VẬT PHẨM') {
-        addMaterial(bp.name as any, 1);
-        addLog(`🧪 Chế tạo thành công: ${bp.name}`);
-        return;
-    }
-
-    // Nếu là Trang bị
-    const evolBonus = (player.blueprintLevels[bp.id] || 0) * 0.25;
+    const evolLevel = player.blueprintLevels[bp.id] || 0;
+    const evolBonus = evolLevel * 0.5; // Tăng bonus tiến hóa
     const memoryBonus = bp.id === 'bp_legacy' ? player.memoryGemPotential : 0;
     
-    // Đốt nhiệt tăng mạnh tỉ lệ ra đồ hiếm (+0.4)
-    const finalRarity = rollRarity((player.skills['gen_luck'] || 0) * 0.01 + (overheat ? 0.4 : 0));
+    const finalRarity = rollRarity((player.skills['al_luck'] || 0) * 0.02 + (overheat ? 0.4 : 0));
     const rarityMult = RARITY_MULTIPLIER[finalRarity];
+    const overheatMult = overheat ? 4.0 : 1.0; // Tăng mạnh bonus overheat
     
-    let talent;
-    if (finalRarity === Rarity.Legendary || finalRarity === Rarity.Mythic || finalRarity === Rarity.Cosmic) {
-        talent = EQUIPMENT_TALENTS[randomInt(0, EQUIPMENT_TALENTS.length - 1)];
-    }
+    const baseAtkRoll = bp.baseStats.maxAtk > 0 ? randomInt(bp.baseStats.minAtk, bp.baseStats.maxAtk) : 0;
+    const baseDefRoll = bp.baseStats.maxDef > 0 ? randomInt(bp.baseStats.minDef, bp.baseStats.maxDef) : 0;
+    const baseHpRoll = (bp.baseStats.maxHp || 0) > 0 ? randomInt(bp.baseStats.minHp || 0, bp.baseStats.maxHp || 0) : 0;
 
-    // Đốt nhiệt thành công x2.0 chỉ số
-    const overheatMult = overheat ? 2.0 : 1.0;
-    
-    // FIX LỖI: Lấy ngẫu nhiên cơ sở từ Min-Max và nhân đúng các hệ số
-    const baseAtkRoll = randomInt(bp.baseStats.minAtk, bp.baseStats.maxAtk);
-    const baseDefRoll = randomInt(bp.baseStats.minDef, bp.baseStats.maxDef);
-
-    const itemAtk = bp.baseStats.maxAtk ? Math.floor(((baseAtkRoll * rarityMult) * (1 + evolBonus) + memoryBonus) * overheatMult) : 0;
-    const itemDef = bp.baseStats.maxDef ? Math.floor(((baseDefRoll * rarityMult) * (1 + evolBonus)) * overheatMult) : 0;
+    const itemAtk = baseAtkRoll > 0 ? Math.floor((baseAtkRoll * rarityMult * overheatMult) * (1 + evolBonus) + memoryBonus) : 0;
+    const itemDef = baseDefRoll > 0 ? Math.floor((baseDefRoll * rarityMult * overheatMult) * (1 + evolBonus)) : 0;
+    const itemHp = baseHpRoll > 0 ? Math.floor((baseHpRoll * rarityMult * overheatMult) * (1 + evolBonus)) : 0;
 
     const item: Equipment = {
         id: generateId(),
-        name: bp.name + (player.blueprintLevels[bp.id] ? ` (+${player.blueprintLevels[bp.id]})` : ""),
+        name: bp.name + (evolLevel > 0 ? ` (+${evolLevel})` : ""),
         type: bp.resultType as EquipmentType,
         rarity: finalRarity,
-        stats: {
-            attack: itemAtk,
-            defense: itemDef
-        },
+        stats: { attack: itemAtk, defense: itemDef, hpBonus: itemHp },
         value: Math.floor(100 * rarityMult), 
-        isEquipped: false, sockets: 1, socketedGems: [], talent
+        isEquipped: false, sockets: 1, socketedGems: [], 
+        talent: (finalRarity === Rarity.Legendary || finalRarity === Rarity.Mythic || finalRarity === Rarity.Cosmic) 
+                 ? EQUIPMENT_TALENTS[randomInt(0, EQUIPMENT_TALENTS.length - 1)] : undefined
     };
+
     addEquipment(item);
   };
+
+  if (!isLoaded) return <div className="bg-black h-screen w-screen flex items-center justify-center text-blue-500">Đang khởi tạo...</div>;
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100 overflow-hidden">
         {player.characterClass === CharacterClass.None && <ClassSelectionModal onSelect={selectClass} />}
-        
-        <Sidebar 
-          player={player} 
-          activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
-          setShowStatsModal={setShowStatsModal} 
-        />
-
+        <Sidebar player={player} activeTab={activeTab} setActiveTab={setActiveTab} setShowStatsModal={setShowStatsModal} />
         <main className="flex-1 flex flex-col overflow-hidden relative">
-            <Header 
-              activeTab={activeTab} 
-              getTabLabel={getTabLabel} 
-              player={player} 
-              onSetGameSpeed={setGameSpeed} 
-            />
-
+            <Header activeTab={activeTab} getTabLabel={(id) => id} player={player} onSetGameSpeed={setGameSpeed} />
             <div className="flex-1 overflow-hidden">
                 {activeTab === 'battle' && (
                     <BattleView 
@@ -171,12 +179,13 @@ export default function App() {
                 )}
                 {activeTab === 'craft' && (
                     <CraftingView 
-                        blueprints={INITIAL_BLUEPRINTS.map(bp => ({ ...bp, evolutionLevel: player.blueprintLevels[bp.id] || 0 }))} 
+                        blueprints={INITIAL_BLUEPRINTS.map(bp => ({ ...bp, unlocked: true, evolutionLevel: player.blueprintLevels[bp.id] || 0 }))} 
                         materials={materials} 
                         onCraft={handleCraft} 
                         craftingSkill={1} 
                         onUpgradeBlueprint={upgradeBlueprint}
                         eternalPoints={player.eternalPoints}
+                        player={player}
                     />
                 )}
                 {activeTab === 'skills' && <SkillTreeView player={player} onUpgrade={upgradeSkill} />}
@@ -191,7 +200,7 @@ export default function App() {
                 {activeTab === 'settings' && (
                     <SettingsView 
                       onSave={saveGame} 
-                      onLoad={loadGame} 
+                      onLoad={() => window.location.reload()} 
                       onReset={() => { localStorage.clear(); window.location.reload(); }} 
                       onExportFile={() => exportSaveFile(player)}
                       onImportFile={importSaveFile}
@@ -200,7 +209,6 @@ export default function App() {
                 {activeTab === 'wiki' && <WikiView zones={ZONES} blueprints={INITIAL_BLUEPRINTS} />}
             </div>
         </main>
-
         {showStatsModal && (
             <CharacterStatsModal 
                 player={player} equipped={equipped} onClose={() => setShowStatsModal(false)} 

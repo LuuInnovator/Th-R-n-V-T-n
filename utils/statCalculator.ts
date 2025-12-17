@@ -1,108 +1,93 @@
 
-import { Player, Equipment, EquipmentType, SetId, ElementType, EnchantmentType, GemType, GemTier } from '../types';
+import { Player, Equipment, EquipmentType, SetId, ElementType, EnchantmentType, GemType, GemTier, EternalUpgradeId, CharacterClass } from '../types';
 import { SETS, GEM_STATS, ENCHANT_STATS } from '../constants';
 
 export const calculateEffectiveStat = (rawStat: number): number => {
-  const SOFT_CAP = 50;
-  if (rawStat <= SOFT_CAP) return rawStat;
-  return SOFT_CAP + (rawStat - SOFT_CAP) * 0.5;
+  const stat = rawStat || 0;
+  const SOFT_CAP = 100; 
+  if (stat <= SOFT_CAP) return stat;
+  return SOFT_CAP + (stat - SOFT_CAP) * 0.7; 
 };
-
-export interface StatMilestone {
-  stat: 'strength' | 'dexterity' | 'intelligence' | 'vitality' | 'luck';
-  threshold: number;
-  name: string;
-  description: string;
-}
-
-export const MILESTONES: StatMilestone[] = [
-  { stat: 'strength', threshold: 20, name: 'Lực Sĩ Tập Sự', description: 'Tăng vĩnh viễn 5% Sát thương Vật lý' },
-  { stat: 'strength', threshold: 50, name: 'Thần Lực Vô Song', description: 'Đòn đánh có khả năng gây choáng nhẹ' },
-  { stat: 'dexterity', threshold: 20, name: 'Nhanh Nhẹn', description: 'Tăng 5% Tốc độ đánh và giảm hồi chiêu' },
-  { stat: 'dexterity', threshold: 50, name: 'Bóng Ma', description: 'Có tỷ lệ né tránh hoàn toàn đòn đánh đầu tiên' },
-  { stat: 'intelligence', threshold: 20, name: 'Học Giả Giả Kim', description: 'Tăng 10% hiệu quả hồi máu' },
-  { stat: 'intelligence', threshold: 50, name: 'Pháp Sư Tối Thượng', description: 'Giảm 15% thời gian hồi chiêu' },
-  { stat: 'vitality', threshold: 20, name: 'Da Sắt Thịt Đồng', description: 'Tăng 5% tổng chỉ số Phòng thủ' },
-  { stat: 'vitality', threshold: 50, name: 'Cơ Thể Bất Tử', description: 'Tự động hồi 1% Máu tối đa mỗi giây' },
-  { stat: 'luck', threshold: 20, name: 'Vận May Tìm Đến', description: 'Tăng 5% Tỷ lệ rơi đồ từ quái vật' },
-  { stat: 'luck', threshold: 50, name: 'Vận Mệnh Định Sẵn', description: 'Tăng mạnh Sát thương Chí mạng' },
-];
 
 export const calculatePlayerStats = (
   player: Player, 
   equipped: Record<EquipmentType, Equipment | null>,
   getStatMultiplier: (val: number) => number 
 ) => {
-  const strEff = calculateEffectiveStat(player.stats.strength);
-  const dexEff = calculateEffectiveStat(player.stats.dexterity);
-  const intEff = calculateEffectiveStat(player.stats.intelligence);
-  const vitEff = calculateEffectiveStat(player.stats.vitality);
-  const lukEff = calculateEffectiveStat(player.stats.luck);
+  const safePlayer = player || { stats: { strength: 1, dexterity: 1, intelligence: 1, vitality: 1, luck: 1 }, attack: 10, defense: 5, maxHp: 100, rebirthCount: 0, skills: {}, eternalUpgrades: {}, characterClass: CharacterClass.None };
+  
+  const stats = {
+      strength: safePlayer.stats?.strength || 1,
+      dexterity: safePlayer.stats?.dexterity || 1,
+      intelligence: safePlayer.stats?.intelligence || 1,
+      vitality: safePlayer.stats?.vitality || 1,
+      luck: safePlayer.stats?.luck || 1,
+  };
+  
+  const strEff = calculateEffectiveStat(stats.strength);
+  const vitEff = calculateEffectiveStat(stats.vitality);
 
-  let baseAtk = player.attack + (strEff * 2); 
-  let baseDef = player.defense + (vitEff * 1); 
-  let maxHp = player.maxHp + (vitEff * 10);    
+  // SCALING CÂN BẰNG: +25% chỉ số gốc mỗi lần tái sinh (Tuyến tính)
+  const rebirthMult = 1 + (safePlayer.rebirthCount * 0.25); 
+  
+  let baseAtk = ((safePlayer.attack || 10) + (strEff * 10)) * rebirthMult; 
+  let baseDef = ((safePlayer.defense || 5) + (vitEff * 5)) * rebirthMult; 
+  let maxHp = ((safePlayer.maxHp || 100) + (vitEff * 100)) * rebirthMult;    
   
   let totalAtk = baseAtk;
   let totalDef = baseDef;
   let totalHp = maxHp;
-  let weaponElement: ElementType = ElementType.Physical;
 
-  const activeSets: Record<SetId, number> = {} as any;
+  // Hệ số Godly Forging: Nhân chỉ số trang bị
+  const forgingLevel = safePlayer.eternalUpgrades[EternalUpgradeId.GodlyForging] || 0;
+  const forgingMult = 1 + (safePlayer.rebirthCount * (forgingLevel * 0.1)); 
 
-  Object.values(equipped).forEach(item => {
-    if (item) {
-      if (item.setId) activeSets[item.setId] = (activeSets[item.setId] || 0) + 1;
+  const safeEquipped = equipped || {};
 
-      let itemAtk = item.stats.attack || 0;
-      let itemDef = item.stats.defense || 0;
-      let itemHp = item.stats.hpBonus || 0;
+  (Object.values(safeEquipped) as (Equipment | null)[]).forEach(item => {
+    if (item && item.stats) {
+      let itemAtk = (item.stats.attack || 0) * forgingMult;
+      let itemDef = (item.stats.defense || 0) * forgingMult;
+      let itemHp = (item.stats.hpBonus || 0) * forgingMult;
 
-      if (item.enchantment === EnchantmentType.Sharpness) itemAtk *= 1.15;
-      if (item.enchantment === EnchantmentType.Protection) itemDef *= 1.15;
+      if (item.enchantment === EnchantmentType.Sharpness) itemAtk *= 1.3;
+      if (item.enchantment === EnchantmentType.Protection) itemDef *= 1.3;
 
-      item.socketedGems.forEach(gem => {
-          const stats = GEM_STATS[gem.type][gem.tier];
-          if (gem.type === GemType.Ruby) itemAtk += stats;
-          if (gem.type === GemType.Sapphire) itemDef += stats;
-          if (gem.type === GemType.Topaz) itemHp += stats;
+      item.socketedGems?.forEach(gem => {
+          const gemStat = (GEM_STATS[gem.type]?.[gem.tier] || 0) * forgingMult;
+          if (gem.type === GemType.Ruby) itemAtk += gemStat;
+          if (gem.type === GemType.Sapphire) itemDef += gemStat;
+          if (gem.type === GemType.Topaz) itemHp += gemStat;
       });
 
       totalAtk += itemAtk;
       totalDef += itemDef;
       totalHp += itemHp;
-
-      if (item.type === EquipmentType.Weapon && item.element) weaponElement = item.element;
     }
   });
 
-  totalAtk = getStatMultiplier(totalAtk);
-  totalDef = getStatMultiplier(totalDef);
-  totalHp = getStatMultiplier(totalHp);
-
-  let critChance = 5 + (dexEff * 0.2) + (player.skills['wp_crit'] || 0);
-  let critDamage = 150 + (lukEff * 0.5);
-  let dropRateBonus = (lukEff * 0.001);
-  let cooldownReduction = Math.min(0.5, dexEff * 0.005); 
-
-  if ((activeSets[SetId.PrimalHunter] || 0) >= 6) {
-      critChance += 30;
-      critDamage += 30;
+  // EP Upgrade: Latent Power
+  if (typeof getStatMultiplier === 'function') {
+    totalAtk = getStatMultiplier(totalAtk);
+    totalDef = getStatMultiplier(totalDef);
+    totalHp = getStatMultiplier(totalHp);
   }
-  if ((activeSets[SetId.InfinityChrono] || 0) >= 6) {
-      totalAtk *= 1.05;
-  }
-  
+
+  // Eternal Blood Bonus
+  const bloodLevel = safePlayer.eternalUpgrades[EternalUpgradeId.EternalBlood] || 0;
+  totalHp *= (1 + (safePlayer.rebirthCount * (bloodLevel * 0.05)));
+
+  // Add explicit typing to return objects to assist TS inference in components
   return {
     totalAtk: Math.floor(totalAtk),
     totalDef: Math.floor(totalDef),
     totalHp: Math.floor(totalHp),
-    critChance: parseFloat(critChance.toFixed(1)),
-    critDamage: parseFloat(critDamage.toFixed(1)),
-    dropRateBonus: parseFloat(dropRateBonus.toFixed(3)),
-    cooldownReduction,
-    weaponElement,
-    activeSets,
-    activeMilestones: MILESTONES.filter(m => player.stats[m.stat] >= m.threshold)
+    critChance: 10 + (calculateEffectiveStat(stats.dexterity) * 0.5),
+    critDamage: 200 + (calculateEffectiveStat(stats.luck) * 1.5),
+    dropRateBonus: calculateEffectiveStat(stats.luck) * 0.005,
+    cooldownReduction: Math.min(0.6, calculateEffectiveStat(stats.dexterity) * 0.01),
+    weaponElement: ElementType.Physical,
+    activeSets: {} as Record<string, number>,
+    activeMilestones: [] as { name: string; description: string }[]
   };
 };

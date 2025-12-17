@@ -2,18 +2,16 @@
 import React, { useState } from 'react';
 import { Equipment, EquipmentType, Player, GemType, EnchantmentType, GemTier } from '../../types';
 import { RARITY_COLOR, GEM_STATS } from '../../constants';
-import { Sword, Shield, HardHat, Hand, Footprints, CircuitBoard, DollarSign, Hammer, Gem, Sparkles } from 'lucide-react';
+import { Sword, Shield, HardHat, Hand, Footprints, CircuitBoard, DollarSign, Hammer, Gem, Sparkles, Heart } from 'lucide-react';
 import { Card } from '../Card';
-import { ItemUpgradeModal } from '../ItemUpgradeModal'; // Import Modal mới
-import { useInventory } from '../../hooks/useInventory'; // Cần hook update
+import { ItemUpgradeModal } from '../ItemUpgradeModal';
 
 interface EquipmentListProps {
   equipments: Equipment[];
   onEquip: (item: Equipment) => void;
   onSell: (item: Equipment) => void;
-  // Truyền thêm prop update
   onUpdateItem?: (item: Equipment) => void;
-  player?: Player; // Cần player để check gem inventory
+  player?: Player;
   onSocketGem?: (gemKey: string, item: Equipment) => void;
   onAddSocket?: (item: Equipment) => void;
   onEnchant?: (type: EnchantmentType, item: Equipment) => void;
@@ -36,7 +34,6 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({
   const handleSocket = (gemKey: string) => {
       if (selectedItem && onSocketGem) {
           onSocketGem(gemKey, selectedItem);
-          // Đóng modal sau khi thao tác hoặc để mở để socket tiếp (tùy UX, tạm để mở)
       }
   };
 
@@ -71,10 +68,28 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3">
             {equipments.map((item) => {
               const Icon = TYPE_ICONS[item.type] || Sword;
-              const isAtk = !!item.stats.attack;
-              const statValue = isAtk ? item.stats.attack : item.stats.defense;
               
-              // Calculate visuals for gems
+              // Determine best stat to display
+              let statLabel = 'ATK';
+              let statValue = item.stats.attack || 0;
+              let statColor = 'text-red-400';
+              let bgStatColor = 'bg-red-900/30';
+              let StatIcon = Sword;
+
+              if ((item.stats.hpBonus || 0) > (item.stats.defense || 0) && (item.stats.hpBonus || 0) > (item.stats.attack || 0)) {
+                  statLabel = 'HP';
+                  statValue = item.stats.hpBonus || 0;
+                  statColor = 'text-green-400';
+                  bgStatColor = 'bg-green-900/30';
+                  StatIcon = Heart;
+              } else if ((item.stats.defense || 0) > (item.stats.attack || 0)) {
+                  statLabel = 'DEF';
+                  statValue = item.stats.defense || 0;
+                  statColor = 'text-blue-400';
+                  bgStatColor = 'bg-blue-900/30';
+                  StatIcon = Shield;
+              }
+              
               const hasSockets = (item.sockets || 0) > 0;
               const filledSockets = item.socketedGems?.length || 0;
 
@@ -88,22 +103,18 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({
                             : 'bg-slate-800/60 border-slate-700 hover:border-slate-500 hover:bg-slate-800'}
                     `}
                 >
-                    {/* Top Info */}
                     <div className="flex justify-between items-start z-10">
-                         {/* Enchant Badge */}
                         {item.enchantment ? (
                              <div className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-900/50 text-purple-300 border border-purple-700 animate-pulse-slow">
                                 <Sparkles size={8} className="inline mr-0.5"/> Phù Phép
                              </div>
                         ) : <div></div>}
                         
-                        {/* Stat Badge */}
-                        <div className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${isAtk ? 'bg-red-900/30 text-red-400' : 'bg-blue-900/30 text-blue-400'}`}>
-                            {isAtk ? 'ATK' : 'DEF'} {statValue}
+                        <div className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${bgStatColor} ${statColor} flex items-center gap-0.5`}>
+                            <StatIcon size={8} /> {statValue}
                         </div>
                     </div>
 
-                    {/* Center Icon & Name */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-20 group-hover:opacity-10 transition-opacity">
                          <Icon size={40} />
                     </div>
@@ -112,7 +123,6 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({
                         <div className={`font-bold text-xs leading-tight line-clamp-2 ${RARITY_COLOR[item.rarity]}`}>
                             {item.name}
                         </div>
-                        {/* Sockets Visual */}
                         {hasSockets && (
                              <div className="flex justify-center gap-1 mt-1">
                                  {Array.from({length: item.sockets}).map((_, i) => (
@@ -122,7 +132,6 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({
                         )}
                     </div>
 
-                    {/* Actions */}
                     <div className="grid grid-cols-2 gap-1 z-10 mt-auto">
                         <button 
                             onClick={() => onEquip(item)} 
@@ -160,7 +169,6 @@ export const EquipmentList: React.FC<EquipmentListProps> = ({
       )}
     </Card>
 
-    {/* Upgrade Modal */}
     {selectedItem && player && (
         <ItemUpgradeModal 
             item={selectedItem}

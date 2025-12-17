@@ -70,7 +70,7 @@ export const RebirthAction: React.FC<RebirthActionProps> = ({ player, onRebirth,
                   <Zap size={12} className="text-blue-400" />
                   <span className="text-[9px] font-black text-slate-500 uppercase">Điểm Tiềm Năng</span>
                 </div>
-                <div className="text-xs font-bold text-blue-400">+{5 + (player.rebirthCount * 5)} Stat Pts</div>
+                <div className="text-xs font-bold text-blue-400">+{5 + (player.rebirthCount * 5)} Điểm TN</div>
               </div>
               <div className="bg-slate-950/50 p-3 rounded-xl border border-slate-800 text-left col-span-2">
                 <div className="flex items-center gap-2 mb-1">
@@ -83,7 +83,6 @@ export const RebirthAction: React.FC<RebirthActionProps> = ({ player, onRebirth,
         </div>
       </div>
 
-      {/* Memory Compression Detail */}
       <div className="bg-blue-900/10 p-6 rounded-2xl border border-blue-500/20 max-w-xl w-full">
           <div className="flex items-start gap-4 text-left">
               <div className="p-3 bg-blue-600/20 rounded-xl border border-blue-500/30 shrink-0">

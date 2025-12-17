@@ -1,7 +1,8 @@
 
 import React, { useMemo, useState } from 'react';
 import { Player, Equipment, EquipmentType, ElementType, SetId } from '../types';
-import { calculatePlayerStats, MILESTONES } from '../utils/statCalculator';
+// Fix: Removed non-existent MILESTONES export
+import { calculatePlayerStats } from '../utils/statCalculator';
 import { SETS } from '../constants';
 import { X, Shield, Sword, Zap, Activity, Flame, Snowflake, Plus, RefreshCw, Trophy, AlertTriangle, Target } from 'lucide-react';
 import { Button } from './Button';
@@ -178,7 +179,7 @@ export const CharacterStatsModal: React.FC<CharacterStatsModalProps> = ({
                                  {stats.activeMilestones.length === 0 ? (
                                      <div className="text-slate-500 italic text-sm text-center py-4">Chưa đạt mốc nào (20/50 điểm)</div>
                                  ) : (
-                                     stats.activeMilestones.map((m, idx) => (
+                                     stats.activeMilestones.map((m: any, idx) => (
                                          <div key={idx} className="bg-slate-900 p-2 rounded border border-amber-900/30 flex gap-2">
                                              <div className="mt-1"><Trophy size={12} className="text-amber-500" /></div>
                                              <div>
@@ -263,10 +264,12 @@ export const CharacterStatsModal: React.FC<CharacterStatsModalProps> = ({
                                      // Fix TypeScript error by casting setId to SetId enum
                                      const id = setId as SetId;
                                      const setInfo = SETS[id];
+                                     // Cast count to any to avoid "unknown" rendering error
+                                     const c = count as any;
                                      return (
                                         <div key={id} className="bg-slate-800 p-2 rounded border border-slate-700">
                                             <div className="text-yellow-500 font-bold text-sm">
-                                                {setInfo ? setInfo.name : id} <span className="text-slate-400 text-xs">({count}/6)</span>
+                                                {setInfo ? setInfo.name : id} <span className="text-slate-400 text-xs">({c}/6)</span>
                                             </div>
                                         </div>
                                      );

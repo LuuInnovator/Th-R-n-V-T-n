@@ -26,37 +26,8 @@ export const INITIAL_PLAYER: Player = {
   memoryGemPotential: 0
 };
 
-const SAVE_KEY = 'thoren_vontat_save_v2';
-
 export const usePlayer = (addLog: (msg: string) => void) => {
   const [player, setPlayer] = useState<Player>(INITIAL_PLAYER);
-
-  const saveGame = useCallback(() => {
-    localStorage.setItem(SAVE_KEY, JSON.stringify(player));
-    addLog("💾 Ký ức thợ rèn đã được ghi lại thành công vào trình duyệt!");
-  }, [player, addLog]);
-
-  const loadGame = useCallback(() => {
-    const saved = localStorage.getItem(SAVE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setPlayer(prev => ({
-          ...INITIAL_PLAYER,
-          ...parsed,
-          stats: { ...INITIAL_PLAYER.stats, ...parsed.stats },
-          skills: { ...parsed.skills },
-          eternalUpgrades: { ...parsed.eternalUpgrades },
-          blueprintLevels: { ...parsed.blueprintLevels }
-        }));
-        addLog("📖 Khôi phục ký ức thành công từ bộ nhớ trình duyệt!");
-      } catch (e) {
-        addLog("❌ Lỗi khi đọc bản lưu: Dữ liệu không hợp lệ.");
-      }
-    } else {
-      addLog("⚠️ Không tìm thấy bản lưu nào trong trình duyệt!");
-    }
-  }, [addLog]);
 
   const setGameSpeed = useCallback((speed: number) => {
     setPlayer(p => ({ ...p, gameSpeed: speed }));
@@ -83,13 +54,13 @@ export const usePlayer = (addLog: (msg: string) => void) => {
   const getStatMultiplier = useCallback((base: number) => {
     let multiplier = 1.0;
     const latentPowerLevel = player.eternalUpgrades[EternalUpgradeId.LatentPower] || 0;
-    multiplier += latentPowerLevel * 0.05;
+    multiplier += latentPowerLevel * 0.3; // Tăng hiệu quả latent power
     return Math.floor(base * multiplier);
   }, [player.eternalUpgrades]);
 
   const gainExp = useCallback((amount: number) => {
     setPlayer(prev => {
-      if (prev.level >= 90) return prev;
+      if (prev.level >= 150) return prev; // Nâng level cap lên 150
       let newExp = prev.currentExp + amount;
       let newLevel = prev.level;
       let newMaxExp = prev.maxExp;
@@ -97,12 +68,12 @@ export const usePlayer = (addLog: (msg: string) => void) => {
       let newStatPoints = prev.statPoints;
       let leveledUp = false;
 
-      while (newExp >= newMaxExp && newLevel < 90) {
+      while (newExp >= newMaxExp && newLevel < 150) {
         newExp -= newMaxExp;
         newLevel++;
-        newMaxExp = Math.floor(newMaxExp * 1.5);
-        newSP += 1; 
-        newStatPoints += 3;
+        newMaxExp = Math.floor(newMaxExp * 1.45);
+        newSP += 2; 
+        newStatPoints += 5;
         leveledUp = true;
       }
       if (leveledUp) addLog(`🎉 LÊN CẤP ${newLevel}!`);
@@ -125,6 +96,7 @@ export const usePlayer = (addLog: (msg: string) => void) => {
         const savedRebirthCount = prev.rebirthCount + 1;
         const savedClass = prev.characterClass; 
         const savedBpLevels = prev.blueprintLevels;
+        const savedSkills = prev.skills;
 
         return {
           ...INITIAL_PLAYER,
@@ -133,7 +105,8 @@ export const usePlayer = (addLog: (msg: string) => void) => {
           rebirthCount: savedRebirthCount,
           eternalUpgrades: savedUpgrades,
           blueprintLevels: savedBpLevels,
-          statPoints: 5 + (savedRebirthCount * 5),
+          skills: savedSkills, 
+          statPoints: 10 + (savedRebirthCount * 10),
           memoryGemPotential: 0
         };
     });
@@ -141,15 +114,14 @@ export const usePlayer = (addLog: (msg: string) => void) => {
 
   const upgradeSkill = useCallback((skill: Skill) => {
     setPlayer(prev => {
-      // Kiểm tra cấp độ yêu cầu
       if (prev.level < skill.reqLevel) {
-          addLog(`❌ Cần Cấp ${skill.reqLevel} để mở khóa Bí Kỹ này!`);
+          addLog(`❌ Cần Cấp ${skill.reqLevel} để mở khóa!`);
           return prev;
       }
       const currentLevel = prev.skills[skill.id] || 0;
       if (currentLevel >= skill.maxLevel || prev.skillPoints < skill.cost) return prev;
       
-      addLog(`✨ Lĩnh hội thành công Bí Kỹ: ${skill.name}`);
+      addLog(`✨ Lĩnh hội Bí Kỹ: ${skill.name}`);
       return { 
         ...prev, 
         skillPoints: prev.skillPoints - skill.cost, 
@@ -185,6 +157,6 @@ export const usePlayer = (addLog: (msg: string) => void) => {
   }, []);
 
   return { 
-      player, setPlayer, gainExp, updateHp, addGold, rebirth, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, allocateStat, resetStats, setGameSpeed, upgradeBlueprint, updateMemoryPotential, saveGame, loadGame
+      player, setPlayer, gainExp, updateHp, addGold, rebirth, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, allocateStat, resetStats, setGameSpeed, upgradeBlueprint, updateMemoryPotential
   };
 };

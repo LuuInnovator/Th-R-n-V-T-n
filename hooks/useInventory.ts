@@ -40,20 +40,17 @@ export const useInventory = (addLog: (msg: string) => void) => {
   }, []);
 
   const handleRebirth = useCallback((retentionBonus: number, onCompress: (potential: number) => void) => {
-    // Tính toán tiềm năng từ kho đồ hiện tại (10% chỉ số)
     let totalPotential = 0;
     equipments.forEach(e => {
       totalPotential += (e.stats.attack || 0) + (e.stats.defense || 0);
     });
     onCompress(Math.floor(totalPotential * 0.1));
 
-    // Lọc nguyên liệu theo phân tầng
     setMaterials(prev => {
         return prev.filter(m => {
             const tier = MATERIAL_TIERS[m.type];
             if (tier === MaterialTier.Eternal) return true;
             if (tier === MaterialTier.Elite) {
-                // Giữ lại một phần dựa trên nâng cấp EP
                 const keepQty = Math.floor(m.quantity * (retentionBonus / 100));
                 if (keepQty > 0) {
                     m.quantity = keepQty;
@@ -64,14 +61,13 @@ export const useInventory = (addLog: (msg: string) => void) => {
         });
     });
 
-    // Reset trang bị và kho đồ
     setEquipments([]);
     setEquipped({
         [EquipmentType.Weapon]: null, [EquipmentType.Armor]: null, [EquipmentType.Accessory]: null,
         [EquipmentType.Helmet]: null, [EquipmentType.Gloves]: null, [EquipmentType.Boots]: null
     });
 
-    addLog("🌀 Toàn bộ kho đồ đã được nén thành tiềm năng cho kiếp sau!");
+    addLog("🌀 Kho đồ đã được nén thành tiềm năng cho kiếp sau!");
   }, [equipments, addLog]);
 
   const addEquipment = useCallback((item: Equipment) => {
@@ -90,7 +86,7 @@ export const useInventory = (addLog: (msg: string) => void) => {
   }, [addLog, equipped]);
 
   return { 
-    materials, equipments, equipped, 
+    materials, setMaterials, equipments, setEquipments, equipped, setEquipped,
     addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, handleRebirth
   };
 };

@@ -2,90 +2,139 @@
 import { 
   Rarity, Zone, Enemy, ElementType, MaterialType, Blueprint, EquipmentType, 
   EternalUpgrade, EternalUpgradeId, Skill, SkillBranch, CharacterClass, 
-  EquipmentTalent, MutationType, MonsterAbility, GemType, GemTier, SetId, MaterialTier
+  EquipmentTalent, MonsterAbility, GemType, GemTier, SetId, MaterialTier, EnchantmentType
 } from './types';
 
 export const ZONES: Zone[] = [
-  { id: 'z1', name: 'Rừng Khởi Nguyên', description: 'Khu vực tân thủ, tập trung vào nguyên liệu da, gỗ và nhựa.', recommendedLevel: 1, materials: [MaterialType.SlimeResin, MaterialType.WolfSkin, MaterialType.PoisonSpore, MaterialType.ForestWood, MaterialType.WildHerb] },
-  { id: 'z2', name: 'Hang Động Quặng Thô', description: 'Nơi khai thác quặng đồng, sắt và đá cường hóa.', recommendedLevel: 10, materials: [MaterialType.RawCopperOre, MaterialType.IronScale, MaterialType.Flint, MaterialType.GemStone] },
-  { id: 'z3', name: 'Núi Tuyết Vĩnh Cửu', description: 'Khu vực khắc nghiệt, quái vật có khả năng làm chậm.', recommendedLevel: 25, materials: [MaterialType.SnowCrystal, MaterialType.WarmFur, MaterialType.YetiFur] },
-  { id: 'z4', name: 'Thành Cổ Hoang Tàn', description: 'Nơi rơi các bản thiết kế cổ đại và linh hồn.', recommendedLevel: 45, materials: [MaterialType.OldBone, MaterialType.BlueSoul, MaterialType.BrokenSwordFragment] },
-  { id: 'z5', name: 'Cung Điện Ẩn Giấu', description: 'Nơi tập trung trang bị Sử Thi và nguyên liệu hiếm.', recommendedLevel: 65, materials: [MaterialType.MemoryGem, MaterialType.StarDust, MaterialType.GoldOre] },
-  { id: 'z6', name: 'Vùng Đất Song Song', description: 'Phiên bản ác mộng của các khu vực trước. Quái vật cực mạnh.', recommendedLevel: 85, minRebirth: 1, materials: [MaterialType.FissionCrystal, MaterialType.VoidCore] },
-  { id: 'z7', name: 'Vực Thẳm Vô Định', description: 'Khu vực cuối cùng, chứa đựng bí mật tối thượng.', recommendedLevel: 100, minRebirth: 5, materials: [MaterialType.VoidCore, MaterialType.VoidShard] }
+  { id: 'z1', name: 'Rừng Khởi Nguyên', description: 'Nơi bắt đầu của mọi huyền thoại.', recommendedLevel: 1, materials: [MaterialType.SlimeResin, MaterialType.WolfSkin, MaterialType.WolfFang, MaterialType.ForestWood, MaterialType.SpiderSilk, MaterialType.WildHerb] },
+  { id: 'z2', name: 'Hang Động Đồng Thô', description: 'Nơi chứa đựng những quặng kim loại đầu tiên.', recommendedLevel: 10, materials: [MaterialType.RawCopperOre, MaterialType.IronScraps, MaterialType.BatWing, MaterialType.GolemCore, MaterialType.Flint, MaterialType.GemStone, MaterialType.AmberFragment] },
+  { id: 'z3', name: 'Núi Tuyết Vĩnh Cửu', description: 'Băng giá che phủ những bí mật cổ xưa.', recommendedLevel: 25, materials: [MaterialType.SnowCrystal, MaterialType.WarmFur, MaterialType.YetiFur, MaterialType.IceShard, MaterialType.FrozenHeart, MaterialType.FrostLotus] },
+  // Fix: Added MaterialType.MagicThread to Zone 4 materials to make it obtainable and used correctly
+  { id: 'z4', name: 'Thành Cổ Hoang Tàn', description: 'Tàn tích của một đế chế ma pháp hùng mạnh.', recommendedLevel: 45, materials: [MaterialType.OldBone, MaterialType.BlueSoul, MaterialType.BrokenSwordFragment, MaterialType.AncientScroll, MaterialType.MagicThread, MaterialType.GhostEssence, MaterialType.CursedStone, MaterialType.WillOfDead] },
+  { id: 'z5', name: 'Cung Điện Long Tộc', description: 'Thánh địa của những sinh vật mạnh nhất thế gian.', recommendedLevel: 65, materials: [MaterialType.DragonScale, MaterialType.GoldOre, MaterialType.StarDust, MaterialType.DragonBlood, MaterialType.RoyalCloth, MaterialType.PearlOfPower, MaterialType.AncientDragonBone] },
+  { id: 'z6', name: 'Vùng Đất Song Song', description: 'Thực tại bị bóp méo bởi năng lượng hư không.', recommendedLevel: 85, minRebirth: 2, materials: [MaterialType.FissionCrystal, MaterialType.VoidCore, MaterialType.DarkEssence, MaterialType.MemoryGem, MaterialType.OmniStone] },
+  { id: 'z7', name: 'Vực Thẳm Vô Định', description: 'Nơi kết thúc của không gian và thời gian.', recommendedLevel: 100, minRebirth: 5, materials: [MaterialType.RealityTear, MaterialType.VoidShard, MaterialType.AncientRelic, MaterialType.EternalSpark] }
 ];
 
 export const ENEMIES_DB: Record<string, Enemy[]> = {
   z1: [
-    { id: 'e1_1', name: 'Slime Xanh', level: 1, hp: 40, maxHp: 40, attack: 5, defense: 1, element: ElementType.Physical, expReward: 12, goldReward: 4, dropTable: [{ materialType: MaterialType.SlimeResin, chance: 0.7, minQty: 1, maxQty: 2 }] },
-    { id: 'e1_2', name: 'Nấm Độc', level: 3, hp: 90, maxHp: 90, attack: 12, defense: 2, element: ElementType.Acid, expReward: 25, goldReward: 10, dropTable: [{ materialType: MaterialType.PoisonSpore, chance: 0.6, minQty: 1, maxQty: 3 }] },
-    { id: 'e1_3', name: 'Dơi Rừng', level: 5, hp: 150, maxHp: 150, attack: 22, defense: 4, element: ElementType.Physical, expReward: 45, goldReward: 20, dropTable: [{ materialType: MaterialType.BatWing, chance: 0.4, minQty: 1, maxQty: 2 }] },
-    { id: 'e1_4', name: 'Sói Xám', level: 8, hp: 350, maxHp: 350, attack: 40, defense: 8, element: ElementType.Physical, expReward: 100, goldReward: 50, dropTable: [{ materialType: MaterialType.WolfSkin, chance: 0.5, minQty: 1, maxQty: 2 }] }
+    { id: 'e1_1', name: 'Slime Xanh', level: 1, hp: 100, maxHp: 100, attack: 15, defense: 2, element: ElementType.Physical, expReward: 20, goldReward: 15, dropTable: [{ materialType: MaterialType.SlimeResin, chance: 0.8, minQty: 1, maxQty: 3 }] },
+    { id: 'e1_2', name: 'Sói Xám', level: 5, hp: 500, maxHp: 500, attack: 50, defense: 10, element: ElementType.Physical, expReward: 100, goldReward: 50, dropTable: [{ materialType: MaterialType.WolfSkin, chance: 0.7, minQty: 2, maxQty: 5 }] },
+    { id: 'e1_boss', name: 'Vua Slime Hoàng Kim', level: 15, hp: 10000, maxHp: 10000, attack: 850, defense: 450, element: ElementType.Physical, isBoss: true, expReward: 2500, goldReward: 2000, dropTable: [{ materialType: MaterialType.SlimeResin, chance: 1, minQty: 50, maxQty: 100 }] }
   ],
   z2: [
-    { id: 'e2_1', name: 'Bọ Giáp Sắt', level: 15, hp: 1200, maxHp: 1200, attack: 85, defense: 110, element: ElementType.Physical, expReward: 280, goldReward: 120, dropTable: [{ materialType: MaterialType.IronScale, chance: 0.5, minQty: 1, maxQty: 3 }] },
-    { id: 'e2_2', name: 'Kobold Thợ Mỏ', level: 18, hp: 1500, maxHp: 1500, attack: 120, defense: 80, element: ElementType.Physical, expReward: 350, goldReward: 180, dropTable: [{ materialType: MaterialType.RawCopperOre, chance: 0.4, minQty: 2, maxQty: 4 }] },
-    { id: 'e2_3', name: 'Nhện Hang Sâu', level: 22, hp: 2000, maxHp: 2000, attack: 160, defense: 100, element: ElementType.Acid, expReward: 500, goldReward: 250, dropTable: [{ materialType: MaterialType.PoisonSpore, chance: 0.5, minQty: 3, maxQty: 6 }] },
-    { id: 'e2_boss', name: 'Golem Đá Cổ (Boss)', level: 25, hp: 12000, maxHp: 12000, attack: 280, defense: 350, element: ElementType.Physical, isBoss: true, abilities: [MonsterAbility.Stun, MonsterAbility.Reflect], expReward: 4000, goldReward: 1500, dropTable: [{ materialType: MaterialType.GolemCore, chance: 1, minQty: 1, maxQty: 1 }] }
-  ],
-  z3: [
-    { id: 'e3_1', name: 'Sói Tuyết', level: 30, hp: 5000, maxHp: 5000, attack: 350, defense: 180, element: ElementType.Ice, expReward: 1500, goldReward: 600, dropTable: [{ materialType: MaterialType.WarmFur, chance: 0.5, minQty: 1, maxQty: 2 }] },
-    { id: 'e3_2', name: 'Băng Tinh Linh', level: 35, hp: 6500, maxHp: 6500, attack: 480, defense: 220, element: ElementType.Ice, expReward: 2200, goldReward: 800, dropTable: [{ materialType: MaterialType.SnowCrystal, chance: 0.4, minQty: 2, maxQty: 4 }] },
-    { id: 'e3_boss', name: 'Yeti Vương (Boss)', level: 45, hp: 30000, maxHp: 30000, attack: 950, defense: 600, element: ElementType.Ice, isBoss: true, abilities: [MonsterAbility.Freeze, MonsterAbility.Regen], expReward: 12000, goldReward: 4000, dropTable: [{ materialType: MaterialType.YetiFur, chance: 1, minQty: 2, maxQty: 4 }] }
-  ],
-  z4: [
-    { id: 'e4_1', name: 'Chiến Binh Xương', level: 50, hp: 12000, maxHp: 12000, attack: 1200, defense: 850, element: ElementType.Physical, expReward: 6000, goldReward: 2000, dropTable: [{ materialType: MaterialType.OldBone, chance: 0.5, minQty: 3, maxQty: 7 }] },
-    { id: 'e4_2', name: 'Hồn Ma Thành Cổ', level: 55, hp: 10000, maxHp: 10000, attack: 1500, defense: 700, element: ElementType.Void, expReward: 8000, goldReward: 2500, dropTable: [{ materialType: MaterialType.BlueSoul, chance: 0.4, minQty: 1, maxQty: 2 }] },
-    { id: 'e4_3', name: 'Kỵ Sĩ Mục Nát', level: 60, hp: 25000, maxHp: 25000, attack: 2200, defense: 1500, element: ElementType.Physical, expReward: 15000, goldReward: 5000, dropTable: [{ materialType: MaterialType.BrokenSwordFragment, chance: 0.3, minQty: 1, maxQty: 3 }] }
+    { id: 'e2_1', name: 'Bọ Giáp Sắt', level: 25, hp: 15000, maxHp: 15000, attack: 1200, defense: 1500, element: ElementType.Physical, expReward: 1800, goldReward: 1200, dropTable: [{ materialType: MaterialType.IronScraps, chance: 0.7, minQty: 15, maxQty: 35 }] },
+    { id: 'e2_boss', name: 'Golem Cổ Đại', level: 45, hp: 250000, maxHp: 250000, attack: 8500, defense: 12000, element: ElementType.Physical, isBoss: true, abilities: [MonsterAbility.Stun, MonsterAbility.ArmorBreak], expReward: 45000, goldReward: 35000, dropTable: [{ materialType: MaterialType.GolemCore, chance: 1, minQty: 3, maxQty: 8 }] }
   ],
   z7: [
-    { id: 'e7_1', name: 'Lính Canh Hư Không', level: 110, hp: 1500000, maxHp: 1500000, attack: 35000, defense: 25000, element: ElementType.Void, expReward: 250000, goldReward: 100000, dropTable: [{ materialType: MaterialType.VoidShard, chance: 0.3, minQty: 2, maxQty: 5 }] },
-    { id: 'e7_boss', name: 'Chúa Tể Hư Không (Final Boss)', level: 125, hp: 8000000, maxHp: 8000000, attack: 95000, defense: 65000, element: ElementType.Void, isBoss: true, abilities: [MonsterAbility.ArmorBreak, MonsterAbility.Reflect, MonsterAbility.Stun, MonsterAbility.Regen], expReward: 2000000, goldReward: 1000000, dropTable: [{ materialType: MaterialType.VoidCore, chance: 1, minQty: 5, maxQty: 10 }] }
+    { id: 'e7_final', name: 'Chúa Tể Hư Không', level: 999, hp: 9999999999999, maxHp: 9999999999999, attack: 850000000000, defense: 750000000000, element: ElementType.Void, isBoss: true, minRebirth: 15, abilities: [MonsterAbility.Dodge, MonsterAbility.Reflect, MonsterAbility.Silence, MonsterAbility.Stun, MonsterAbility.Regen], expReward: 9999999999, goldReward: 9999999999, dropTable: [{ materialType: MaterialType.RealityTear, chance: 1, minQty: 500, maxQty: 1500 }, { materialType: MaterialType.EternalSpark, chance: 1, minQty: 50, maxQty: 100 }] }
   ]
 };
 
 export const INITIAL_BLUEPRINTS: Blueprint[] = [
-  // ⚔️ VŨ KHÍ (Giảm sát thương để cân bằng game)
-  { id: 'bp_legacy', name: 'Kiếm Thánh Kế Thừa', resultType: EquipmentType.Weapon, evolutionLevel: 0, 
-    requiredMaterials: [
-        { type: MaterialType.MemoryGem, amount: 5 }, 
-        { type: MaterialType.VoidCore, amount: 20 }, 
-        { type: MaterialType.StarDust, amount: 100 },
-        { type: MaterialType.BlueSoul, amount: 50 }
-    ], 
-    baseStats: { minAtk: 450, maxAtk: 750, minDef: 0, maxDef: 0 }, unlocked: true 
-  },
-  { id: 'bp_w_1', name: 'Đoản Kiếm Rèn Vội', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.SlimeResin, amount: 10 }], baseStats: { minAtk: 4, maxAtk: 9, minDef: 0, maxDef: 0 }, unlocked: true },
-  { id: 'bp_w_2', name: 'Cung Gỗ Rừng', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.ForestWood, amount: 15 }, { type: MaterialType.WolfSkin, amount: 8 }], baseStats: { minAtk: 12, maxAtk: 20, minDef: 0, maxDef: 0 }, unlocked: true },
-  { id: 'bp_w_3', name: 'Trượng Nấm Độc', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.PoisonSpore, amount: 20 }, { type: MaterialType.SlimeResin, amount: 15 }], baseStats: { minAtk: 25, maxAtk: 42, minDef: 0, maxDef: 0 }, unlocked: true },
-  { id: 'bp_w_4', name: 'Kiếm Băng Giá', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.SnowCrystal, amount: 12 }, { type: MaterialType.PureIronOre, amount: 25 }], baseStats: { minAtk: 85, maxAtk: 150, minDef: 0, maxDef: 0 }, unlocked: true },
-  { id: 'bp_w_5', name: 'Thương Thành Cổ', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.BrokenSwordFragment, amount: 10 }, { type: MaterialType.BlueSoul, amount: 30 }], baseStats: { minAtk: 250, maxAtk: 450, minDef: 0, maxDef: 0 }, unlocked: true },
+  // --- VŨ KHÍ (WEAPONS) ---
+  { id: 'bp_w_1', name: 'Kiếm Gỗ Tập Sự', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.ForestWood, amount: 200 }], baseStats: { minAtk: 30, maxAtk: 60, minDef: 0, maxDef: 0 }, unlocked: true },
+  { id: 'bp_w_6', name: 'Thánh Thương Long Vương', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.DragonScale, amount: 3500 }, { type: MaterialType.DragonBlood, amount: 1500 }], baseStats: { minAtk: 15000000, maxAtk: 35000000, minDef: 0, maxDef: 0 }, unlocked: true, setId: SetId.DragonWarlord },
+  { id: 'bp_w_final', name: 'Diệt Thần Kiếm', resultType: EquipmentType.Weapon, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.RealityTear, amount: 15000 }, { type: MaterialType.EternalSpark, amount: 500 }], baseStats: { minAtk: 50000000000, maxAtk: 150000000000, minDef: 0, maxDef: 0 }, unlocked: true, setId: SetId.VoidSeeker },
 
-  // 🛡️ GIÁP
-  { id: 'bp_a_1', name: 'Áo Da Sói', resultType: EquipmentType.Armor, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.WolfSkin, amount: 15 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 10, maxDef: 18 }, unlocked: true },
-  { id: 'bp_a_2', name: 'Mũ Nấm Độc', resultType: EquipmentType.Helmet, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.MushroomCap, amount: 12 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 6, maxDef: 12 }, unlocked: true },
-  { id: 'bp_a_3', name: 'Giáp Vảy Sắt', resultType: EquipmentType.Armor, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.IronScale, amount: 30 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 45, maxDef: 85 }, unlocked: true },
-  { id: 'bp_a_4', name: 'Mũ Hoàng Kim', resultType: EquipmentType.Helmet, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.GoldOre, amount: 10 }], baseStats: { minAtk: 3, maxAtk: 8, minDef: 35, maxDef: 60 }, unlocked: true },
+  // --- TRANG SỨC (ACCESSORIES) - SIÊU ĐỒ SỘ ---
+  { id: 'bp_acc_z1_1', name: 'Nhẫn Nhựa Slime', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.SlimeResin, amount: 1200 }], baseStats: { minAtk: 50, maxAtk: 120, minDef: 50, maxDef: 120, minHp: 800, maxHp: 2500 }, unlocked: true },
+  { id: 'bp_acc_z1_2', name: 'Dây Chuyền Bào Tử', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.PoisonSpore, amount: 800 }, { type: MaterialType.WildHerb, amount: 500 }], baseStats: { minAtk: 150, maxAtk: 450, minDef: 150, maxDef: 450, minHp: 2500, maxHp: 6500 }, unlocked: true },
+  
+  { id: 'bp_acc_z2_1', name: 'Nhẫn Đồng Hổ Phách', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.RawCopperOre, amount: 5000 }, { type: MaterialType.AmberFragment, amount: 150 }], baseStats: { minAtk: 2500, maxAtk: 6500, minDef: 2500, maxDef: 6500, minHp: 25000, maxHp: 65000 }, unlocked: true, setId: SetId.IronWill },
+  { id: 'bp_acc_z2_2', name: 'Vòng Tay Golem', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.GolemCore, amount: 85 }, { type: MaterialType.IronScale, amount: 2500 }], baseStats: { minAtk: 8500, maxAtk: 18500, minDef: 8500, maxDef: 18500, minHp: 85000, maxHp: 185000 }, unlocked: true, setId: SetId.IronWill },
 
-  // 🧪 DÙNG
-  { id: 'bp_c_1', name: 'Bình Hồi Phục', resultType: 'VẬT PHẨM', evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.SlimeResin, amount: 8 }, { type: MaterialType.WildHerb, amount: 15 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 0, maxDef: 0 }, unlocked: true }
-];
+  { id: 'bp_acc_z3_1', name: 'Dây Chuyền Tuyết Liên', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.FrostLotus, amount: 350 }, { type: MaterialType.SnowCrystal, amount: 6500 }], baseStats: { minAtk: 85000, maxAtk: 225000, minDef: 85000, maxDef: 225000, minHp: 850000, maxHp: 2250000 }, unlocked: true, setId: SetId.FrozenLegacy },
+  { id: 'bp_acc_z3_2', name: 'Nhẫn Trái Tim Băng', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.FrozenHeart, amount: 125 }, { type: MaterialType.IceShard, amount: 8500 }], baseStats: { minAtk: 250000, maxAtk: 650000, minDef: 250000, maxDef: 650000, minHp: 2500000, maxHp: 6500000 }, unlocked: true, setId: SetId.FrozenLegacy },
 
-export const SKILLS: Skill[] = [
-  { id: 'wp_atk', name: 'Sắc Bén Cực Hạn', branch: SkillBranch.WeaponSmith, description: 'Tăng 5% sát thương vật lý cơ bản.', maxLevel: 10, cost: 2, effectValue: 5, reqLevel: 5 },
-  { id: 'wp_crit', name: 'Nhãn Lực Thợ Rèn', branch: SkillBranch.WeaponSmith, description: 'Tăng 2% tỷ lệ chí mạng khi chiến đấu.', maxLevel: 10, cost: 3, effectValue: 2, reqLevel: 15 },
-  { id: 'hv_hp', name: 'Huyết Mạch Hộ Vệ', branch: SkillBranch.ArmorSmith, description: 'Tăng 10% HP tối đa.', maxLevel: 10, cost: 4, effectValue: 10, reqLevel: 20, reqClass: CharacterClass.HeavySentinel },
-  { id: 'bm_atk', name: 'Lưỡi Dao Hư Không', branch: SkillBranch.WeaponSmith, description: 'Tăng 10% sát thương xuyên thấu.', maxLevel: 10, cost: 4, effectValue: 10, reqLevel: 20, reqClass: CharacterClass.ShadowBlade },
-  { id: 'gk_craft', name: 'Tinh Hoa Vật Chất', branch: SkillBranch.Alchemy, description: 'Tăng 10% chỉ số khi rèn đồ.', maxLevel: 10, cost: 4, effectValue: 10, reqLevel: 20, reqClass: CharacterClass.AlchemistMage }
-];
+  { id: 'bp_acc_z4_1', name: 'Bông Tai Vong Linh', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.WillOfDead, amount: 450 }, { type: MaterialType.BlueSoul, amount: 12000 }], baseStats: { minAtk: 1500000, maxAtk: 3500000, minDef: 1500000, maxDef: 3500000, minHp: 15000000, maxHp: 35000000 }, unlocked: true, setId: SetId.GhostlyRelic },
+  { id: 'bp_acc_z4_2', name: 'Nhẫn Nguyền Rủa Tối Thượng', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.CursedStone, amount: 2500 }, { type: MaterialType.OldBone, amount: 35000 }], baseStats: { minAtk: 4500000, maxAtk: 12500000, minDef: 4500000, maxDef: 12500000, minHp: 45000000, maxHp: 125000000 }, unlocked: true, setId: SetId.GhostlyRelic },
 
-export const ETERNAL_UPGRADES: EternalUpgrade[] = [
-  { id: EternalUpgradeId.LatentPower, name: 'Sức Mạnh Tiềm Ẩn', description: 'Tăng 10% toàn bộ chỉ số nhân vật vĩnh viễn.', baseCost: 100, costMultiplier: 2, maxLevel: 50, effectValue: 10 },
-  { id: EternalUpgradeId.ResourceRetention, name: 'Bảo Toàn Tinh Hoa', description: 'Giữ lại 10% nguyên liệu khi Tái sinh.', baseCost: 200, costMultiplier: 2.5, maxLevel: 10, effectValue: 10 }
+  { id: 'bp_acc_z5_1', name: 'Ngọc Bội Long Cốt', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.AncientDragonBone, amount: 650 }, { type: MaterialType.GoldOre, amount: 50000 }], baseStats: { minAtk: 25000000, maxAtk: 65000000, minDef: 25000000, maxDef: 65000000, minHp: 250000000, maxHp: 650000000 }, unlocked: true, setId: SetId.DragonWarlord },
+  { id: 'bp_acc_z5_2', name: 'Long Châu Hộ Mệnh', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.PearlOfPower, amount: 180 }, { type: MaterialType.DragonBlood, amount: 6500 }], baseStats: { minAtk: 85000000, maxAtk: 225000000, minDef: 85000000, maxDef: 225000000, minHp: 850000000, maxHp: 2250000000 }, unlocked: true, setId: SetId.DragonWarlord },
+
+  { id: 'bp_acc_final_1', name: 'Nhẫn Toàn Năng', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.OmniStone, amount: 1500 }, { type: MaterialType.VoidCore, amount: 12000 }], baseStats: { minAtk: 1500000000, maxAtk: 4500000000, minDef: 1500000000, maxDef: 4500000000, minHp: 15000000000, maxHp: 45000000000 }, unlocked: true, setId: SetId.VoidSeeker },
+  { id: 'bp_acc_final_2', name: 'Trái Tim Vĩnh Hằng', resultType: EquipmentType.Accessory, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.EternalSpark, amount: 1000 }, { type: MaterialType.AncientRelic, amount: 2500 }], baseStats: { minAtk: 85000000000, maxAtk: 225000000000, minDef: 85000000000, maxDef: 225000000000, minHp: 850000000000, maxHp: 2250000000000 }, unlocked: true, setId: SetId.InfinityChrono },
+
+  // --- GIÁP TRỤ (ARMOR) ---
+  { id: 'bp_a_1', name: 'Giáp Da Sói', resultType: EquipmentType.Armor, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.WolfSkin, amount: 800 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 150, maxDef: 350, minHp: 1500, maxHp: 5000 }, unlocked: true, setId: SetId.PrimalHunter },
+  { id: 'bp_a_final', name: 'Giáp Thần Thoại', resultType: EquipmentType.Armor, evolutionLevel: 0, requiredMaterials: [{ type: MaterialType.FissionCrystal, amount: 25000 }, { type: MaterialType.RealityTear, amount: 8500 }], baseStats: { minAtk: 0, maxAtk: 0, minDef: 1200000000000, maxDef: 3500000000000, minHp: 15000000000000, maxHp: 45000000000000 }, unlocked: true, setId: SetId.InfinityChrono }
 ];
 
 export const RARITY_MULTIPLIER: Record<Rarity, number> = {
-  [Rarity.Common]: 1, [Rarity.Rare]: 1.5, [Rarity.Epic]: 2.5, [Rarity.Legendary]: 5, [Rarity.Mythic]: 10, [Rarity.Cosmic]: 25
+  [Rarity.Common]: 1, 
+  [Rarity.Rare]: 5, 
+  [Rarity.Epic]: 20, 
+  [Rarity.Legendary]: 85, 
+  [Rarity.Mythic]: 350, 
+  [Rarity.Cosmic]: 1200 // Đẩy lên x1200 để tạo khoảng cách cực lớn
+};
+
+export const ETERNAL_UPGRADES: EternalUpgrade[] = [
+  { id: EternalUpgradeId.LatentPower, name: 'Sức Mạnh Tiềm Ẩn', description: 'Tăng 30% toàn bộ chỉ số nhân vật vĩnh viễn.', baseCost: 150, costMultiplier: 1.7, maxLevel: 500, effectValue: 30 },
+  { id: EternalUpgradeId.EternalBlood, name: 'Huyết Mạch Vĩnh Hằng', description: 'Tăng 100% HP tối đa cho mỗi cấp Tái sinh.', baseCost: 600, costMultiplier: 2.1, maxLevel: 250, effectValue: 100 },
+  { id: EternalUpgradeId.GodlyForging, name: 'Kỹ Thuật Đúc Thần', description: 'Mọi trang bị chế tạo được nhân thêm (Số lần tái sinh * 25%) chỉ số.', baseCost: 5000, costMultiplier: 3.2, maxLevel: 20, effectValue: 25 }
+];
+
+export const SKILLS: Skill[] = [
+  { id: 'wp_atk', name: 'Sắc Bén Cực Hạn', branch: SkillBranch.WeaponSmith, description: 'Tăng 25% sát thương vật lý cơ bản cho mỗi cấp.', maxLevel: 20, cost: 3, effectValue: 25, reqLevel: 5 },
+  { id: 'wp_mastery', name: 'Bậc Thầy Binh Khí', branch: SkillBranch.WeaponSmith, description: 'Tăng 100% chỉ số cộng thêm từ trang bị Vũ khí.', maxLevel: 15, cost: 12, effectValue: 100, reqLevel: 50, reqClass: CharacterClass.ShadowBlade }
+];
+
+export const MATERIAL_TIERS: Record<MaterialType, MaterialTier> = {
+  [MaterialType.SlimeResin]: MaterialTier.Basic,
+  [MaterialType.PoisonSpore]: MaterialTier.Basic,
+  [MaterialType.MushroomCap]: MaterialTier.Basic,
+  [MaterialType.WolfSkin]: MaterialTier.Basic,
+  [MaterialType.WolfFang]: MaterialTier.Basic,
+  [MaterialType.SpiderSilk]: MaterialTier.Basic,
+  [MaterialType.ForestWood]: MaterialTier.Basic,
+  [MaterialType.WildHerb]: MaterialTier.Basic,
+  [MaterialType.RawCopperOre]: MaterialTier.Basic,
+  [MaterialType.IronScale]: MaterialTier.Basic,
+  [MaterialType.IronScraps]: MaterialTier.Basic,
+  [MaterialType.Flint]: MaterialTier.Basic,
+  [MaterialType.GemStone]: MaterialTier.Basic,
+  [MaterialType.SilverOre]: MaterialTier.Basic,
+  [MaterialType.AmberFragment]: MaterialTier.Basic,
+  [MaterialType.BatWing]: MaterialTier.Basic,
+  [MaterialType.GolemCore]: MaterialTier.Elite,
+  [MaterialType.SnowCrystal]: MaterialTier.Elite,
+  [MaterialType.WarmFur]: MaterialTier.Elite,
+  [MaterialType.YetiFur]: MaterialTier.Elite,
+  [MaterialType.IceShard]: MaterialTier.Elite,
+  [MaterialType.FrozenHeart]: MaterialTier.Elite,
+  [MaterialType.FrostLotus]: MaterialTier.Elite,
+  [MaterialType.OldBone]: MaterialTier.Elite,
+  [MaterialType.BlueSoul]: MaterialTier.Elite,
+  [MaterialType.BrokenSwordFragment]: MaterialTier.Elite,
+  [MaterialType.AncientScroll]: MaterialTier.Elite,
+  // Fix: Added Tier mapping for MagicThread
+  [MaterialType.MagicThread]: MaterialTier.Elite,
+  [MaterialType.GhostEssence]: MaterialTier.Elite,
+  [MaterialType.CursedStone]: MaterialTier.Elite,
+  [MaterialType.WillOfDead]: MaterialTier.Elite,
+  [MaterialType.GoldOre]: MaterialTier.Elite,
+  [MaterialType.DragonScale]: MaterialTier.Elite,
+  [MaterialType.RoyalCloth]: MaterialTier.Elite,
+  [MaterialType.DragonBlood]: MaterialTier.Elite,
+  [MaterialType.PearlOfPower]: MaterialTier.Elite,
+  [MaterialType.AncientDragonBone]: MaterialTier.Elite,
+  [MaterialType.VoidCore]: MaterialTier.Eternal,
+  [MaterialType.VoidShard]: MaterialTier.Eternal,
+  [MaterialType.StarDust]: MaterialTier.Eternal,
+  [MaterialType.MemoryGem]: MaterialTier.Eternal,
+  [MaterialType.FissionCrystal]: MaterialTier.Eternal,
+  [MaterialType.DarkEssence]: MaterialTier.Eternal,
+  [MaterialType.RealityTear]: MaterialTier.Eternal,
+  [MaterialType.AncientRelic]: MaterialTier.Eternal,
+  [MaterialType.EternalSpark]: MaterialTier.Eternal,
+  [MaterialType.OmniStone]: MaterialTier.Eternal,
+  [MaterialType.BlueCoreFragment]: MaterialTier.Basic,
+  [MaterialType.PureIronOre]: MaterialTier.Elite,
+  [MaterialType.Wood]: MaterialTier.Basic,
+  [MaterialType.Leather]: MaterialTier.Basic,
+  [MaterialType.Ore]: MaterialTier.Basic,
 };
 
 export const RARITY_COLOR: Record<Rarity, string> = {
@@ -93,65 +142,37 @@ export const RARITY_COLOR: Record<Rarity, string> = {
 };
 
 export const CLASS_INFO: Record<string, { name: string; desc: string; bonuses: string }> = {
-  [CharacterClass.None]: { name: 'Vô Danh', desc: 'Chưa thức tỉnh.', bonuses: '' },
-  [CharacterClass.HeavySentinel]: { name: 'Hộ Vệ Thủ Lĩnh', desc: 'Bậc thầy phòng ngự.', bonuses: '+10% Thủ, +20% HP' },
-  [CharacterClass.ShadowBlade]: { name: 'Bóng Ma Hắc Ám', desc: 'Sát thủ hư không.', bonuses: '+15% Công, +10% Crit' },
-  [CharacterClass.AlchemistMage]: { name: 'Giả Kim Pháp Sư', desc: 'Kẻ điều khiển vật chất.', bonuses: '+20% Hiệu quả chế tác' }
+  [CharacterClass.None]: { name: 'Vô Danh', desc: 'Chưa thức tỉnh sức mạnh.', bonuses: 'Không có.' },
+  [CharacterClass.HeavySentinel]: { name: 'Hộ Vệ Thủ Lĩnh', desc: 'Bậc thầy phòng ngự.', bonuses: '+100% Phòng Thủ, +200% HP' },
+  [CharacterClass.ShadowBlade]: { name: 'Bóng Ma Hắc Ám', desc: 'Sát thủ tàn bạo.', bonuses: '+150% Tấn Công, +60% Chí Mạng' },
+  [CharacterClass.AlchemistMage]: { name: 'Giả Kim Pháp Sư', desc: 'Bậc thầy chế tác.', bonuses: '+100% Hiệu quả thuốc, +200% Tỷ lệ Rơi đồ' }
 };
 
 export const EQUIPMENT_TALENTS: EquipmentTalent[] = [
-  { name: 'Sức Mạnh Thần Thánh', desc: 'Gây thêm 20% sát thương lên Boss.' },
-  { name: 'Hào Quang Hồi Phục', desc: 'Hồi 1% máu mỗi đòn đánh.' },
-  { name: 'Giáp Gai', desc: 'Phản lại 15% sát thương.' },
-  { name: 'Khát Máu', desc: 'Hút 5% máu từ sát thương.' }
+  { name: 'Sát Thần', desc: 'Gây thêm 200% sát thương lên Boss.' },
+  { name: 'Hào Quang Hồi Phục', desc: 'Hồi 15% máu mỗi giây.' },
+  { name: 'Lời Nguyền Hư Không', desc: 'Giảm 80% thủ địch mỗi đòn.' }
 ];
 
 export const GEM_STATS: Record<GemType, Record<GemTier, number>> = {
-  [GemType.Ruby]: { [GemTier.T1]: 10, [GemTier.T2]: 25, [GemTier.T3]: 60 },
-  [GemType.Sapphire]: { [GemTier.T1]: 5, [GemTier.T2]: 15, [GemTier.T3]: 40 },
-  [GemType.Topaz]: { [GemTier.T1]: 50, [GemTier.T2]: 150, [GemTier.T3]: 400 },
+  [GemType.Ruby]: { [GemTier.T1]: 1000, [GemTier.T2]: 15000, [GemTier.T3]: 250000 },
+  [GemType.Sapphire]: { [GemTier.T1]: 800, [GemTier.T2]: 12000, [GemTier.T3]: 200000 },
+  [GemType.Topaz]: { [GemTier.T1]: 10000, [GemTier.T2]: 150000, [GemTier.T3]: 2500000 },
 };
 
 export const ENCHANT_STATS: Record<string, { name: string; desc: string }> = {
-  'Sharpness': { name: 'Sắc Bén', desc: '+15% Công' },
-  'Protection': { name: 'Bảo Vệ', desc: '+15% Thủ' }
+  [EnchantmentType.Sharpness]: { name: 'Sắc Bén', desc: '+100% Tổng Sát thương' },
+  [EnchantmentType.Protection]: { name: 'Bảo Vệ', desc: '+100% Tổng Phòng thủ' },
+  [EnchantmentType.Vitality]: { name: 'Sinh Lực', desc: '+150% HP Tối Đa' },
+  [EnchantmentType.Luck]: { name: 'Vận May', desc: '+50% Tỷ Lệ Rơi Đồ' }
 };
 
-export const SETS: Record<SetId, { name: string }> = {
+export const SETS: Record<string, { name: string }> = {
   [SetId.PrimalHunter]: { name: 'Thợ Săn Nguyên Thủy' },
+  [SetId.IronWill]: { name: 'Ý Chí Thép' },
+  [SetId.FrozenLegacy]: { name: 'Di Sản Băng Giá' },
+  [SetId.GhostlyRelic]: { name: 'Di Vật U Linh' },
+  [SetId.DragonWarlord]: { name: 'Đại Tướng Long Tộc' },
+  [SetId.VoidSeeker]: { name: 'Kẻ Tầm Đạo Hư Không' },
   [SetId.InfinityChrono]: { name: 'Vòng Lặp Vô Tận' }
-};
-
-export const MATERIAL_TIERS: Record<MaterialType, MaterialTier> = {
-  [MaterialType.SlimeResin]: MaterialTier.Basic,
-  [MaterialType.BlueCoreFragment]: MaterialTier.Basic,
-  [MaterialType.PoisonSpore]: MaterialTier.Basic,
-  [MaterialType.MushroomCap]: MaterialTier.Basic,
-  [MaterialType.WolfSkin]: MaterialTier.Basic,
-  [MaterialType.WolfFang]: MaterialTier.Basic,
-  [MaterialType.BatWing]: MaterialTier.Basic,
-  [MaterialType.Flint]: MaterialTier.Basic,
-  [MaterialType.IronScale]: MaterialTier.Basic,
-  [MaterialType.RawCopperOre]: MaterialTier.Basic,
-  [MaterialType.GolemCore]: MaterialTier.Elite,
-  [MaterialType.PureIronOre]: MaterialTier.Elite,
-  [MaterialType.SnowCrystal]: MaterialTier.Elite,
-  [MaterialType.WarmFur]: MaterialTier.Elite,
-  [MaterialType.OldBone]: MaterialTier.Elite,
-  [MaterialType.BrokenSwordFragment]: MaterialTier.Elite,
-  [MaterialType.BlueSoul]: MaterialTier.Elite,
-  [MaterialType.VoidCore]: MaterialTier.Eternal,
-  [MaterialType.StarDust]: MaterialTier.Eternal,
-  [MaterialType.MemoryGem]: MaterialTier.Eternal,
-  [MaterialType.FissionCrystal]: MaterialTier.Eternal,
-  [MaterialType.IronScraps]: MaterialTier.Basic,
-  [MaterialType.Wood]: MaterialTier.Basic,
-  [MaterialType.Leather]: MaterialTier.Basic,
-  [MaterialType.Ore]: MaterialTier.Basic,
-  [MaterialType.ForestWood]: MaterialTier.Basic,
-  [MaterialType.WildHerb]: MaterialTier.Basic,
-  [MaterialType.YetiFur]: MaterialTier.Elite,
-  [MaterialType.GoldOre]: MaterialTier.Elite,
-  [MaterialType.VoidShard]: MaterialTier.Eternal,
-  [MaterialType.GemStone]: MaterialTier.Basic,
 };

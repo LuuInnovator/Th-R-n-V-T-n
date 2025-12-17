@@ -15,44 +15,67 @@ export enum MaterialTier {
 }
 
 export enum MaterialType {
+  // Z1: Rừng
   SlimeResin = 'Nhựa Slime',
-  BlueCoreFragment = 'Mảnh Lõi Xanh',
   PoisonSpore = 'Bào Tử Độc',
   MushroomCap = 'Mũ Nấm',
   WolfSkin = 'Da Sói',
   WolfFang = 'Răng Nanh',
-  BatWing = 'Cánh Dơi',
-  Flint = 'Đá Lửa',
-  IronScale = 'Vảy Sắt',
+  ForestWood = 'Gỗ Khởi Nguyên',
+  SpiderSilk = 'Tơ Nhện',
+  WildHerb = 'Thảo Mộc Hoang',
+  // Z2: Hang Động
   RawCopperOre = 'Quặng Đồng Thô',
+  IronScale = 'Vảy Sắt',
+  IronScraps = 'Mảnh Sắt Vụn',
+  Flint = 'Đá Lửa',
+  GemStone = 'Đá Quý Thô',
+  BatWing = 'Cánh Dơi',
   GolemCore = 'Lõi Golem',
-  PureIronOre = 'Quặng Sắt Tinh Khiết',
+  SilverOre = 'Quặng Bạc',
+  AmberFragment = 'Mảnh Hổ Phách',
+  // Z3: Núi Tuyết
   SnowCrystal = 'Tinh Thể Tuyết',
   WarmFur = 'Lông Thú Ấm',
+  YetiFur = 'Lông Yeti',
+  IceShard = 'Mảnh Băng Vĩnh Cửu',
+  FrozenHeart = 'Trái Tim Băng',
+  FrostLotus = 'Hoa Tuyết Liên',
+  // Z4: Thành Cổ
   OldBone = 'Xương Mục',
-  BrokenSwordFragment = 'Mảnh Kiếm Gãy',
   BlueSoul = 'Linh Hồn Xanh',
-  VoidCore = 'Lõi Hư Không',
+  BrokenSwordFragment = 'Mảnh Kiếm Gãy',
+  AncientScroll = 'Cuộn Giấy Cổ',
+  // Fix: Added missing MagicThread material
+  MagicThread = 'Chỉ Ma Thuật',
+  GhostEssence = 'Tinh Hoa U Linh',
+  CursedStone = 'Đá Nguyền Rủa',
+  WillOfDead = 'Ý Chí Vong Linh',
+  // Z5: Long Cung
+  GoldOre = 'Quặng Vàng',
   StarDust = 'Bụi Sao',
   MemoryGem = 'Ngọc Ký Ức',
+  DragonScale = 'Vảy Rồng',
+  RoyalCloth = 'Vải Hoàng Gia',
+  DragonBlood = 'Máu Rồng Thiêng',
+  PearlOfPower = 'Long Châu Lực',
+  AncientDragonBone = 'Xương Rồng Thượng Cổ',
+  // Z6 & Z7: Hư Không
+  VoidCore = 'Lõi Hư Không',
+  VoidShard = 'Mảnh Vỡ Hư Không',
   FissionCrystal = 'Tinh Thể Nhiệt Hạch',
-  IronScraps = 'Mảnh Sắt Vụn',
+  DarkEssence = 'Tinh Hoa Bóng Tối',
+  RealityTear = 'Vết Rách Thực Tại',
+  AncientRelic = 'Di Vật Cổ Đại',
+  EternalSpark = 'Tàn Lửa Vĩnh Hằng',
+  OmniStone = 'Đá Toàn Năng',
+  
+  // Tương thích cũ
+  BlueCoreFragment = 'Mảnh Lõi Xanh',
+  PureIronOre = 'Quặng Sắt Tinh Khiết',
   Wood = 'Gỗ Rừng',
   Leather = 'Da Thú',
-  Ore = 'Quặng Thô',
-  ForestWood = 'Gỗ Khởi Nguyên',
-  WildHerb = 'Thảo Mộc Rừng',
-  YetiFur = 'Lông Yeti',
-  GoldOre = 'Quặng Vàng',
-  VoidShard = 'Mảnh Vỡ Hư Không',
-  GemStone = 'Đá Quý'
-}
-
-export interface Material {
-  id: string;
-  name: string;
-  type: MaterialType;
-  quantity: number;
+  Ore = 'Quặng Thô'
 }
 
 export enum ElementType {
@@ -71,15 +94,15 @@ export enum MonsterAbility {
   Reflect = 'Phản Đòn',
   Stun = 'Gây Choáng',
   Freeze = 'Đông Cứng',
-  Regen = 'Hồi Phục'
+  Regen = 'Hồi Phục',
+  Silence = 'Câm Lặng'
 }
 
 export enum MutationType {
   None = 'Bình Thường',
-  RebirthVariant = 'Biến Dị Tái Sinh',
-  Void = 'Vô Định',
-  Corrupted = 'Tha Hóa',
-  Stalker = 'Kẻ Săn Đuổi'
+  Stalker = 'Kẻ Săn Đuổi',
+  Void = 'Hư Không',
+  Corrupted = 'Hóa Quỷ'
 }
 
 export interface Enemy {
@@ -105,20 +128,44 @@ export interface Enemy {
   }[];
 }
 
+export enum SetId {
+  PrimalHunter = 'Thợ Săn Nguyên Thủy',
+  IronWill = 'Ý Chí Thép',
+  FrozenLegacy = 'Di Sản Băng Giá',
+  GhostlyRelic = 'Di Vật U Linh',
+  DragonWarlord = 'Đại Tướng Long Tộc',
+  VoidSeeker = 'Kẻ Tầm Đạo Hư Không',
+  InfinityChrono = 'Vòng Lặp Vô Tận'
+}
+
+export enum EquipmentType {
+  Weapon = 'Vũ Khí',
+  Armor = 'Giáp Trụ',
+  Accessory = 'Trang Sức',
+  Helmet = 'Mũ Giáp',
+  Boots = 'Giày',
+  Gloves = 'Găng Tay'
+}
+
+export enum GemType { Ruby = 'Hồng Ngọc', Sapphire = 'Lam Ngọc', Topaz = 'Hoàng Ngọc' }
+export enum GemTier { T1 = 1, T2 = 2, T3 = 3 }
+
+export interface SocketedGem {
+  type: GemType;
+  tier: GemTier;
+}
+
 export interface EquipmentTalent {
   name: string;
   desc: string;
 }
 
-export enum SetId {
-  PrimalHunter = 'PrimalHunter',
-  InfinityChrono = 'InfinityChrono'
-}
-
 export enum EnchantmentType {
   None = 'Không',
   Sharpness = 'Sắc Bén',
-  Protection = 'Bảo Vệ'
+  Protection = 'Bảo Vệ',
+  Vitality = 'Sinh Lực',
+  Luck = 'Vận May'
 }
 
 export interface Equipment {
@@ -141,31 +188,19 @@ export interface Equipment {
   element?: ElementType;
 }
 
-export enum EquipmentType {
-  Weapon = 'Vũ Khí',
-  Armor = 'Giáp Trụ',
-  Accessory = 'Trang Sức',
-  Helmet = 'Mũ Giáp',
-  Boots = 'Giày',
-  Gloves = 'Găng Tay'
-}
-
-export interface SocketedGem {
-  type: GemType;
-  tier: GemTier;
-}
-
-export enum GemType { Ruby = 'Hồng Ngọc', Sapphire = 'Lam Ngọc', Topaz = 'Hoàng Ngọc' }
-export enum GemTier { T1 = 1, T2 = 2, T3 = 3 }
-
 export interface Blueprint {
   id: string;
   name: string;
   resultType: EquipmentType | 'VẬT PHẨM';
   evolutionLevel: number;
   requiredMaterials: { type: MaterialType; amount: number }[];
-  baseStats: { minAtk: number; maxAtk: number; minDef: number; maxDef: number };
+  baseStats: { 
+    minAtk: number; maxAtk: number; 
+    minDef: number; maxDef: number;
+    minHp?: number; maxHp?: number;
+  };
   unlocked: boolean;
+  setId?: SetId;
 }
 
 export interface Zone {
@@ -182,7 +217,7 @@ export enum EternalUpgradeId {
   ResourceRetention = 'bao_toan_tai_nguyen',
   BlueprintMastery = 'bac_thay_ban_ve',
   EternalBlood = 'huyet_mach_vinh_hang',
-  DeepSight = 'thau_thi_sau'
+  GodlyForging = 'ky_thuat_duc_than'
 }
 
 export interface EternalUpgrade {
@@ -219,6 +254,13 @@ export interface Skill {
   effectValue: number;
   reqLevel: number;
   reqClass?: CharacterClass;
+}
+
+export interface Material {
+  id: string;
+  name: string;
+  type: MaterialType;
+  quantity: number;
 }
 
 export interface Guild {

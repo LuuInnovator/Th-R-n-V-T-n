@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Blueprint, Material } from '../../types';
+import { Blueprint, Material, Player } from '../../types';
 import { Button } from '../Button';
 import { Hammer, AlertCircle, Sparkles, X, Flame, AlertTriangle } from 'lucide-react';
 import { CraftingStats } from './CraftingStats';
@@ -11,9 +11,10 @@ interface CraftingDetailProps {
   materials: Material[];
   onCraft: (bp: Blueprint, useOverheat: boolean) => void;
   onClose?: () => void;
+  player: Player; // Thêm player prop
 }
 
-export const CraftingDetail: React.FC<CraftingDetailProps> = ({ blueprint, materials, onCraft, onClose }) => {
+export const CraftingDetail: React.FC<CraftingDetailProps> = ({ blueprint, materials, onCraft, onClose, player }) => {
   const [useOverheat, setUseOverheat] = useState(false);
 
   const checkRequirements = (bp: Blueprint) => {
@@ -62,13 +63,6 @@ export const CraftingDetail: React.FC<CraftingDetailProps> = ({ blueprint, mater
                         {useOverheat ? <Flame size={12} className="animate-pulse" /> : null}
                         {useOverheat ? '🔥 ĐANG ĐỐT NHIỆT 🔥' : '🔨 CHẾ ĐỘ TIÊU CHUẨN 🔨'}
                     </button>
-                    
-                    {useOverheat && (
-                        <div className="mt-3 flex items-center justify-center gap-2 text-red-500 animate-bounce">
-                            <AlertTriangle size={14} />
-                            <span className="text-[10px] font-black uppercase tracking-widest">CẢNH BÁO: THẤT BẠI SẼ MẤT ĐỒ!</span>
-                        </div>
-                    )}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
@@ -76,7 +70,12 @@ export const CraftingDetail: React.FC<CraftingDetailProps> = ({ blueprint, mater
                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1 flex items-center gap-2">
                              Dự Đoán Kết Quả
                         </div>
-                        <CraftingStats blueprint={blueprint} useOverheat={useOverheat} onToggleOverheat={() => setUseOverheat(!useOverheat)} />
+                        <CraftingStats 
+                            blueprint={blueprint} 
+                            useOverheat={useOverheat} 
+                            onToggleOverheat={() => setUseOverheat(!useOverheat)} 
+                            player={player} 
+                        />
                     </div>
                     <div className="space-y-4">
                         <div className="text-[9px] font-black text-slate-600 uppercase tracking-widest ml-1 flex items-center gap-2">
