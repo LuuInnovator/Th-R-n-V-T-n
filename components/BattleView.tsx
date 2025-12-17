@@ -105,18 +105,8 @@ export const BattleView: React.FC<BattleViewProps> = ({
              </div>
         </div>
 
-        {/* BOTTOM LEFT: Skills (Placeholder for future update) */}
-        <div className="col-span-4 row-span-2 row-start-5 flex items-end">
-             <div className="flex gap-2">
-                 {[1, 2, 3, 4].map(i => (
-                     <div key={i} className="w-12 h-12 bg-slate-900/80 border border-slate-600 rounded-lg flex items-center justify-center hover:border-amber-500 cursor-pointer shadow-lg transition-colors group">
-                         <span className="text-slate-600 text-xs font-bold group-hover:text-slate-400">{i}</span>
-                     </div>
-                 ))}
-             </div>
-        </div>
-
         {/* BOTTOM RIGHT: Special Items / Decoy */}
+        {/* Moved slightly to avoid overlapping with where skills used to be */}
         <div className="col-span-4 row-span-2 row-start-5 col-start-9 flex items-end justify-end">
              <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-700 backdrop-blur-md flex items-center gap-3">
                  <div className="text-right">

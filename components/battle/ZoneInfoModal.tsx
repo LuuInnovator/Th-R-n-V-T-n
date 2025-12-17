@@ -17,12 +17,14 @@ export const ZoneInfoModal: React.FC<ZoneInfoModalProps> = ({ zone, blueprints, 
 
   // Hàm tìm các bản vẽ sử dụng nguyên liệu này
   const getUsage = (matType: MaterialType) => {
+    // HIỂN THỊ TẤT CẢ CÔNG THỨC (Kể cả chưa mở khóa) để người chơi biết tác dụng
     const usages = blueprints.filter(bp => 
-      bp.unlocked && bp.requiredMaterials.some(req => req.type === matType)
+      bp.requiredMaterials.some(req => req.type === matType)
     ).map(bp => bp.name);
 
     if (usages.length === 0) return "Chưa có công thức";
-    if (usages.length > 3) return `${usages.slice(0, 3).join(', ')}... (+${usages.length - 3})`;
+    
+    // Hiển thị toàn bộ, không cắt bớt để người chơi dễ tra cứu
     return usages.join(', ');
   };
 
@@ -34,20 +36,20 @@ export const ZoneInfoModal: React.FC<ZoneInfoModalProps> = ({ zone, blueprints, 
         <div className="p-4 border-b border-slate-800 bg-slate-950 flex justify-between items-center sticky top-0 rounded-t-2xl z-10">
           <div>
             <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-              <Search className="text-blue-500" size={20} /> 
+              <Search className="text-blue-500" size={24} /> 
               Thông Tin: {zone.name}
             </h2>
-            <div className="flex gap-2 items-center text-xs mt-1 flex-wrap">
-                <span className="text-slate-400">{zone.description}</span>
+            <div className="flex gap-2 items-center text-sm mt-1 flex-wrap">
+                <span className="text-slate-300">{zone.description}</span>
                 {dropRateBonus > 0 && (
-                    <span className="text-green-400 font-bold bg-green-900/20 px-2 py-0.5 rounded border border-green-800 whitespace-nowrap">
+                    <span className="text-green-400 font-bold bg-green-900/20 px-2 py-0.5 rounded border border-green-800 whitespace-nowrap text-xs">
                         Bonus Rơi Đồ: +{(dropRateBonus * 100).toFixed(0)}%
                     </span>
                 )}
             </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full transition-colors shrink-0 ml-2">
-            <X size={24} className="text-slate-400 hover:text-white" />
+            <X size={28} className="text-slate-400 hover:text-white" />
           </button>
         </div>
 
@@ -59,53 +61,53 @@ export const ZoneInfoModal: React.FC<ZoneInfoModalProps> = ({ zone, blueprints, 
             enemies.map(enemy => (
               <div key={enemy.id} className="bg-slate-800/50 rounded-xl border border-slate-700 overflow-hidden">
                 {/* Enemy Header */}
-                <div className="px-4 py-2 bg-slate-800 flex justify-between items-center border-b border-slate-700/50 sticky top-0">
+                <div className="px-4 py-3 bg-slate-800 flex justify-between items-center border-b border-slate-700/50 sticky top-0">
                    <div className="flex items-center gap-2">
-                      <Target size={16} className={enemy.isBoss ? "text-red-500" : "text-slate-400"} />
-                      <span className={`font-bold ${enemy.isBoss ? "text-red-400" : "text-slate-200"}`}>
-                        {enemy.name} <span className="text-xs font-normal text-slate-500">(Lv.{enemy.level})</span>
+                      <Target size={20} className={enemy.isBoss ? "text-red-500" : "text-slate-400"} />
+                      <span className={`font-bold text-base ${enemy.isBoss ? "text-red-400" : "text-slate-200"}`}>
+                        {enemy.name} <span className="text-sm font-normal text-slate-400 ml-1">(Lv.{enemy.level})</span>
                       </span>
                    </div>
-                   {enemy.isBoss && <span className="text-[10px] bg-red-900/50 text-red-300 px-2 py-0.5 rounded border border-red-800 shrink-0 ml-2">BOSS</span>}
+                   {enemy.isBoss && <span className="text-[10px] font-bold bg-red-900/50 text-red-300 px-2 py-1 rounded border border-red-800 shrink-0 ml-2">BOSS</span>}
                 </div>
 
                 {/* Drop Table */}
-                <div className="p-3 overflow-x-auto">
-                    <table className="w-full text-sm text-left text-slate-400 min-w-[300px]">
-                        <thead className="text-[10px] text-slate-500 uppercase bg-slate-900/50">
+                <div className="p-0 overflow-x-auto">
+                    <table className="w-full text-left text-slate-400 min-w-[400px]">
+                        <thead className="text-xs font-bold text-slate-400 uppercase bg-slate-900/80">
                             <tr>
-                                <th className="px-2 py-1 rounded-l whitespace-nowrap">Vật Phẩm Rơi</th>
-                                <th className="px-2 py-1 text-center whitespace-nowrap"><Percent size={10} className="inline"/> Tỷ Lệ</th>
-                                <th className="px-2 py-1 rounded-r whitespace-nowrap"><Hammer size={10} className="inline"/> Dùng Chế Tạo</th>
+                                <th className="px-4 py-2 whitespace-nowrap w-1/3">Vật Phẩm Rơi</th>
+                                <th className="px-4 py-2 text-center whitespace-nowrap w-1/6"><Percent size={12} className="inline mr-1"/>Tỷ Lệ</th>
+                                <th className="px-4 py-2 w-1/2"><Hammer size={12} className="inline mr-1"/>Dùng Chế Tạo</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-700/50">
+                        <tbody className="divide-y divide-slate-700/50 text-sm">
                             {enemy.dropTable.map((drop, idx) => {
                                 const baseChance = drop.chance * 100;
                                 const bonusChance = dropRateBonus * 100;
                                 const totalChance = Math.min(100, baseChance + bonusChance);
                                 
                                 return (
-                                <tr key={idx} className="hover:bg-slate-700/30 transition-colors">
-                                    <td className="px-2 py-2 font-medium text-slate-200">
-                                        <div className="flex flex-col sm:flex-row sm:items-center">
-                                            <span>{drop.materialType}</span>
-                                            <span className="text-[10px] text-slate-500 sm:ml-1 whitespace-nowrap">
+                                <tr key={idx} className="hover:bg-slate-700/40 transition-colors">
+                                    <td className="px-4 py-3 font-bold text-slate-200 align-top">
+                                        <div className="flex flex-col sm:flex-row sm:items-baseline">
+                                            <span className="mr-2">{drop.materialType}</span>
+                                            <span className="text-xs text-slate-400 whitespace-nowrap font-normal">
                                                 (x{drop.minQty}-{drop.maxQty})
                                             </span>
                                         </div>
                                     </td>
-                                    <td className="px-2 py-2 text-center font-mono align-middle">
+                                    <td className="px-4 py-3 text-center font-mono align-top">
                                         <div className="flex flex-col items-center">
-                                            <span className="text-yellow-400 font-bold">{totalChance.toFixed(0)}%</span>
+                                            <span className="text-yellow-400 font-bold text-base">{totalChance.toFixed(0)}%</span>
                                             {dropRateBonus > 0 && totalChance > baseChance && (
-                                                <span className="text-[10px] text-green-500 whitespace-nowrap">
-                                                    ({baseChance.toFixed(0)}% + {bonusChance.toFixed(0)}%)
+                                                <span className="text-[10px] text-green-400 whitespace-nowrap">
+                                                    (+{bonusChance.toFixed(0)}%)
                                                 </span>
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-2 py-2 text-xs text-blue-300 align-middle">
+                                    <td className="px-4 py-3 text-sm text-slate-100 align-top whitespace-normal break-words leading-relaxed">
                                         {getUsage(drop.materialType)}
                                     </td>
                                 </tr>
@@ -119,7 +121,7 @@ export const ZoneInfoModal: React.FC<ZoneInfoModalProps> = ({ zone, blueprints, 
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-900/50 flex justify-end rounded-b-2xl sticky bottom-0 z-10">
+        <div className="p-4 border-t border-slate-800 bg-slate-900/80 flex justify-end rounded-b-2xl sticky bottom-0 z-10 backdrop-blur">
             <Button variant="primary" onClick={onClose}>Đã Hiểu</Button>
         </div>
       </div>

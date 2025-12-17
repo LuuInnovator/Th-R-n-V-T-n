@@ -1,7 +1,6 @@
-
 import React from 'react';
-import { Player, Equipment, EquipmentType, SetId, ElementType, EternalUpgradeId } from '../types';
-import { SETS } from '../constants';
+import { Player, Equipment, EquipmentType, SetId, ElementType, EternalUpgradeId, GemType, EnchantmentType } from '../types';
+import { SETS, GEM_STATS, ENCHANT_STATS } from '../constants';
 import { X, Shield, Sword, Zap, Activity, Flame, Snowflake } from 'lucide-react';
 import { Button } from './Button';
 import { formatNumber } from '../utils';
@@ -24,12 +23,45 @@ export const CharacterStatsModal: React.FC<CharacterStatsModalProps> = ({
   let totalDef = getStatMultiplier(player.defense);
   let totalHp = getStatMultiplier(player.maxHp);
   
-  // 1. Từ Trang bị
+  // 1. Từ Trang bị (Tính cả Ngọc & Phù phép)
   let weaponElement = ElementType.Physical;
+  
   Object.values(equipped).forEach(item => {
     if(item) {
-        totalAtk += (item.stats.attack || 0);
-        totalDef += (item.stats.defense || 0);
+        // FIX: Sử dụng ?. để tránh lỗi nếu stats bị thiếu trong dữ liệu cũ
+        let itemAtk = item.stats?.attack || 0;
+        let itemDef = item.stats?.defense || 0;
+
+        // FIX: Gán vào biến const để TypeScript hiểu đã kiểm tra undefined
+        const enchantment = item.enchantment;
+
+        // Xử lý Phù phép (Enchantment)
+        if (enchantment && ENCHANT_STATS[enchantment]) {
+            if (enchantment === EnchantmentType.Sharpness) {
+                 const bonus = ENCHANT_STATS[enchantment].multAtk || 0;
+                 itemAtk *= (1 + bonus);
+            }
+            if (enchantment === EnchantmentType.Protection) {
+                 const bonus = ENCHANT_STATS[enchantment].multDef || 0;
+                 itemDef *= (1 + bonus);
+            }
+        }
+
+        totalAtk += Math.floor(itemAtk);
+        totalDef += Math.floor(itemDef);
+
+        // Xử lý Ngọc (Gems)
+        // FIX: Sử dụng ?. để an toàn nếu mảng gem chưa khởi tạo
+        if (item.socketedGems && item.socketedGems.length > 0) {
+            item.socketedGems.forEach(gem => {
+                const stats = GEM_STATS[gem.type]?.[gem.tier] || 0;
+                if (gem.type === GemType.Ruby) totalAtk += stats;
+                if (gem.type === GemType.Sapphire) totalDef += stats;
+                if (gem.type === GemType.Topaz) totalHp += stats;
+            });
+        }
+
+        // Xác định hệ nguyên tố vũ khí
         if (item.type === EquipmentType.Weapon && item.element) {
             weaponElement = item.element;
         }
@@ -49,6 +81,11 @@ export const CharacterStatsModal: React.FC<CharacterStatsModalProps> = ({
   Object.values(equipped).forEach(item => {
     if (item && item.setId) activeSets[item.setId] = (activeSets[item.setId] || 0) + 1;
   });
+
+  // Infinity Chrono Bonus (Time Lord) - Mock logic giống BattleView
+  if ((activeSets[SetId.InfinityChrono] || 0) >= 6) {
+      totalAtk = Math.floor(totalAtk * 1.05); // +5% mock
+  }
 
   const primalHunterCount = activeSets[SetId.PrimalHunter] || 0;
   const forgeSpiritCount = activeSets[SetId.ForgeSpirit] || 0;
@@ -75,15 +112,15 @@ export const CharacterStatsModal: React.FC<CharacterStatsModalProps> = ({
   let fireResist = 0;
   if (dragonfireCount >= 2) fireResist += 30;
 
-  // Thêm chỉ số từ Thiên phú Latent Power (Đã tính vào base stats qua getStatMultiplier, nhưng hiển thị thêm cho rõ)
+  // Thêm chỉ số từ Thiên phú Latent Power
   const latentPowerLevel = player.eternalUpgrades[EternalUpgradeId.LatentPower] || 0;
   const latentBonus = latentPowerLevel * 5;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in safe-area-bottom">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950 sticky top-0 z-10">
+        <div className="p-6 border-b border-slate-800 bg-slate-950 flex justify-between items-center sticky top-0 z-10">
           <div>
             <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
               <Activity className="text-blue-500" /> Hồ Sơ Thợ Rèn
@@ -166,11 +203,14 @@ export const CharacterStatsModal: React.FC<CharacterStatsModalProps> = ({
                 {Object.keys(activeSets).length > 0 && (
                     <div className="mt-2 pt-2 border-t border-slate-800">
                         <div className="mb-1 text-slate-500 font-mono text-xs">BỘ TRANG BỊ ĐANG KÍCH HOẠT:</div>
-                        {Object.keys(activeSets).map((setId) => (
-                            <div key={setId} className="text-yellow-500 font-bold">
-                                {SETS[setId as SetId].name} ({activeSets[setId as SetId]}/6)
-                            </div>
-                        ))}
+                        {Object.keys(activeSets).map((setId) => {
+                             const setInfo = SETS[setId as SetId];
+                             return (
+                                <div key={setId} className="text-yellow-500 font-bold">
+                                    {setInfo ? setInfo.name : setId} ({activeSets[setId as SetId]}/6)
+                                </div>
+                             );
+                        })}
                     </div>
                 )}
             </div>

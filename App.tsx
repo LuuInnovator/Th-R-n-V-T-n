@@ -18,11 +18,12 @@ import { RebirthView } from './components/RebirthView';
 import { SkillTreeView } from './components/SkillTreeView';
 import { CharacterStatsModal } from './components/CharacterStatsModal'; 
 import { ClassSelectionModal } from './components/ClassSelectionModal';
-import { GuildView } from './components/GuildView'; // New
-import { User, Shield, Sword, Hammer, RefreshCw, Save, Upload, Zap, BarChart2, Users } from 'lucide-react';
+import { GuildView } from './components/GuildView'; 
+import { WikiView } from './components/WikiView'; // Import mới
+import { User, Shield, Sword, Hammer, RefreshCw, Save, Upload, Zap, BarChart2, Users, Book } from 'lucide-react'; // Import Book icon
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'battle' | 'craft' | 'inventory' | 'rebirth' | 'skills' | 'guild'>('battle');
+  const [activeTab, setActiveTab] = useState<'battle' | 'craft' | 'inventory' | 'rebirth' | 'skills' | 'guild' | 'wiki'>('battle');
   const [showStatsModal, setShowStatsModal] = useState(false);
   
   const { logs, addLog, clearLogs } = useGameLog();
@@ -182,13 +183,32 @@ export default function App() {
 
   const handleExplore = useCallback(() => {
     const enemiesInZone = ENEMIES_DB[currentZone.id];
+    
     if (enemiesInZone && enemiesInZone.length > 0) {
-      const randIdx = randomInt(0, enemiesInZone.length - 1);
-      setCurrentEnemy({ ...enemiesInZone[randIdx] });
+      // Phân loại quái và boss
+      const bosses = enemiesInZone.filter(e => e.isBoss);
+      const normalMobs = enemiesInZone.filter(e => !e.isBoss);
+
+      let selectedEnemy: Enemy;
+
+      // Logic: Nếu zone có cả boss và quái thường, chỉ 5% ra boss
+      if (bosses.length > 0 && normalMobs.length > 0) {
+          if (Math.random() < 0.05) { // 5% cơ hội gặp Boss
+              selectedEnemy = bosses[randomInt(0, bosses.length - 1)];
+          } else {
+              selectedEnemy = normalMobs[randomInt(0, normalMobs.length - 1)];
+          }
+      } else {
+          // Nếu chỉ có boss (Map cuối) hoặc chỉ có quái thường
+          selectedEnemy = enemiesInZone[randomInt(0, enemiesInZone.length - 1)];
+      }
+
+      // Clone enemy để tránh sửa trực tiếp vào DB
+      setCurrentEnemy({ ...selectedEnemy });
       setHasRevivedInBattle(false);
       setBossPhase(0);
       setRustStacks(0);
-      addLog(`⚔️ Bạn đã tìm thấy ${enemiesInZone[randIdx].name}!`);
+      addLog(`⚔️ Bạn đã tìm thấy ${selectedEnemy.name}!`);
     } else {
       addLog("Khu vực này có vẻ trống trải...");
       setIsAutoAttacking(false);
@@ -576,6 +596,7 @@ export default function App() {
         </div>
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           <SidebarButton id="battle" icon={Sword} label="Chiến Đấu" />
+          <SidebarButton id="wiki" icon={Book} label="Từ Điển" colorClass="text-green-400 hover:text-green-300" />
           <SidebarButton id="inventory" icon={User} label="Túi Đồ" />
           <SidebarButton id="craft" icon={Hammer} label="Chế Tạo" />
           <SidebarButton id="skills" icon={Zap} label="Kỹ Năng" />
@@ -587,10 +608,11 @@ export default function App() {
 
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 flex justify-around p-2 z-50 safe-area-bottom">
         <button onClick={() => setActiveTab('battle')} className={`p-2 flex flex-col items-center ${activeTab === 'battle' ? 'text-blue-500' : 'text-slate-500'}`}><Sword size={20} /><span className="text-[9px] font-bold mt-1">Chiến Đấu</span></button>
+        <button onClick={() => setActiveTab('wiki')} className={`p-2 flex flex-col items-center ${activeTab === 'wiki' ? 'text-green-500' : 'text-slate-500'}`}><Book size={20} /><span className="text-[9px] font-bold mt-1">Từ Điển</span></button>
         <button onClick={() => setActiveTab('inventory')} className={`p-2 flex flex-col items-center ${activeTab === 'inventory' ? 'text-blue-500' : 'text-slate-500'}`}><User size={20} /><span className="text-[9px] font-bold mt-1">Túi Đồ</span></button>
         <button onClick={() => setActiveTab('craft')} className={`p-2 flex flex-col items-center ${activeTab === 'craft' ? 'text-blue-500' : 'text-slate-500'}`}><Hammer size={20} /><span className="text-[9px] font-bold mt-1">Chế Tạo</span></button>
-        <button onClick={() => setActiveTab('guild')} className={`p-2 flex flex-col items-center ${activeTab === 'guild' ? 'text-blue-500' : 'text-slate-500'}`}><Users size={20} /><span className="text-[9px] font-bold mt-1">Bang Hội</span></button>
-        <button onClick={() => setActiveTab('rebirth')} className={`p-2 flex flex-col items-center ${activeTab === 'rebirth' ? 'text-purple-500' : 'text-slate-500'}`}><RefreshCw size={20} /><span className="text-[9px] font-bold mt-1">Tái Sinh</span></button>
+        {/* Combine Guild/Skills/Rebirth into a More menu later if needed, for now use scroll or fit */}
+         <button onClick={() => setActiveTab('rebirth')} className={`p-2 flex flex-col items-center ${activeTab === 'rebirth' ? 'text-purple-500' : 'text-slate-500'}`}><RefreshCw size={20} /><span className="text-[9px] font-bold mt-1">Tái Sinh</span></button>
       </div>
 
       <main className="flex-1 flex flex-col overflow-hidden relative z-10 pb-16 lg:pb-0">
@@ -601,6 +623,7 @@ export default function App() {
              </div>
              <h2 className="text-lg font-bold text-slate-200 tracking-wide flex items-center gap-2">
                 {activeTab === 'battle' && <><span className="text-blue-500">◈</span> THÁM HIỂM</>}
+                {activeTab === 'wiki' && <><span className="text-green-500">◈</span> TỪ ĐIỂN SINH VẬT</>}
                 {activeTab === 'inventory' && <><span className="text-green-500">◈</span> KHO ĐỒ</>}
                 {activeTab === 'craft' && <><span className="text-amber-500">◈</span> XƯỞNG RÈN</>}
                 {activeTab === 'skills' && <><span className="text-red-500">◈</span> CÂY KỸ NĂNG</>}
@@ -634,6 +657,10 @@ export default function App() {
               blueprints={[...INITIAL_BLUEPRINTS].filter(bp => !bp.isGuildBlueprint || player.guild.blueprints.includes(bp.id))}
               dropRateBonus={dropRateBonus} // Pass bonus down
             />
+          )}
+
+          {activeTab === 'wiki' && (
+             <WikiView zones={ZONES} blueprints={INITIAL_BLUEPRINTS} />
           )}
           
           {activeTab === 'inventory' && (

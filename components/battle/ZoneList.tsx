@@ -1,25 +1,17 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Zone, Blueprint } from '../../types';
-import { Map, Info } from 'lucide-react';
-import { ZoneInfoModal } from './ZoneInfoModal';
+import { Map } from 'lucide-react';
 
 interface ZoneListProps {
   zones: Zone[];
   activeZone: Zone;
   onSelect: (zone: Zone) => void;
-  blueprints?: Blueprint[]; // Add blueprints prop
+  blueprints?: Blueprint[]; 
   dropRateBonus?: number;
 }
 
-export const ZoneList: React.FC<ZoneListProps> = ({ zones, activeZone, onSelect, blueprints = [], dropRateBonus = 0 }) => {
-  const [infoZone, setInfoZone] = useState<Zone | null>(null);
-
-  const handleInfoClick = (e: React.MouseEvent, zone: Zone) => {
-    e.stopPropagation(); // Ngăn chặn việc chọn zone khi bấm info
-    setInfoZone(zone);
-  };
-
+export const ZoneList: React.FC<ZoneListProps> = ({ zones, activeZone, onSelect }) => {
   return (
     <>
       <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin px-2">
@@ -34,16 +26,7 @@ export const ZoneList: React.FC<ZoneListProps> = ({ zones, activeZone, onSelect,
                 : 'bg-slate-800/60 border-slate-700 hover:bg-slate-800 hover:border-slate-500'}
             `}
           >
-            {/* Info Button */}
-            <button 
-                onClick={(e) => handleInfoClick(e, zone)}
-                className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-900/80 text-slate-400 hover:text-white hover:bg-blue-600 transition-colors z-10 border border-slate-700"
-                title="Xem tỷ lệ rơi đồ"
-            >
-                <Info size={14} />
-            </button>
-
-            <div className="flex items-start justify-between mb-2 pr-6">
+            <div className="flex items-start justify-between mb-2 pr-2">
               <div className={`p-2 rounded-lg ${activeZone.id === zone.id ? 'bg-blue-600' : 'bg-slate-700 group-hover:bg-slate-600'}`}>
                 <Map size={20} className="text-white" />
               </div>
@@ -68,15 +51,6 @@ export const ZoneList: React.FC<ZoneListProps> = ({ zones, activeZone, onSelect,
           </div>
         ))}
       </div>
-
-      {infoZone && (
-          <ZoneInfoModal 
-            zone={infoZone} 
-            blueprints={blueprints} 
-            onClose={() => setInfoZone(null)} 
-            dropRateBonus={dropRateBonus}
-          />
-      )}
     </>
   );
 };
