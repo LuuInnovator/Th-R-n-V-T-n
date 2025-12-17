@@ -2,13 +2,6 @@
 import { useState, useCallback } from 'react';
 import { Player, Skill, EternalUpgrade, EternalUpgradeId, CharacterClass, Guild } from '../types';
 
-const INITIAL_GUILD: Guild = {
-    name: 'Thợ Rèn Lang Thang',
-    level: 1,
-    fame: 0,
-    blueprints: []
-};
-
 export const INITIAL_PLAYER: Player = {
   characterClass: CharacterClass.None,
   level: 1,
@@ -25,22 +18,60 @@ export const INITIAL_PLAYER: Player = {
   skills: {},
   eternalUpgrades: {},
   gemInventory: {}, 
-  guild: INITIAL_GUILD,
-  legacyGearNames: [],
-  
-  // Stats Allocation System
+  guild: { name: 'Thợ Rèn Lang Thang', level: 1, fame: 0, blueprints: [] },
   statPoints: 5, 
-  stats: {
-      strength: 1,
-      dexterity: 1,
-      intelligence: 1,
-      vitality: 1,
-      luck: 1
-  }
+  stats: { strength: 1, dexterity: 1, intelligence: 1, vitality: 1, luck: 1 },
+  blueprintLevels: {},
+  gameSpeed: 1,
+  memoryGemPotential: 0
 };
+
+const SAVE_KEY = 'thoren_vontat_save';
 
 export const usePlayer = (addLog: (msg: string) => void) => {
   const [player, setPlayer] = useState<Player>(INITIAL_PLAYER);
+
+  const saveGame = useCallback(() => {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(player));
+    addLog("💾 Ký ức thợ rèn đã được ghi lại thành công!");
+  }, [player, addLog]);
+
+  const loadGame = useCallback(() => {
+    const saved = localStorage.getItem(SAVE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setPlayer(parsed);
+        addLog("📖 Khôi phục ký ức thành công!");
+      } catch (e) {
+        addLog("❌ Lỗi khi đọc bản lưu!");
+      }
+    } else {
+      addLog("⚠️ Không tìm thấy bản lưu nào!");
+    }
+  }, [addLog]);
+
+  const setGameSpeed = useCallback((speed: number) => {
+    setPlayer(p => ({ ...p, gameSpeed: speed }));
+    addLog(`⏩ Tốc độ trò chơi: x${speed}`);
+  }, [addLog]);
+
+  const upgradeBlueprint = useCallback((bpId: string, cost: number) => {
+    setPlayer(prev => {
+      if (prev.eternalPoints < cost) return prev;
+      const currentLevel = prev.blueprintLevels[bpId] || 0;
+      return {
+        ...prev,
+        eternalPoints: prev.eternalPoints - cost,
+        blueprintLevels: { ...prev.blueprintLevels, [bpId]: currentLevel + 1 }
+      };
+    });
+    addLog(`📘 Bản vẽ nâng lên cấp ${ (player.blueprintLevels[bpId] || 0) + 1}!`);
+  }, [player.blueprintLevels, addLog]);
+
+  const updateMemoryPotential = useCallback((potential: number) => {
+    setPlayer(p => ({ ...p, memoryGemPotential: p.memoryGemPotential + potential }));
+  }, []);
 
   const getStatMultiplier = useCallback((base: number) => {
     let multiplier = 1.0;
@@ -49,35 +80,11 @@ export const usePlayer = (addLog: (msg: string) => void) => {
     return Math.floor(base * multiplier);
   }, [player.eternalUpgrades]);
 
-  const selectClass = useCallback((cls: CharacterClass) => {
-      setPlayer(prev => {
-          const newStats = { ...prev.stats };
-          if (cls === CharacterClass.HeavySentinel) { newStats.strength += 5; newStats.vitality += 5; }
-          if (cls === CharacterClass.ShadowBlade) { newStats.dexterity += 5; newStats.luck += 5; }
-          if (cls === CharacterClass.AlchemistMage) { newStats.intelligence += 5; newStats.luck += 5; }
-
-          return {
-            ...prev,
-            characterClass: cls,
-            stats: newStats,
-            attack: cls === CharacterClass.ShadowBlade ? prev.attack + 5 : prev.attack,
-            defense: cls === CharacterClass.HeavySentinel ? prev.defense + 5 : prev.defense,
-            maxHp: cls === CharacterClass.AlchemistMage ? prev.maxHp + 20 : prev.maxHp,
-            hp: cls === CharacterClass.AlchemistMage ? prev.maxHp + 20 : prev.hp
-        };
-      });
-      addLog(`✨ Bạn đã chọn lớp nhân vật: ${cls}`);
-  }, [addLog]);
-
   const gainExp = useCallback((amount: number) => {
     setPlayer(prev => {
       if (prev.level >= 90) return prev;
-
       let newExp = prev.currentExp + amount;
       let newLevel = prev.level;
-      let newMaxHp = prev.maxHp;
-      let newAtk = prev.attack;
-      let newDef = prev.defense;
       let newMaxExp = prev.maxExp;
       let newSP = prev.skillPoints;
       let newStatPoints = prev.statPoints;
@@ -87,66 +94,14 @@ export const usePlayer = (addLog: (msg: string) => void) => {
         newExp -= newMaxExp;
         newLevel++;
         newMaxExp = Math.floor(newMaxExp * 1.5);
-        newMaxHp += 10;
-        newAtk += 1;
-        newDef += 1;
         newSP += 1; 
         newStatPoints += 3;
         leveledUp = true;
       }
-
-      if (leveledUp) {
-        addLog(`🎉 LÊN CẤP ${newLevel}! (+3 Điểm Tiềm Năng, +1 SP)`);
-      }
-
-      return {
-        ...prev,
-        currentExp: newExp,
-        level: newLevel,
-        maxExp: newMaxExp,
-        maxHp: newMaxHp,
-        hp: newMaxHp,
-        attack: newAtk,
-        defense: newDef,
-        skillPoints: newSP,
-        statPoints: newStatPoints
-      };
+      if (leveledUp) addLog(`🎉 LÊN CẤP ${newLevel}!`);
+      return { ...prev, currentExp: newExp, level: newLevel, maxExp: newMaxExp, skillPoints: newSP, statPoints: newStatPoints };
     });
   }, [addLog]);
-
-  const allocateStat = useCallback((statName: keyof Player['stats'], amount: number = 1) => {
-      setPlayer(prev => {
-          if (prev.statPoints < amount) return prev;
-          if (prev.stats[statName] >= 90) return prev;
-          return {
-              ...prev,
-              statPoints: prev.statPoints - amount,
-              stats: {
-                  ...prev.stats,
-                  [statName]: prev.stats[statName] + amount
-              }
-          };
-      });
-  }, []);
-
-  const resetStats = useCallback(() => {
-      setPlayer(prev => {
-          const totalSpent = (prev.stats.strength - 1) + 
-                             (prev.stats.dexterity - 1) + 
-                             (prev.stats.intelligence - 1) + 
-                             (prev.stats.vitality - 1) + 
-                             (prev.stats.luck - 1);
-          const refundedPoints = prev.statPoints + totalSpent;
-          const cost = prev.level <= 10 ? 0 : prev.level * 100;
-          if (prev.level > 10 && prev.gold < cost) return prev;
-          return {
-              ...prev,
-              gold: prev.gold - cost,
-              statPoints: refundedPoints,
-              stats: { strength: 1, dexterity: 1, intelligence: 1, vitality: 1, luck: 1 }
-          };
-      });
-  }, []);
 
   const updateHp = useCallback((newHp: number) => {
     setPlayer(p => ({ ...p, hp: Math.max(0, newHp) })); 
@@ -156,16 +111,33 @@ export const usePlayer = (addLog: (msg: string) => void) => {
     setPlayer(p => ({ ...p, gold: p.gold + amount }));
   }, []);
 
+  const rebirth = useCallback((eternalPointsReward: number) => {
+    setPlayer(prev => {
+        const savedUpgrades = prev.eternalUpgrades;
+        const savedPoints = prev.eternalPoints;
+        const savedRebirthCount = prev.rebirthCount + 1;
+        const savedClass = prev.characterClass; 
+        const savedBpLevels = prev.blueprintLevels;
+        const savedPotential = prev.memoryGemPotential;
+
+        return {
+          ...INITIAL_PLAYER,
+          characterClass: savedClass,
+          eternalPoints: savedPoints + eternalPointsReward,
+          rebirthCount: savedRebirthCount,
+          eternalUpgrades: savedUpgrades,
+          blueprintLevels: savedBpLevels,
+          statPoints: 5 + (savedRebirthCount * 5),
+          memoryGemPotential: 0
+        };
+    });
+  }, []);
+
   const upgradeSkill = useCallback((skill: Skill) => {
     setPlayer(prev => {
       const currentLevel = prev.skills[skill.id] || 0;
-      if (currentLevel >= skill.maxLevel) return prev;
-      if (prev.skillPoints < skill.cost) return prev;
-      return {
-        ...prev,
-        skillPoints: prev.skillPoints - skill.cost,
-        skills: { ...prev.skills, [skill.id]: currentLevel + 1 }
-      };
+      if (currentLevel >= skill.maxLevel || prev.skillPoints < skill.cost) return prev;
+      return { ...prev, skillPoints: prev.skillPoints - skill.cost, skills: { ...prev.skills, [skill.id]: currentLevel + 1 } };
     });
   }, []);
 
@@ -175,38 +147,27 @@ export const usePlayer = (addLog: (msg: string) => void) => {
       if (currentLevel >= upgrade.maxLevel) return prev;
       const cost = Math.floor(upgrade.baseCost * Math.pow(upgrade.costMultiplier, currentLevel));
       if (prev.eternalPoints < cost) return prev;
-      return {
-        ...prev,
-        eternalPoints: prev.eternalPoints - cost,
-        eternalUpgrades: { ...prev.eternalUpgrades, [upgrade.id]: currentLevel + 1 }
-      };
+      return { ...prev, eternalPoints: prev.eternalPoints - cost, eternalUpgrades: { ...prev.eternalUpgrades, [upgrade.id]: currentLevel + 1 } };
     });
   }, []);
 
-  const rebirth = useCallback((eternalPointsReward: number) => {
-    setPlayer(prev => {
-        const savedUpgrades = prev.eternalUpgrades;
-        const savedPoints = prev.eternalPoints;
-        const savedRebirthCount = prev.rebirthCount + 1;
-        const savedClass = prev.characterClass; 
-        const savedGuild = prev.guild; 
-        const savedLegacy = prev.legacyGearNames;
+  const selectClass = useCallback((cls: CharacterClass) => {
+      setPlayer(prev => ({ ...prev, characterClass: cls }));
+      addLog(`✨ Thức tỉnh sức mạnh: ${cls}`);
+  }, [addLog]);
 
-        return {
-          ...INITIAL_PLAYER,
-          characterClass: savedClass,
-          eternalPoints: savedPoints + eternalPointsReward,
-          rebirthCount: savedRebirthCount,
-          eternalUpgrades: savedUpgrades,
-          guild: savedGuild,
-          legacyGearNames: savedLegacy,
-          statPoints: 5 + (savedRebirthCount * 5),
-          stats: INITIAL_PLAYER.stats
-        };
-    });
+  const allocateStat = useCallback((statName: keyof Player['stats'], amount: number = 1) => {
+      setPlayer(prev => {
+          if (prev.statPoints < amount) return prev;
+          return { ...prev, statPoints: prev.statPoints - amount, stats: { ...prev.stats, [statName]: prev.stats[statName] + amount } };
+      });
+  }, []);
+
+  const resetStats = useCallback(() => {
+      setPlayer(prev => ({ ...prev, statPoints: prev.statPoints + 10, stats: { strength: 1, dexterity: 1, intelligence: 1, vitality: 1, luck: 1 } }));
   }, []);
 
   return { 
-      player, setPlayer, gainExp, updateHp, addGold, rebirth, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, allocateStat, resetStats
+      player, setPlayer, gainExp, updateHp, addGold, rebirth, upgradeSkill, buyEternalUpgrade, getStatMultiplier, selectClass, allocateStat, resetStats, setGameSpeed, upgradeBlueprint, updateMemoryPotential, saveGame, loadGame
   };
 };

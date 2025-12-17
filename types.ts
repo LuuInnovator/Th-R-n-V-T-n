@@ -8,6 +8,12 @@ export enum Rarity {
   Cosmic = 'Vũ Trụ'
 }
 
+export enum MaterialTier {
+  Basic = 'Cơ Bản',
+  Elite = 'Tinh Hoa',
+  Eternal = 'Vĩnh Cửu'
+}
+
 export enum MaterialType {
   Ore = 'Quặng Thô',
   Wood = 'Gỗ Rừng',
@@ -20,8 +26,14 @@ export enum MaterialType {
   MemoryShard = 'Mảnh Vỡ Ký Ức',
   IronScraps = 'Mảnh Sắt Vụn',
   StoneSharpener = 'Đá Mài Cường Hóa',
-  // Fix: Added missing Ice material type referenced in ZONES constant
-  Ice = 'Băng Thạch'
+  Ice = 'Băng Thạch',
+  TemperedSteel = 'Thép Tôi Luyện',
+  DragonHide = 'Da Rồng',
+  ElementalCrystal = 'Tinh Thể Nguyên Tố',
+  StarDust = 'Bụi Sao',
+  VoidCore = 'Lõi Hư Không',
+  TimeFragment = 'Mảnh Vỡ Thời Gian',
+  MemoryGem = 'Ngọc Ký Ức'
 }
 
 export enum ElementType {
@@ -60,6 +72,7 @@ export interface Blueprint {
     maxDef: number;
   };
   unlocked: boolean;
+  evolutionLevel: number;
 }
 
 export enum MonsterAbility {
@@ -100,7 +113,6 @@ export interface Enemy {
     minQty: number;
     maxQty: number;
   }[];
-  corruptedGearName?: string;
 }
 
 export enum SetId {
@@ -131,6 +143,11 @@ export interface SocketedGem {
   tier: GemTier;
 }
 
+export interface EquipmentTalent {
+  name: string;
+  desc: string;
+}
+
 export interface Equipment {
   id: string;
   name: string;
@@ -148,6 +165,8 @@ export interface Equipment {
   setId?: SetId;
   enchantment?: EnchantmentType;
   element?: ElementType;
+  inheritedPotential?: number;
+  talent?: EquipmentTalent;
 }
 
 export interface Zone {
@@ -160,7 +179,10 @@ export interface Zone {
 
 export enum EternalUpgradeId {
   LatentPower = 'suc_manh_tiem_an',
-  ResourceRetention = 'bao_toan_tai_nguyen'
+  ResourceRetention = 'bao_toan_tai_nguyen',
+  BlueprintMastery = 'bac_thay_ban_ve',
+  EternalBlood = 'huyet_mach_vinh_hang', // Thiên phú vĩnh hằng mới
+  DeepSight = 'thau_thi_sau' // Thiên phú vĩnh hằng mới
 }
 
 export interface EternalUpgrade {
@@ -224,10 +246,7 @@ export interface Player {
   statPoints: number;
   stats: { strength: number; dexterity: number; intelligence: number; vitality: number; luck: number };
   guild: Guild;
-  legacyGearNames: string[];
-}
-
-export interface EquipmentTalent {
-  name: string;
-  desc: string;
+  blueprintLevels: Record<string, number>;
+  gameSpeed: number;
+  memoryGemPotential: number;
 }

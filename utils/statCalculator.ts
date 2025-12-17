@@ -17,15 +17,15 @@ export interface StatMilestone {
 
 export const MILESTONES: StatMilestone[] = [
   { stat: 'strength', threshold: 20, name: 'Lực Sĩ Tập Sự', description: 'Tăng vĩnh viễn 5% Sát thương Vật lý' },
-  { stat: 'strength', threshold: 50, name: 'Thần Lực Vô Song', description: 'Đòn đánh có khả năng gây choáng nhẹ (0.5s)' },
+  { stat: 'strength', threshold: 50, name: 'Thần Lực Vô Song', description: 'Đòn đánh có khả năng gây choáng nhẹ' },
   { stat: 'dexterity', threshold: 20, name: 'Nhanh Nhẹn', description: 'Tăng 5% Tốc độ đánh và giảm hồi chiêu' },
   { stat: 'dexterity', threshold: 50, name: 'Bóng Ma', description: 'Có tỷ lệ né tránh hoàn toàn đòn đánh đầu tiên' },
-  { stat: 'intelligence', threshold: 20, name: 'Học Giả Giả Kim', description: 'Tăng 10% hiệu quả hồi máu từ kỹ năng và vật phẩm' },
-  { stat: 'intelligence', threshold: 50, name: 'Pháp Sư Tối Thượng', description: 'Giảm 15% thời gian hồi chiêu của các kỹ năng' },
+  { stat: 'intelligence', threshold: 20, name: 'Học Giả Giả Kim', description: 'Tăng 10% hiệu quả hồi máu' },
+  { stat: 'intelligence', threshold: 50, name: 'Pháp Sư Tối Thượng', description: 'Giảm 15% thời gian hồi chiêu' },
   { stat: 'vitality', threshold: 20, name: 'Da Sắt Thịt Đồng', description: 'Tăng 5% tổng chỉ số Phòng thủ' },
   { stat: 'vitality', threshold: 50, name: 'Cơ Thể Bất Tử', description: 'Tự động hồi 1% Máu tối đa mỗi giây' },
   { stat: 'luck', threshold: 20, name: 'Vận May Tìm Đến', description: 'Tăng 5% Tỷ lệ rơi đồ từ quái vật' },
-  { stat: 'luck', threshold: 50, name: 'Vận Mệnh Định Sẵn', description: 'Tăng mạnh Sát thương Chí mạng lên mức cực đại' },
+  { stat: 'luck', threshold: 50, name: 'Vận Mệnh Định Sẵn', description: 'Tăng mạnh Sát thương Chí mạng' },
 ];
 
 export const calculatePlayerStats = (

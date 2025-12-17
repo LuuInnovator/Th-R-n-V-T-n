@@ -1,19 +1,16 @@
 
 import { useState, useCallback } from 'react';
-import { Material, Equipment, EquipmentType, MaterialType, Rarity, SocketedGem, EnchantmentType } from '../types';
+import { Material, Equipment, EquipmentType, MaterialType, MaterialTier } from '../types';
 import { generateId } from '../utils';
+import { MATERIAL_TIERS } from '../constants';
 
 export const useInventory = (addLog: (msg: string) => void) => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [equipments, setEquipments] = useState<Equipment[]>([]);
   
   const [equipped, setEquipped] = useState<Record<EquipmentType, Equipment | null>>({
-    [EquipmentType.Weapon]: null,
-    [EquipmentType.Armor]: null,
-    [EquipmentType.Accessory]: null,
-    [EquipmentType.Helmet]: null,
-    [EquipmentType.Gloves]: null,
-    [EquipmentType.Boots]: null
+    [EquipmentType.Weapon]: null, [EquipmentType.Armor]: null, [EquipmentType.Accessory]: null,
+    [EquipmentType.Helmet]: null, [EquipmentType.Gloves]: null, [EquipmentType.Boots]: null
   });
 
   const addMaterial = useCallback((type: MaterialType, qty: number) => {
@@ -34,16 +31,48 @@ export const useInventory = (addLog: (msg: string) => void) => {
         const index = newMaterials.findIndex(m => m.type === req.type);
         if (index !== -1) {
           const newQty = newMaterials[index].quantity - req.amount;
-          if (newQty <= 0) {
-            newMaterials.splice(index, 1);
-          } else {
-            newMaterials[index] = { ...newMaterials[index], quantity: newQty };
-          }
+          if (newQty <= 0) newMaterials.splice(index, 1);
+          else newMaterials[index] = { ...newMaterials[index], quantity: newQty };
         }
       });
       return newMaterials;
     });
   }, []);
+
+  const handleRebirth = useCallback((retentionBonus: number, onCompress: (potential: number) => void) => {
+    // Tính toán tiềm năng từ kho đồ hiện tại (10% chỉ số)
+    let totalPotential = 0;
+    equipments.forEach(e => {
+      totalPotential += (e.stats.attack || 0) + (e.stats.defense || 0);
+    });
+    onCompress(Math.floor(totalPotential * 0.1));
+
+    // Lọc nguyên liệu theo phân tầng
+    setMaterials(prev => {
+        return prev.filter(m => {
+            const tier = MATERIAL_TIERS[m.type];
+            if (tier === MaterialTier.Eternal) return true;
+            if (tier === MaterialTier.Elite) {
+                // Giữ lại một phần dựa trên nâng cấp EP
+                const keepQty = Math.floor(m.quantity * (retentionBonus / 100));
+                if (keepQty > 0) {
+                    m.quantity = keepQty;
+                    return true;
+                }
+            }
+            return false;
+        });
+    });
+
+    // Reset trang bị và kho đồ
+    setEquipments([]);
+    setEquipped({
+        [EquipmentType.Weapon]: null, [EquipmentType.Armor]: null, [EquipmentType.Accessory]: null,
+        [EquipmentType.Helmet]: null, [EquipmentType.Gloves]: null, [EquipmentType.Boots]: null
+    });
+
+    addLog("🌀 Toàn bộ kho đồ đã được nén thành tiềm năng cho kiếp sau!");
+  }, [equipments, addLog]);
 
   const addEquipment = useCallback((item: Equipment) => {
     setEquipments(prev => [item, ...prev]);
@@ -54,39 +83,14 @@ export const useInventory = (addLog: (msg: string) => void) => {
     setEquipments(prev => prev.filter(e => e.id !== id));
   }, []);
 
-  const updateEquipment = useCallback((updatedItem: Equipment) => {
-      setEquipments(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));
-      setEquipped(prev => {
-          if (prev[updatedItem.type]?.id === updatedItem.id) {
-              return { ...prev, [updatedItem.type]: updatedItem };
-          }
-          return prev;
-      });
-  }, []);
-
   const equipItem = useCallback((item: Equipment) => {
     setEquipped(prev => ({ ...prev, [item.type]: item }));
     setEquipments(prev => prev.map(e => ({ ...e, isEquipped: e.id === item.id ? true : (equipped[item.type]?.id === e.id ? false : e.isEquipped) })));
     addLog(`Đã trang bị: ${item.name}`);
   }, [addLog, equipped]);
 
-  const resetInventory = useCallback(() => {
-    setMaterials([]);
-    setEquipments([]);
-    setEquipped({
-      [EquipmentType.Weapon]: null, [EquipmentType.Armor]: null, [EquipmentType.Accessory]: null,
-      [EquipmentType.Helmet]: null, [EquipmentType.Gloves]: null, [EquipmentType.Boots]: null
-    });
-  }, []);
-
-  const loadInventory = useCallback((savedMaterials: any[], savedEquipments: Equipment[], savedEquipped: any) => {
-    setMaterials(savedMaterials);
-    setEquipments(savedEquipments);
-    setEquipped(savedEquipped);
-  }, []);
-
   return { 
     materials, equipments, equipped, 
-    addMaterial, consumeMaterials, addEquipment, removeEquipment, updateEquipment, equipItem, resetInventory, loadInventory
+    addMaterial, consumeMaterials, addEquipment, removeEquipment, equipItem, handleRebirth
   };
 };
