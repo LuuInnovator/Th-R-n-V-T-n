@@ -12,17 +12,18 @@ interface CraftingStatsProps {
 
 export const CraftingStats: React.FC<CraftingStatsProps> = ({ blueprint, useOverheat, onToggleOverheat }) => {
   const calculateStat = (min: number, max: number, rarity: Rarity) => {
-      const mult = RARITY_MULTIPLIER[rarity] * (useOverheat ? 2.5 : 1.0);
+      // Đồng bộ hệ số đốt nhiệt x2.0
+      const mult = RARITY_MULTIPLIER[rarity] * (useOverheat ? 2.0 : 1.0);
       return { min: Math.floor(min * mult), max: Math.floor(max * mult) };
   };
 
   const getProb = (rarity: Rarity, isOverheat: boolean) => {
     if (isOverheat) {
-        // Tổng tỉ lệ thành công là 30%
+        // Tỉ lệ thành công khi đốt nhiệt chỉ là 30% tổng (Rủi ro mất đồ 70%)
         if (rarity === Rarity.Cosmic) return 2;
         if (rarity === Rarity.Mythic) return 5;
-        if (rarity === Rarity.Legendary) return 8;
-        if (rarity === Rarity.Epic) return 15;
+        if (rarity === Rarity.Legendary) return 10;
+        if (rarity === Rarity.Epic) return 13;
         return 0;
     }
     const probs = { [Rarity.Common]: 60, [Rarity.Rare]: 25, [Rarity.Epic]: 10, [Rarity.Legendary]: 4, [Rarity.Mythic]: 0.9, [Rarity.Cosmic]: 0.1 };
@@ -45,12 +46,12 @@ export const CraftingStats: React.FC<CraftingStatsProps> = ({ blueprint, useOver
             </div>
         </div>
         <div className={`font-mono text-[9px] font-black px-1.5 py-0.5 rounded ${useOverheat ? 'bg-red-500 text-white' : 'bg-slate-800 text-slate-500'}`}>
-            {useOverheat ? 'Chỉ số x2.5' : 'Tiêu chuẩn'}
+            {useOverheat ? 'Chỉ số x2.0' : 'Tiêu chuẩn'}
         </div>
       </button>
 
       {useOverheat && (
-          <div className="p-2 bg-red-950/20 border border-red-900/30 rounded-lg flex items-center gap-2">
+          <div className="p-2 bg-red-950/20 border border-red-900/30 rounded-lg flex items-center gap-2 border-dashed">
               <AlertTriangle size={14} className="text-red-500 shrink-0" />
               <div className="text-[8px] font-black text-red-400 uppercase leading-tight">
                   CẢNH BÁO: 70% THẤT BẠI SẼ LÀM MẤT TRẮNG VẬT PHẨM VÀ NGUYÊN LIỆU!
@@ -60,8 +61,8 @@ export const CraftingStats: React.FC<CraftingStatsProps> = ({ blueprint, useOver
 
       <div className="bg-slate-900/40 rounded-lg border border-slate-800 divide-y divide-slate-800/30">
         {useOverheat && (
-            <div className="p-2 flex items-center justify-between bg-red-900/10">
-                <span className="font-black text-[9px] uppercase tracking-wider text-red-500">THẤT BẠI (MẤT ĐỒ)</span>
+            <div className="p-2 flex items-center justify-between bg-red-900/20">
+                <span className="font-black text-[9px] uppercase tracking-wider text-red-500 animate-pulse">THẤT BẠI (MẤT ĐỒ)</span>
                 <span className="text-[9px] font-mono font-black text-red-500">70%</span>
             </div>
         )}
@@ -72,7 +73,7 @@ export const CraftingStats: React.FC<CraftingStatsProps> = ({ blueprint, useOver
             const defs = calculateStat(blueprint.baseStats.minDef, blueprint.baseStats.maxDef, rarity);
 
             return (
-                <div key={rarity} className="p-2 flex items-center justify-between group hover:bg-slate-800/20 transition-colors">
+                <div key={rarity} className={`p-2 flex items-center justify-between group hover:bg-slate-800/20 transition-colors ${useOverheat ? 'bg-slate-900/20' : ''}`}>
                     <div className="flex flex-col">
                         <span className={`font-black text-[9px] uppercase tracking-wider ${RARITY_COLOR[rarity]}`}>{rarity}</span>
                         <div className="flex gap-2 mt-0.5 opacity-60">

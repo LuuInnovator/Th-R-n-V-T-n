@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Rarity, EquipmentType, Blueprint, CharacterClass, Equipment, Zone, Enemy, EternalUpgradeId } from './types';
-import { ZONES, INITIAL_BLUEPRINTS, EQUIPMENT_TALENTS } from './constants';
+import { ZONES, INITIAL_BLUEPRINTS, EQUIPMENT_TALENTS, RARITY_MULTIPLIER } from './constants';
 import { generateId, randomInt, rollRarity } from './utils';
 
 import { usePlayer } from './hooks/usePlayer';
@@ -81,9 +81,9 @@ export default function App() {
   const handleCraft = (bp: Blueprint, overheat: boolean) => {
     consumeMaterials(bp.requiredMaterials);
     
-    // Logic Đốt nhiệt mới: 70% thất bại mất đồ
+    // Logic Đốt nhiệt: 70% thất bại mất sạch nguyên liệu và vật phẩm
     if (overheat && Math.random() < 0.7) {
-        addLog(`🔥 Lò rèn quá nóng! Trang bị đã bị thiêu rụi hoàn toàn...`);
+        addLog(`🔥 LÒ RÈN QUÁ NÓNG! Vật phẩm đã bị thiêu rụi hoàn toàn... Thật đáng tiếc!`);
         return;
     }
 
@@ -97,17 +97,25 @@ export default function App() {
     // Nếu là Trang bị
     const evolBonus = (player.blueprintLevels[bp.id] || 0) * 0.25;
     const memoryBonus = bp.id === 'bp_legacy' ? player.memoryGemPotential : 0;
+    
+    // Đốt nhiệt tăng mạnh tỉ lệ ra đồ hiếm (+0.4)
     const finalRarity = rollRarity((player.skills['gen_luck'] || 0) * 0.01 + (overheat ? 0.4 : 0));
+    const rarityMult = RARITY_MULTIPLIER[finalRarity];
     
     let talent;
     if (finalRarity === Rarity.Legendary || finalRarity === Rarity.Mythic || finalRarity === Rarity.Cosmic) {
         talent = EQUIPMENT_TALENTS[randomInt(0, EQUIPMENT_TALENTS.length - 1)];
     }
 
-    // Nếu đốt nhiệt thành công, chỉ số x2.5
-    const overheatMult = overheat ? 2.5 : 1.0;
-    const itemAtk = bp.baseStats.maxAtk ? Math.floor((bp.baseStats.maxAtk * (1 + evolBonus) + memoryBonus) * overheatMult) : 0;
-    const itemDef = bp.baseStats.maxDef ? Math.floor((bp.baseStats.maxDef * (1 + evolBonus)) * overheatMult) : 0;
+    // Đốt nhiệt thành công x2.0 chỉ số
+    const overheatMult = overheat ? 2.0 : 1.0;
+    
+    // FIX LỖI: Lấy ngẫu nhiên cơ sở từ Min-Max và nhân đúng các hệ số
+    const baseAtkRoll = randomInt(bp.baseStats.minAtk, bp.baseStats.maxAtk);
+    const baseDefRoll = randomInt(bp.baseStats.minDef, bp.baseStats.maxDef);
+
+    const itemAtk = bp.baseStats.maxAtk ? Math.floor(((baseAtkRoll * rarityMult) * (1 + evolBonus) + memoryBonus) * overheatMult) : 0;
+    const itemDef = bp.baseStats.maxDef ? Math.floor(((baseDefRoll * rarityMult) * (1 + evolBonus)) * overheatMult) : 0;
 
     const item: Equipment = {
         id: generateId(),
@@ -118,7 +126,8 @@ export default function App() {
             attack: itemAtk,
             defense: itemDef
         },
-        value: 100, isEquipped: false, sockets: 1, socketedGems: [], talent
+        value: Math.floor(100 * rarityMult), 
+        isEquipped: false, sockets: 1, socketedGems: [], talent
     };
     addEquipment(item);
   };
