@@ -5,6 +5,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Thợ Rèn Vô Tận - Kỷ Nguyên Chế Tác</title>
+    <!-- Favicon rỗng để tránh lỗi 404 -->
+    <link rel="icon" href="data:image/x-icon;base64,AA">
+    <link rel="stylesheet" href="./index.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap');
@@ -30,7 +33,6 @@
         -webkit-font-smoothing: antialiased;
       }
 
-      /* Hiệu ứng VIP Glass */
       .glass-card {
         background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(25px) saturate(180%);
@@ -38,14 +40,6 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.7);
       }
-
-      /* Glow động cho các phẩm cấp */
-      .glow-common { filter: drop-shadow(0 0 5px rgba(148, 163, 184, 0.3)); }
-      .glow-rare { filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5)); }
-      .glow-epic { filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.6)); }
-      .glow-legendary { filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.7)); }
-      .glow-mythic { filter: drop-shadow(0 0 25px rgba(239, 68, 68, 0.8)); }
-      .glow-cosmic { filter: drop-shadow(0 0 30px rgba(34, 211, 238, 0.9)); }
 
       @keyframes float {
         0%, 100% { transform: translateY(0px); }
@@ -105,6 +99,8 @@
   <body class="selection:bg-indigo-500/30 selection:text-indigo-200 bg-grid">
     <div class="lava-glow"></div>
     <div id="root"></div>
+    <!-- Nạp entry point của ứng dụng -->
+    <script type="module" src="./index.tsx"></script>
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>
