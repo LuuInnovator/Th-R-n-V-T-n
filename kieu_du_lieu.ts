@@ -1,4 +1,25 @@
 
+// File kieu_du_lieu.ts: Khai báo tất cả các kiểu dữ liệu dùng trong game
+
+// Các hệ phái nhân vật
+export enum CharacterClass {
+  None = 'Vô Danh',
+  HeavySentinel = 'Hộ Vệ Thủ Lĩnh',
+  ShadowBlade = 'Bóng Ma Hắc Ám',
+  AlchemistMage = 'Giả Kim Pháp Sư'
+}
+
+// Các loại trang bị
+export enum EquipmentType {
+  Weapon = 'Vũ Khí',
+  Armor = 'Giáp Trụ',
+  Helmet = 'Mũ Giáp',
+  Gloves = 'Bao Tay',
+  Boots = 'Giày',
+  Accessory = 'Trang Sức'
+}
+
+// Độ hiếm trang bị
 export enum Rarity {
   Common = 'Thường',
   Rare = 'Hiếm',
@@ -8,138 +29,131 @@ export enum Rarity {
   Cosmic = 'Vũ Trụ'
 }
 
-export enum MaterialTier {
-  Basic = 'Cơ Bản',
-  Elite = 'Tinh Hoa',
-  Eternal = 'Vĩnh Cửu'
+// Các nguyên tố
+export enum ElementType {
+  Physical = 'Vật Lý',
+  Fire = 'Hỏa',
+  Ice = 'Băng',
+  Void = 'Hư Không',
+  Nature = 'Tự Nhiên'
 }
 
+// Phân cấp nguyên liệu
+export enum MaterialTier {
+  Basic = 'Cơ Bản',
+  Elite = 'Tinh Anh',
+  Eternal = 'Vĩnh Hằng'
+}
+
+// Các nhánh kỹ năng
+export enum SkillBranch {
+  WeaponSmith = 'Đúc Vũ Khí',
+  ArmorSmith = 'Đúc Giáp',
+  Alchemy = 'Giả Kim',
+  Enchanting = 'Phù Phép'
+}
+
+// ID các nâng cấp vĩnh hằng
+export enum EternalUpgradeId {
+  LatentPower = 'nc_suc_manh_tiem_an',
+  EternalBlood = 'nc_huyet_mach_vinh_hang',
+  GodlyForging = 'nc_ky_thuat_duc_than'
+}
+
+// Các loại ngọc
+export enum GemType {
+  Ruby = 'Ruby',
+  Sapphire = 'Sapphire',
+  Topaz = 'Topaz'
+}
+
+// Cấp độ ngọc
+export enum GemTier {
+  T1 = 'T1',
+  T2 = 'T2',
+  T3 = 'T3'
+}
+
+// Các loại phù phép
+export enum EnchantmentType {
+  Sharpness = 'Sharpness',
+  Protection = 'Protection',
+  Vitality = 'Vitality',
+  Luck = 'Luck'
+}
+
+// Các bộ trang bị (Set)
+export enum SetId {
+  PrimalHunter = 'PrimalHunter',
+  IronWill = 'IronWill',
+  FrozenLegacy = 'FrozenLegacy',
+  GhostlyRelic = 'GhostlyRelic',
+  DragonWarlord = 'DragonWarlord',
+  VoidSeeker = 'VoidSeeker',
+  InfinityChrono = 'InfinityChrono'
+}
+
+// Kỹ năng của quái vật
+export enum MonsterAbility {
+  Stun = 'Choáng',
+  ArmorBreak = 'Phá Giáp',
+  Freeze = 'Đóng Băng',
+  Regen = 'Hồi Phục',
+  Silence = 'Câm Lặng',
+  LifeSteal = 'Hút Máu',
+  Dodge = 'Né Tránh',
+  Reflect = 'Phản Sát Thương'
+}
+
+// Các loại đột biến của quái
+export enum MutationType {
+  None = 'Bình Thường',
+  Elite = 'Tinh Anh',
+  Ancient = 'Cổ Đại'
+}
+
+// Các loại nguyên liệu
 export enum MaterialType {
   SlimeResin = 'Nhựa Slime',
   PoisonSpore = 'Bào Tử Độc',
-  MushroomCap = 'Mũ Nấm',
+  ForestWood = 'Gỗ Rừng',
   WolfSkin = 'Da Sói',
-  WolfFang = 'Răng Nanh',
-  ForestWood = 'Gỗ Khởi Nguyên',
+  WolfFang = 'Răng Sói',
   SpiderSilk = 'Tơ Nhện',
-  WildHerb = 'Thảo Mộc Hoang',
+  WildHerb = 'Thảo Mộc',
   RawCopperOre = 'Quặng Đồng Thô',
-  IronScale = 'Vảy Sắt',
-  IronScraps = 'Mảnh Sắt Vụn',
-  Flint = 'Đá Lửa',
-  GemStone = 'Đá Quý Thô',
+  IronScraps = 'Sắt Vụn',
   BatWing = 'Cánh Dơi',
   GolemCore = 'Lõi Golem',
-  SilverOre = 'Quặng Bạc',
+  Flint = 'Đá Lửa',
+  GemStone = 'Đá Quý',
   AmberFragment = 'Mảnh Hổ Phách',
   SnowCrystal = 'Tinh Thể Tuyết',
-  WarmFur = 'Lông Thú Ấm',
+  WarmFur = 'Lông Ấm',
   YetiFur = 'Lông Yeti',
-  IceShard = 'Mảnh Băng Vĩnh Cửu',
+  IceShard = 'Mảnh Băng',
   FrozenHeart = 'Trái Tim Băng',
-  FrostLotus = 'Hoa Tuyết Liên',
-  OldBone = 'Xương Mục',
+  FrostLotus = 'Hoa Tuyết',
+  OldBone = 'Xương Cổ',
   BlueSoul = 'Linh Hồn Xanh',
   BrokenSwordFragment = 'Mảnh Kiếm Gãy',
   AncientScroll = 'Cuộn Giấy Cổ',
   MagicThread = 'Chỉ Ma Thuật',
   GhostEssence = 'Tinh Hoa U Linh',
-  CursedStone = 'Đá Nguyền Rủa',
-  WillOfDead = 'Ý Chí Vong Linh',
-  GoldOre = 'Quặng Vàng',
-  StarDust = 'Bụi Sao',
-  MemoryGem = 'Ngọc Ký Ức',
   DragonScale = 'Vảy Rồng',
-  RoyalCloth = 'Vải Hoàng Gia',
-  DragonBlood = 'Máu Rồng Thiêng',
-  PearlOfPower = 'Long Châu Lực',
-  AncientDragonBone = 'Xương Rồng Thượng Cổ',
+  DragonBlood = 'Máu Rồng',
+  PearlOfPower = 'Ngọc Quyền Năng',
+  AncientDragonBone = 'Xương Rồng Cổ',
+  GoldOre = 'Quặng Vàng',
+  FissionCrystal = 'Tinh Thể Phân Hạch',
   VoidCore = 'Lõi Hư Không',
-  VoidShard = 'Mảnh Vỡ Hư Không',
-  FissionCrystal = 'Tinh Thể Nhiệt Hạch',
+  VoidShard = 'Mảnh Hư Không',
   DarkEssence = 'Tinh Hoa Bóng Tối',
   RealityTear = 'Vết Rách Thực Tại',
-  AncientRelic = 'Di Vật Cổ Đại',
-  EternalSpark = 'Tàn Lửa Vĩnh Hằng',
-  OmniStone = 'Đá Toàn Năng',
-  BlueCoreFragment = 'Mảnh Lõi Xanh',
-  PureIronOre = 'Quặng Sắt Tinh Khiết',
-  Wood = 'Gỗ Rừng',
-  Leather = 'Da Thú',
-  Ore = 'Quặng Thô'
+  EternalSpark = 'Tia Sáng Vĩnh Hằng',
+  OmniStone = 'Đá Vạn Năng',
+  WillOfDead = 'Ý Chí Tử Sĩ'
 }
-
-export enum ElementType {
-  Physical = 'Vật Lý',
-  Fire = 'Lửa',
-  Ice = 'Băng',
-  Lightning = 'Sét',
-  Acid = 'Axit',
-  Void = 'Hư Không'
-}
-
-export enum MonsterAbility {
-  Dodge = 'Né Đòn',
-  LifeSteal = 'Hút Máu',
-  ArmorBreak = 'Phá Giáp',
-  Reflect = 'Phản Đòn',
-  Stun = 'Gây Choáng',
-  Freeze = 'Đông Cứng',
-  Regen = 'Hồi Phục',
-  Silence = 'Câm Lặng'
-}
-
-export enum MutationType {
-  None = 'Bình Thường',
-  Stalker = 'Kẻ Săn Đuổi',
-  Void = 'Hư Không',
-  Corrupted = 'Hóa Quỷ'
-}
-
-export interface Enemy {
-  id: string;
-  name: string;
-  level: number;
-  hp: number;
-  maxHp: number;
-  attack: number;
-  defense: number;
-  element: ElementType;
-  isBoss?: boolean;
-  mutation?: MutationType;
-  abilities?: MonsterAbility[];
-  expReward: number;
-  goldReward: number;
-  minRebirth?: number;
-  dropTable: {
-    materialType: MaterialType;
-    chance: number;
-    minQty: number;
-    maxQty: number;
-  }[];
-}
-
-export enum SetId {
-  PrimalHunter = 'Thợ Săn Nguyên Thủy',
-  IronWill = 'Ý Chí Thép',
-  FrozenLegacy = 'Di Sản Băng Giá',
-  GhostlyRelic = 'Di Vật U Linh',
-  DragonWarlord = 'Đại Tướng Long Tộc',
-  VoidSeeker = 'Kẻ Tầm Đạo Hư Không',
-  InfinityChrono = 'Vòng Lặp Vô Tận'
-}
-
-export enum EquipmentType {
-  Weapon = 'Vũ Khí',
-  Armor = 'Giáp Trụ',
-  Accessory = 'Trang Sức',
-  Helmet = 'Mũ Giáp',
-  Boots = 'Giày',
-  Gloves = 'Găng Tay'
-}
-
-export enum GemType { Ruby = 'Hồng Ngọc', Sapphire = 'Lam Ngọc', Topaz = 'Hoàng Ngọc' }
-export enum GemTier { T1 = 1, T2 = 2, T3 = 3 }
 
 export interface SocketedGem {
   type: GemType;
@@ -151,49 +165,11 @@ export interface EquipmentTalent {
   desc: string;
 }
 
-export enum EnchantmentType {
-  None = 'Không',
-  Sharpness = 'Sắc Bén',
-  Protection = 'Bảo Vệ',
-  Vitality = 'Sinh Lực',
-  Luck = 'Vận May'
-}
-
-export interface Equipment {
+export interface Material {
   id: string;
   name: string;
-  type: EquipmentType;
-  rarity: Rarity;
-  isEquipped: boolean;
-  value: number;
-  reqLevel: number;
-  stats: {
-    attack?: number;
-    defense?: number;
-    hpBonus?: number;
-  };
-  sockets: number;
-  socketedGems: SocketedGem[];
-  talent?: EquipmentTalent;
-  setId?: SetId;
-  enchantment?: EnchantmentType;
-  element?: ElementType;
-}
-
-export interface Blueprint {
-  id: string;
-  name: string;
-  resultType: EquipmentType | 'VẬT PHẨM';
-  evolutionLevel: number;
-  reqLevel: number;
-  requiredMaterials: { type: MaterialType; amount: number }[];
-  baseStats: { 
-    minAtk: number; maxAtk: number; 
-    minDef: number; maxDef: number;
-    minHp?: number; maxHp?: number;
-  };
-  unlocked: boolean;
-  setId?: SetId;
+  type: MaterialType;
+  quantity: number;
 }
 
 export interface Zone {
@@ -205,36 +181,38 @@ export interface Zone {
   minRebirth?: number;
 }
 
-export enum EternalUpgradeId {
-  LatentPower = 'suc_manh_tiem_an',
-  ResourceRetention = 'bao_toan_tai_nguyen',
-  BlueprintMastery = 'bac_thay_ban_ve',
-  EternalBlood = 'huyet_mach_vinh_hang',
-  GodlyForging = 'ky_thuat_duc_than'
-}
-
-export interface EternalUpgrade {
-  id: EternalUpgradeId | string;
+export interface Enemy {
+  id: string;
   name: string;
-  description: string;
-  baseCost: number;
-  costMultiplier: number;
-  maxLevel: number;
-  effectValue: number;
+  level: number;
+  hp: number;
+  maxHp: number;
+  attack: number;
+  defense: number;
+  element: ElementType;
+  expReward: number;
+  goldReward: number;
+  dropTable: { materialType: MaterialType; chance: number; minQty: number; maxQty: number }[];
+  isBoss?: boolean;
+  minRebirth?: number;
+  abilities?: MonsterAbility[];
+  mutation?: MutationType;
 }
 
-export enum CharacterClass {
-  None = 'Chưa Chọn',
-  HeavySentinel = 'Hộ Vệ Thủ Lĩnh',
-  ShadowBlade = 'Bóng Ma Hắc Ám',
-  AlchemistMage = 'Giả Kim Pháp Sư'
-}
-
-export enum SkillBranch {
-  WeaponSmith = 'Kỹ Thuật Rèn Vũ Khí',
-  ArmorSmith = 'Kỹ Thuật Rèn Giáp',
-  Alchemy = 'Giả Kim Thuật',
-  Enchanting = 'Ma Thuật Phù Phép'
+export interface Blueprint {
+  id: string;
+  name: string;
+  resultType: EquipmentType | string;
+  evolutionLevel: number;
+  reqLevel: number;
+  requiredMaterials: { type: MaterialType; amount: number }[];
+  baseStats: { 
+    minAtk: number; maxAtk: number; 
+    minDef: number; maxDef: number;
+    minHp?: number; maxHp?: number;
+  };
+  unlocked: boolean;
+  setId?: SetId;
 }
 
 export interface Skill {
@@ -249,11 +227,14 @@ export interface Skill {
   reqClass?: CharacterClass;
 }
 
-export interface Material {
-  id: string;
+export interface EternalUpgrade {
+  id: EternalUpgradeId | string;
   name: string;
-  type: MaterialType;
-  quantity: number;
+  description: string;
+  baseCost: number;
+  costMultiplier: number;
+  maxLevel: number;
+  effectValue: number;
 }
 
 export interface Guild {
@@ -268,6 +249,28 @@ export interface LifeStats {
   goldEarned: number;
   itemsCrafted: number;
   maxDamageDealt: number;
+}
+
+export interface Equipment {
+  id: string;
+  name: string;
+  type: EquipmentType;
+  rarity: Rarity;
+  isEquipped: boolean;
+  isLegacy?: boolean; // Trang bị được chọn để kế thừa sau luân hồi
+  value: number;
+  reqLevel: number;
+  stats: {
+    attack?: number;
+    defense?: number;
+    hpBonus?: number;
+  };
+  sockets: number;
+  socketedGems: SocketedGem[];
+  talent?: EquipmentTalent;
+  setId?: SetId;
+  enchantment?: EnchantmentType;
+  element?: ElementType;
 }
 
 export interface Player {
@@ -293,5 +296,5 @@ export interface Player {
   gameSpeed: number;
   memoryGemPotential: number;
   rebirthTalents: string[];
-  lifeStats: LifeStats; // Theo dõi thành tích kiếp hiện tại
+  lifeStats: LifeStats;
 }

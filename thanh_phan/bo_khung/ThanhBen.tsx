@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { User, Sword, Hammer, Zap, RefreshCw, Book, Settings, ChevronRight } from 'lucide-react';
+import { User, Sword, Hammer, Zap, RefreshCw, Book, Settings, ChevronRight, Lock } from 'lucide-react';
 import { Player } from '../../kieu_du_lieu';
 
 interface Props {
@@ -22,6 +22,7 @@ export const ThanhBen: React.FC<Props> = ({ player, activeTab, setActiveTab, set
   ];
 
   const expPercent = (player.currentExp / player.maxExp) * 100;
+  const rebirthProgress = Math.min(100, (player.level / 50) * 100);
 
   return (
     <aside className="w-20 md:w-72 glass-card border-r border-white/5 flex flex-col shrink-0 z-20 transition-all duration-500 group/sidebar">
@@ -54,6 +55,17 @@ export const ThanhBen: React.FC<Props> = ({ player, activeTab, setActiveTab, set
                 className="h-full bg-gradient-to-r from-blue-600 to-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.4)] transition-all duration-1000" 
                 style={{ width: `${expPercent}%` }}
             ></div>
+          </div>
+
+          {/* REBIRTH PROGRESS BAR */}
+          <div className="mt-2 mb-4 space-y-1">
+              <div className="flex justify-between items-center px-1">
+                  <span className="text-[7px] font-black text-slate-600 uppercase">Tiến Độ Luân Hồi</span>
+                  <span className="text-[7px] font-black text-rose-500 uppercase">{Math.floor(rebirthProgress)}%</span>
+              </div>
+              <div className="h-1 w-full bg-slate-900 rounded-full overflow-hidden">
+                  <div className="h-full bg-rose-600" style={{ width: `${rebirthProgress}%` }}></div>
+              </div>
           </div>
 
           <button 

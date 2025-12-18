@@ -38,6 +38,30 @@ export const NHAN_VAT_MAC_DINH: Player = {
 export const dungNguoiChoi = (themLog: (msg: string) => void) => {
   const [nguoiChoi, datNguoiChoi] = useState<Player>(NHAN_VAT_MAC_DINH);
 
+  const thucHienLuanHoi = useCallback((thienPhuMoi?: string) => {
+    datNguoiChoi(prev => {
+      const epNhanDuoc = prev.level * 10;
+      const talentsMoi = thienPhuMoi ? [...prev.rebirthTalents, thienPhuMoi] : prev.rebirthTalents;
+      
+      themLog(`🌀 LUÂN HỒI THÀNH CÔNG! Nhận được ${epNhanDuoc} EP.`);
+      
+      return {
+        ...prev,
+        level: 1,
+        currentExp: 0,
+        maxExp: 100,
+        gold: 0, // Mất vàng
+        statPoints: 10 + (prev.rebirthCount * 10), // Điểm khởi đầu tăng theo vòng lặp
+        stats: { strength: 1, dexterity: 1, intelligence: 1, vitality: 1, luck: 1 },
+        rebirthCount: prev.rebirthCount + 1,
+        eternalPoints: prev.eternalPoints + epNhanDuoc,
+        rebirthTalents: talentsMoi,
+        lifeStats: { ...THONG_KE_KIEP_MOI } // Reset thống kê kiếp này
+      };
+    });
+  }, [themLog]);
+
+  // ... giữ các hàm datTocDoGame, nangCapBanVe, nhanEXP, congDiemTiemNang, muaNangCapVinhHang, nangCapKyNang cũ ...
   const datTocDoGame = useCallback((tocDo: number) => {
     datNguoiChoi(p => ({ ...p, gameSpeed: tocDo }));
     themLog(`⏩ Tốc độ: x${tocDo}`);
@@ -138,6 +162,7 @@ export const dungNguoiChoi = (themLog: (msg: string) => void) => {
 
   return { 
     nguoiChoi, datNguoiChoi, datTocDoGame, nangCapBanVe, 
-    nhanEXP, congDiemTiemNang, muaNangCapVinhHang, nangCapKyNang 
+    nhanEXP, congDiemTiemNang, muaNangCapVinhHang, nangCapKyNang,
+    thucHienLuanHoi
   };
 };

@@ -26,24 +26,35 @@ export const dungChienDau = (
     const danhSachQuai = QUAI_VAT_DB[vungHienTai.id] || [];
     if (danhSachQuai.length === 0) return;
 
-    const gioiHanCap = nhanVat.level + (nhanVat.rebirthCount > 0 ? 10 : 5);
-    
     const locQuai = danhSachQuai.filter(e => 
       nhanVat.rebirthCount >= (e.minRebirth || 0) &&
-      e.level <= gioiHanCap
+      e.level <= nhanVat.level + 10
     );
 
-    if (locQuai.length === 0) {
-      const quaiYeuNhat = danhSachQuai.reduce((prev, curr) => prev.level < curr.level ? prev : curr);
-      datQuai({ ...quaiYeuNhat, hp: quaiYeuNhat.maxHp });
-      return;
-    }
+    if (locQuai.length === 0) return;
 
     const base = locQuai[so_ngau_nhien(0, locQuai.length - 1)];
-    datQuai({ ...base, hp: base.maxHp });
-    themLog(`🔍 Phát hiện: ${base.name} (Cấp ${base.level})!`);
+    
+    // SCALE QUÁI VẬT THEO LUÂN HỒI
+    const scaleFactor = 1 + (nhanVat.rebirthCount * 0.5); // Tăng 50% mỗi lần luân hồi
+    const nameSuffix = nhanVat.rebirthCount > 0 ? ` [Luân Hồi ${nhanVat.rebirthCount}]` : "";
+
+    const quaiScaled: Enemy = {
+        ...base,
+        name: base.name + nameSuffix,
+        maxHp: Math.floor(base.maxHp * scaleFactor),
+        hp: Math.floor(base.maxHp * scaleFactor),
+        attack: Math.floor(base.attack * scaleFactor),
+        defense: Math.floor(base.defense * scaleFactor),
+        goldReward: Math.floor(base.goldReward * (1 + nhanVat.rebirthCount * 0.2)),
+        expReward: Math.floor(base.expReward * (1 + nhanVat.rebirthCount * 0.1))
+    };
+
+    datQuai(quaiScaled);
+    themLog(`🔍 Phát hiện: ${quaiScaled.name}!`);
   }, [vungHienTai, nhanVat.rebirthCount, nhanVat.level, themLog, datQuai, quaiHienTai]);
 
+  // ... giữ hàm tanCong cũ ...
   const tanCong = useCallback(() => {
     if (!quaiHienTai) {
       if (dangTuDong) timQuai();
@@ -70,12 +81,9 @@ export const dungChienDau = (
           nhanVat.lifeStats.maxDamageDealt = satThuongNguoi;
       }
 
-      // ĐIỀU CHỈNH: Đảm bảo nguyên liệu rơi dồi dào hơn
       quaiHienTai.dropTable.forEach(drop => {
-        // Tăng tỷ lệ rơi dựa trên may mắn của người chơi
         const tyLeThucTe = drop.chance + (chiSoThucTe.dropRateBonus || 0);
         if (Math.random() < tyLeThucTe) {
-          // Tăng thêm số lượng nếu là Boss
           const bonusQty = quaiHienTai.isBoss ? 2 : 1;
           const qty = so_ngau_nhien(drop.minQty, drop.maxQty) * bonusQty;
           nhanNL(drop.materialType, qty);

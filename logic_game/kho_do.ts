@@ -1,17 +1,38 @@
 
-import { useState, useCallback } from 'react';
-import { Material, Equipment, EquipmentType, MaterialType, GemType, GemTier, EnchantmentType } from '../kieu_du_lieu';
+import { useState, useCallback, useMemo } from 'react';
+import { Material, Equipment, EquipmentType, MaterialType, MaterialTier } from '../kieu_du_lieu';
+import { PHAN_CAP_NGUYEN_LIEU } from '../hang_so/nguyen_lieu/phan_cap';
 import { tao_id } from '../tien_ich/tinh_toan';
 
 export const dungKhoDo = (themLog: (msg: string) => void) => {
   const [danhSachTrangBi, datDanhSachTrangBi] = useState<Equipment[]>([]);
   const [khoNguyenLieu, datKhoNguyenLieu] = useState<Material[]>([]);
   
-  const [doDangMac, datDoDangMac] = useState<Record<EquipmentType, Equipment | null>>({
-    [EquipmentType.Weapon]: null, [EquipmentType.Armor]: null, [EquipmentType.Accessory]: null,
-    [EquipmentType.Helmet]: null, [EquipmentType.Gloves]: null, [EquipmentType.Boots]: null
-  });
+  const doDangMac = useMemo(() => {
+    const mac: Record<string, Equipment | null> = {
+      [EquipmentType.Weapon]: null, [EquipmentType.Armor]: null, [EquipmentType.Accessory]: null,
+      [EquipmentType.Helmet]: null, [EquipmentType.Gloves]: null, [EquipmentType.Boots]: null
+    };
+    danhSachTrangBi.forEach(item => {
+      if (item.isEquipped) mac[item.type] = item;
+    });
+    return mac;
+  }, [danhSachTrangBi]);
 
+  const donDepKhiLuanHoi = useCallback((legacyItemId?: string) => {
+    // 1. Giữ lại trang bị Legacy hoặc đang mặc nếu được đánh dấu
+    datDanhSachTrangBi(prev => prev.filter(item => item.id === legacyItemId || item.isLegacy));
+    
+    // 2. Mất nguyên liệu Basic, giữ lại Elite và Eternal
+    datKhoNguyenLieu(prev => prev.filter(m => {
+        const phanCap = PHAN_CAP_NGUYEN_LIEU[m.type] || MaterialTier.Basic;
+        return phanCap !== MaterialTier.Basic;
+    }));
+
+    themLog("🧹 Kho đồ đã được dọn dẹp cho kiếp mới.");
+  }, [themLog]);
+
+  // ... giữ các hàm themNguyenLieu, banTrangBi, macTrangBi, thaoTrangBi, capNhatTrangBi cũ ...
   const themNguyenLieu = useCallback((loai: MaterialType, soLuong: number) => {
     datKhoNguyenLieu(prev => {
       const tonTai = prev.find(m => m.type === loai);
@@ -25,7 +46,7 @@ export const dungKhoDo = (themLog: (msg: string) => void) => {
 
   const banTrangBi = useCallback((item: Equipment, onNhanVang: (v: number) => void) => {
     if (item.isEquipped) {
-        themLog("❌ Không thể bán món đồ đang mặc!");
+        themLog("❌ Tháo trang bị ra trước khi bán!");
         return;
     }
     const giaBan = Math.floor(item.value || 50);
@@ -46,43 +67,25 @@ export const dungKhoDo = (themLog: (msg: string) => void) => {
         return item;
     }));
 
-    datDoDangMac(prev => ({ ...prev, [monDo.type]: { ...monDo, isEquipped: true } }));
     themLog(`⚔️ Đã trang bị: ${monDo.name}`);
   }, [themLog]);
 
-  const thaoTrangBi = useCallback((loai: EquipmentType) => {
-    datDoDangMac(prev => {
-        const monDo = prev[loai];
-        if (monDo) {
-            datDanhSachTrangBi(list => list.map(item => 
-                item.id === monDo.id ? { ...item, isEquipped: false } : item
-            ));
-            themLog(`🛡️ Đã tháo: ${monDo.name}`);
-        }
-        return { ...prev, [loai]: null };
-    });
+  const thaoTrangBi = useCallback((itemId: string) => {
+    datDanhSachTrangBi(prev => prev.map(item => 
+        item.id === itemId ? { ...item, isEquipped: false } : item
+    ));
+    themLog(`🛡️ Đã tháo trang bị.`);
   }, [themLog]);
 
   const capNhatTrangBi = useCallback((itemId: string, updates: Partial<Equipment>) => {
     datDanhSachTrangBi(prev => prev.map(item => 
         item.id === itemId ? { ...item, ...updates } : item
     ));
-    // Cập nhật cả đồ đang mặc nếu cần
-    datDoDangMac(prev => {
-        const newMac = { ...prev };
-        Object.keys(newMac).forEach(key => {
-            const k = key as EquipmentType;
-            if (newMac[k]?.id === itemId) {
-                newMac[k] = { ...newMac[k]!, ...updates };
-            }
-        });
-        return newMac;
-    });
   }, []);
 
   return { 
     danhSachTrangBi, khoNguyenLieu, doDangMac, 
     themNguyenLieu, macTrangBi, thaoTrangBi, banTrangBi, capNhatTrangBi,
-    datDanhSachTrangBi, datKhoNguyenLieu 
+    datDanhSachTrangBi, datKhoNguyenLieu, donDepKhiLuanHoi
   };
 };
