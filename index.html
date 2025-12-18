@@ -7,43 +7,70 @@
     <title>Thợ Rèn Vô Tận - Kỷ Nguyên Chế Tác</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;700;900&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&display=swap');
       
       :root {
-        --rarity-common: #9ca3af;
+        --rarity-common: #94a3b8;
         --rarity-rare: #3b82f6;
         --rarity-epic: #a855f7;
-        --rarity-legendary: #eab308;
+        --rarity-legendary: #fbbf24;
         --rarity-mythic: #ef4444;
         --rarity-cosmic: #22d3ee;
+        --bg-deep: #020617;
+        --accent-forge: #f97316;
       }
 
       body {
-        background-color: #020617;
+        background-color: var(--bg-deep);
         color: #f1f5f9;
         font-family: 'Lexend', sans-serif;
         overflow: hidden;
+        margin: 0;
+        padding: 0;
+        -webkit-font-smoothing: antialiased;
       }
 
       .glass-card {
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
       }
 
-      @keyframes floating {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-5px); }
-        100% { transform: translateY(0px); }
-      }
-      .animate-float { animation: floating 3s ease-in-out infinite; }
+      .glow-common { filter: drop-shadow(0 0 5px rgba(148, 163, 184, 0.3)); }
+      .glow-rare { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4)); }
+      .glow-epic { filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.5)); }
+      .glow-legendary { filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.6)); }
+      .glow-mythic { filter: drop-shadow(0 0 15px rgba(239, 68, 68, 0.7)); }
+      .glow-cosmic { filter: drop-shadow(0 0 20px rgba(34, 211, 238, 0.8)); }
 
-      ::-webkit-scrollbar { width: 5px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-      ::-webkit-scrollbar-thumb:hover { background: #334155; }
+      @keyframes slide-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in { animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+
+      ::-webkit-scrollbar { width: 4px; height: 4px; }
+      ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.3); }
+      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+      ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+      .bg-grid {
+        background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.03) 1px, transparent 0);
+        background-size: 32px 32px;
+      }
+
+      .lava-glow {
+        position: absolute;
+        width: 40%;
+        height: 40%;
+        background: radial-gradient(circle, rgba(249, 115, 22, 0.05) 0%, transparent 70%);
+        bottom: -10%;
+        right: -10%;
+        pointer-events: none;
+        z-index: -1;
+      }
     </style>
     <script type="importmap">
     {
@@ -59,21 +86,9 @@
     </script>
   <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="selection:bg-cyan-500/30 selection:text-cyan-200">
-    <div id="root">
-      <!-- Nút cấp cứu: Sẽ biến mất khi React load thành công -->
-      <div id="emergency-screen" style="display: flex; height: 100vh; width: 100vw; flex-direction: column; align-items: center; justify-content: center; background-color: #020617; color: white; gap: 20px; padding: 20px; text-align: center;">
-        <h1 style="font-size: 24px; font-weight: 900; color: #ef4444;">HỆ THỐNG ĐANG KHỞI CHẠY...</h1>
-        <p style="color: #94a3b8; max-width: 400px;">Nếu màn hình này không biến mất sau 5 giây, có thể dữ liệu cũ của bạn đang bị xung đột.</p>
-        <button 
-          onclick="localStorage.clear(); window.location.reload();" 
-          style="padding: 15px 30px; background-color: #ef4444; color: white; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);"
-        >
-          XÓA DỮ LIỆU CŨ & LÀM LẠI CUỘC ĐỜI
-        </button>
-      </div>
-    </div>
-    <script type="module" src="/index.js"></script>
+  <body class="selection:bg-orange-500/30 selection:text-orange-200 bg-grid">
+    <div class="lava-glow"></div>
+    <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>
