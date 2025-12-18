@@ -14,9 +14,9 @@ export const dungQuanLyGame = () => {
   const { nhatKy, themLog, xoaNhatKy } = dungNhatKy();
   
   const { 
-    nguoiChoi, datNguoiChoi, datTocDoGame, nangCapBanVe, 
+    nguoiChoi, datNguoiChoi, datTocDoGame, 
     nhanEXP, congDiemTiemNang, muaNangCapVinhHang, nangCapKyNang,
-    thucHienLuanHoi: luanHoiNguoiChoi, layCapDoLuanHoiYeuCau
+    thucHienLuanHoi: luanHoiNguoiChoi, layCapDoLuanHoiYeuCau, capNhatLifeStats
   } = dungNguoiChoi(themLog);
 
   const { 
@@ -31,11 +31,17 @@ export const dungQuanLyGame = () => {
   const [quaiHienTai, datQuaiHienTai] = useState<any>(null);
   const [dangTuDong, datDangTuDong] = useState(false);
 
-  // Tính toán chỉ số thực tế dựa trên trang bị và tiềm năng
   const chiSoThucTe = useMemo(() => 
     tinh_toan_chi_so_nhan_vat(nguoiChoi, doDangMac, (v) => v), 
     [nguoiChoi, doDangMac]
   );
+
+  const thucHienHoiPhucHoanToan = useCallback(() => {
+    datNguoiChoi(p => {
+        const stats = tinh_toan_chi_so_nhan_vat(p, doDangMac, (v) => v);
+        return { ...p, hp: stats.totalHp };
+    });
+  }, [doDangMac, datNguoiChoi]);
 
   const { timQuai, tanCong } = dungChienDau(
     nguoiChoi, chiSoThucTe, vungHienTai, quaiHienTai, datQuaiHienTai,
@@ -45,7 +51,8 @@ export const dungQuanLyGame = () => {
     themNguyenLieu,
     themLog,
     dangTuDong,
-    () => datNguoiChoi(p => ({ ...p, hp: p.maxHp }))
+    thucHienHoiPhucHoanToan,
+    capNhatLifeStats
   );
 
   const { luuLocal, taiLocal, xuatFile, nhapFile } = dungHeThong(
@@ -80,6 +87,23 @@ export const dungQuanLyGame = () => {
     capNhatTrangBi(item.id, { enchantment: type });
     themLog(`✨ Đã phù phép ${type} cho ${item.name}`);
   }, [nguoiChoi.gold, datNguoiChoi, capNhatTrangBi, themLog]);
+
+  // Fix: Thêm hàm nangCapBanVe để xử lý việc nâng cấp bản vẽ trang bị
+  const nangCapBanVe = useCallback((id: string, cost: number) => {
+    if (nguoiChoi.eternalPoints < cost) {
+      themLog("❌ Không đủ Điểm Vĩnh Hằng!");
+      return;
+    }
+    datNguoiChoi(p => ({
+      ...p,
+      eternalPoints: p.eternalPoints - cost,
+      blueprintLevels: {
+        ...p.blueprintLevels,
+        [id]: (p.blueprintLevels[id] || 0) + 1
+      }
+    }));
+    themLog(`📜 Đã nâng cấp bản vẽ thành công!`);
+  }, [nguoiChoi.eternalPoints, datNguoiChoi, themLog]);
 
   const thucHienLuanHoi = useCallback((thienPhuMoi?: string, legacyItemId?: string) => {
     luanHoiNguoiChoi(thienPhuMoi);
@@ -144,14 +168,10 @@ export const dungQuanLyGame = () => {
         socketedGems: []
     };
 
-    datNguoiChoi(prev => ({
-        ...prev,
-        lifeStats: { ...prev.lifeStats, itemsCrafted: prev.lifeStats.itemsCrafted + 1 }
-    }));
-
+    capNhatLifeStats({ itemsCrafted: nguoiChoi.lifeStats.itemsCrafted + 1 });
     datDanhSachTrangBi(prev => [itemMoi, ...prev]);
     themLog(`⚒️ LUYỆN KIM THÀNH CÔNG: [${phamChat}] ${itemMoi.name}`);
-  }, [khoNguyenLieu, datKhoNguyenLieu, nguoiChoi.blueprintLevels, datDanhSachTrangBi, themLog, datNguoiChoi, nguoiChoi.gold]);
+  }, [khoNguyenLieu, datKhoNguyenLieu, nguoiChoi.blueprintLevels, datDanhSachTrangBi, themLog, capNhatLifeStats, nguoiChoi.lifeStats.itemsCrafted]);
 
   return {
     state: {
@@ -162,9 +182,9 @@ export const dungQuanLyGame = () => {
     actions: {
       datTabHienTai, datHienBangChiSo, datVungHienTai, datDangTuDong, datTocDoGame,
       timQuai, tanCong, macTrangBi, thaoTrangBi, banTrangBi, banNhieuTrangBi,
-      thucHienCheTac, nangCapBanVe, handleSocketGem, handleAddSocket, handleEnchant,
+      thucHienCheTac, handleSocketGem, handleAddSocket, handleEnchant,
       thucHienLuanHoi, muaNangCapVinhHang, nangCapKyNang,
-      congDiemTiemNang, datNguoiChoi, luuLocal, taiLocal, xuatFile, nhapFile, xoaNhatKy
+      congDiemTiemNang, datNguoiChoi, luuLocal, taiLocal, xuatFile, nhapFile, xoaNhatKy, nangCapBanVe
     }
   };
 };

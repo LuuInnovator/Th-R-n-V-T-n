@@ -1,19 +1,24 @@
 
 import React from 'react';
 import { Skill } from '../../kieu_du_lieu';
-import { Zap, Lock, ChevronRight } from 'lucide-react';
+import { Zap, Lock, ChevronRight, Unlock } from 'lucide-react';
 
 interface Props {
   skill: Skill;
   currentLevel: number;
   skillPoints: number;
   playerLevel: number;
+  unlockedSkillIds: string[];
   onUpgrade: (skill: Skill) => void;
 }
 
-export const TheBiKy: React.FC<Props> = ({ skill, currentLevel, skillPoints, playerLevel, onUpgrade }) => {
+export const TheBiKy: React.FC<Props> = ({ skill, currentLevel, skillPoints, playerLevel, unlockedSkillIds, onUpgrade }) => {
   const daMax = currentLevel >= skill.maxLevel;
-  const biKhoaCap = playerLevel < skill.reqLevel;
+  
+  // LOGIC MỚI: Kỹ năng bị khóa chỉ khi cả cấp độ hiện tại chưa đạt VÀ chưa từng được mở khóa ở các kiếp trước
+  const daTungMoKhoa = unlockedSkillIds.includes(skill.id);
+  const biKhoaCap = playerLevel < skill.reqLevel && !daTungMoKhoa;
+  
   const coTheNang = !daMax && !biKhoaCap && skillPoints >= skill.cost;
   const tienDo = (currentLevel / skill.maxLevel) * 100;
 
@@ -24,6 +29,14 @@ export const TheBiKy: React.FC<Props> = ({ skill, currentLevel, skillPoints, pla
               <Lock size={20} className="text-slate-500 mb-2" />
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full border border-slate-800 text-center">Yêu cầu Cấp {skill.reqLevel}</span>
           </div>
+      )}
+
+      {/* Badge hiển thị trạng thái kế thừa */}
+      {!biKhoaCap && playerLevel < skill.reqLevel && daTungMoKhoa && (
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1 bg-emerald-500/20 border border-emerald-500/30 px-2 py-0.5 rounded-md">
+            <Unlock size={8} className="text-emerald-400" />
+            <span className="text-[7px] font-black text-emerald-400 uppercase tracking-tighter">ĐÃ KẾ THỪA</span>
+        </div>
       )}
 
       <div className="absolute top-5 right-5 text-[11px] font-mono font-black text-slate-500 bg-slate-950/50 px-3 py-1 rounded-full border border-slate-800 z-10">

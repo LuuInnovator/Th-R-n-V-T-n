@@ -1,6 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { Player, CharacterClass, Skill, EternalUpgrade, EternalUpgradeId, LifeStats } from '../kieu_du_lieu';
+import { BI_KY_DB } from '../hang_so/bi_ky';
 
 export const THONG_KE_KIEP_MOI: LifeStats = {
   monstersKilled: 0,
@@ -10,7 +11,7 @@ export const THONG_KE_KIEP_MOI: LifeStats = {
 };
 
 export const NHAN_VAT_MAC_DINH: Player = {
-  characterClass: CharacterClass.HeavySentinel, // Mặc định là Hộ Vệ để bắt đầu ngay
+  characterClass: CharacterClass.HeavySentinel, 
   level: 1,
   currentExp: 0,
   maxExp: 100,
@@ -23,6 +24,7 @@ export const NHAN_VAT_MAC_DINH: Player = {
   rebirthCount: 0,
   skillPoints: 0,
   skills: {},
+  unlockedSkillIds: [],
   eternalUpgrades: {},
   gemInventory: {}, 
   guild: { name: 'Vô Danh', level: 1, fame: 0, blueprints: [] },
@@ -50,7 +52,7 @@ export const dungNguoiChoi = (themLog: (msg: string) => void) => {
       if (prev.level < capYeuCau) return prev;
 
       const epNhanDuoc = prev.level * 10;
-      const talentsMoi = thienPhuMoi ? [...prev.rebirthTalents, thienPhuMoi] : prev.rebirthTalents;
+      const talentsMoi = thienPhuMoi ? [...(prev.rebirthTalents || []), thienPhuMoi] : (prev.rebirthTalents || []);
       
       themLog(`🌀 LUÂN HỒI THÀNH CÔNG! Nhận được ${epNhanDuoc} EP. Cấp độ yêu cầu tiếp theo: ${25 + (prev.rebirthCount + 1) * 5}`);
       
@@ -65,7 +67,8 @@ export const dungNguoiChoi = (themLog: (msg: string) => void) => {
         rebirthCount: prev.rebirthCount + 1,
         eternalPoints: prev.eternalPoints + epNhanDuoc,
         rebirthTalents: talentsMoi,
-        lifeStats: { ...THONG_KE_KIEP_MOI }
+        lifeStats: { ...THONG_KE_KIEP_MOI },
+        unlockedSkillIds: prev.unlockedSkillIds || []
       };
     });
   }, [themLog, layCapDoLuanHoiYeuCau]);
@@ -74,18 +77,6 @@ export const dungNguoiChoi = (themLog: (msg: string) => void) => {
     datNguoiChoi(p => ({ ...p, gameSpeed: tocDo }));
     themLog(`⏩ Tốc độ: x${tocDo}`);
   }, [themLog]);
-
-  const nangCapBanVe = useCallback((idBanVe: string, gia: number) => {
-    datNguoiChoi(prev => {
-      if (prev.eternalPoints < gia) return prev;
-      const capHienTai = prev.blueprintLevels[idBanVe] || 0;
-      return {
-        ...prev,
-        eternalPoints: prev.eternalPoints - gia,
-        blueprintLevels: { ...prev.blueprintLevels, [idBanVe]: capHienTai + 1 }
-      };
-    });
-  }, []);
 
   const nhanEXP = useCallback((luong: number) => {
     datNguoiChoi(prev => {
@@ -103,17 +94,34 @@ export const dungNguoiChoi = (themLog: (msg: string) => void) => {
       
       const spNhanDuoc = daLenCap ? (capMoi % 5 === 0 ? 3 : 1) : 0;
       
+      // Fix: Thêm kiểm tra an toàn (prev.unlockedSkillIds || [])
+      const currentUnlocked = prev.unlockedSkillIds || [];
+      const cacSkillVuaMoKhoa = BI_KY_DB
+        .filter(s => capMoi >= s.reqLevel && !currentUnlocked.includes(s.id))
+        .map(s => s.id);
+      
+      const unlockedSkillIdsMoi = [...currentUnlocked, ...cacSkillVuaMoKhoa];
+
       if (daLenCap) themLog(`🎉 Cấp độ tăng lên: ${capMoi}!`);
+      
       return { 
         ...prev, 
         currentExp: expMoi, 
         level: capMoi, 
         maxExp: expToiDaMoi,
         statPoints: prev.statPoints + (daLenCap ? 5 : 0),
-        skillPoints: prev.skillPoints + spNhanDuoc
+        skillPoints: prev.skillPoints + spNhanDuoc,
+        unlockedSkillIds: unlockedSkillIdsMoi
       };
     });
   }, [themLog]);
+
+  const capNhatLifeStats = useCallback((updates: Partial<LifeStats>) => {
+    datNguoiChoi(prev => ({
+      ...prev,
+      lifeStats: { ...prev.lifeStats, ...updates }
+    }));
+  }, []);
 
   const congDiemTiemNang = useCallback((tenChiSo: keyof Player['stats'], luong: number = 1) => {
     datNguoiChoi(prev => {
@@ -121,14 +129,14 @@ export const dungNguoiChoi = (themLog: (msg: string) => void) => {
       return {
         ...prev,
         statPoints: prev.statPoints - luong,
-        stats: { ...prev.stats, [tenChiSo]: prev.stats[tenChiSo] + luong }
+        stats: { ...prev.stats, [tenChiSo]: (prev.stats?.[tenChiSo] || 0) + luong }
       };
     });
   }, []);
 
   const muaNangCapVinhHang = useCallback((nangCap: EternalUpgrade) => {
     datNguoiChoi(prev => {
-      const capHienTai = prev.eternalUpgrades[nangCap.id] || 0;
+      const capHienTai = prev.eternalUpgrades?.[nangCap.id] || 0;
       if (capHienTai >= nangCap.maxLevel) return prev;
       
       const gia = Math.floor(nangCap.baseCost * Math.pow(nangCap.costMultiplier, capHienTai));
@@ -141,21 +149,26 @@ export const dungNguoiChoi = (themLog: (msg: string) => void) => {
       return {
         ...prev,
         eternalPoints: prev.eternalPoints - gia,
-        eternalUpgrades: { ...prev.eternalUpgrades, [nangCap.id]: capHienTai + 1 }
+        eternalUpgrades: { ...(prev.eternalUpgrades || {}), [nangCap.id]: capHienTai + 1 }
       };
     });
   }, [themLog]);
 
   const nangCapKyNang = useCallback((kyNang: Skill) => {
     datNguoiChoi(prev => {
-      const capHienTai = prev.skills[kyNang.id] || 0;
+      const capHienTai = prev.skills?.[kyNang.id] || 0;
       if (capHienTai >= kyNang.maxLevel) return prev;
       if (prev.skillPoints < kyNang.cost) {
           themLog("❌ Không đủ Điểm Bí Kỹ!");
           return prev;
       }
-      if (prev.level < kyNang.reqLevel) {
-          themLog(`❌ Yêu cầu cấp độ ${kyNang.reqLevel}!`);
+      
+      // Fix: Thêm kiểm tra an toàn (prev.unlockedSkillIds || [])
+      const currentUnlocked = prev.unlockedSkillIds || [];
+      const daMoKhoa = currentUnlocked.includes(kyNang.id) || prev.level >= kyNang.reqLevel;
+      
+      if (!daMoKhoa) {
+          themLog(`❌ Kỹ năng này yêu cầu cấp độ ${kyNang.reqLevel}!`);
           return prev;
       }
       
@@ -163,14 +176,14 @@ export const dungNguoiChoi = (themLog: (msg: string) => void) => {
       return {
         ...prev,
         skillPoints: prev.skillPoints - kyNang.cost,
-        skills: { ...prev.skills, [kyNang.id]: capHienTai + 1 }
+        skills: { ...(prev.skills || {}), [kyNang.id]: capHienTai + 1 }
       };
     });
   }, [themLog]);
 
   return { 
-    nguoiChoi, datNguoiChoi, datTocDoGame, nangCapBanVe, 
-    nhanEXP, congDiemTiemNang, muaNangCapVinhHang, nangCapKyNang,
-    thucHienLuanHoi, layCapDoLuanHoiYeuCau
+    nguoiChoi, datNguoiChoi, datTocDoGame, nhanEXP, congDiemTiemNang, 
+    muaNangCapVinhHang, nangCapKyNang, thucHienLuanHoi, 
+    layCapDoLuanHoiYeuCau, capNhatLifeStats
   };
 };

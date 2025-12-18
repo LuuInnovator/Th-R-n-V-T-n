@@ -33,6 +33,7 @@ export enum ElementType {
   Void = 'HƯ KHÔNG',
 }
 
+// Fix: Bổ sung các loại nguyên liệu còn thiếu trong enum MaterialType
 export enum MaterialType {
   SlimeResin = 'Nhựa Slime',
   PoisonSpore = 'Bào Tử Độc',
@@ -78,6 +79,8 @@ export enum MaterialType {
   SkeletonRib = 'Xương Sườn Bộ Xương',
   WillOfDead = 'Ý Chí Người Chết',
   LavaRock = 'Đá Dung Nham',
+  Flint = 'Đá Lửa',
+  GemStone = 'Đá Quý',
 }
 
 export enum MaterialTier {
@@ -294,6 +297,7 @@ export interface Player {
   rebirthCount: number;
   skillPoints: number;
   skills: Record<string, number>;
+  unlockedSkillIds: string[]; // Lưu các ID kỹ năng đã từng đạt đủ cấp độ mở khóa
   eternalUpgrades: Record<string, number>;
   gemInventory: Record<string, number>;
   guild: { name: string; level: number; fame: number; blueprints: string[] };

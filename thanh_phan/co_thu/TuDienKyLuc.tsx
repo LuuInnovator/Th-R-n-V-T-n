@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Trophy, History, Star, Swords, Shield, Hammer, Crown, Sparkles, TrendingUp, Package, Zap, Info, ShieldCheck, HelpCircle, ArrowRight, Lightbulb } from 'lucide-react';
 import { dinh_dang_so } from '../../tien_ich/tinh_toan';
 import { Player, Equipment } from '../../kieu_du_lieu';
@@ -11,10 +12,10 @@ interface Props {
 
 export const TuDienKyLuc: React.FC<Props> = ({ player, equipped }) => {
   const stats = {
-      maxDps: player.lifeStats.maxDamageDealt || 0,
+      maxDps: player.lifeStats?.maxDamageDealt || 0,
       bestItemName: player.rebirthCount > 0 ? "Bản Sắc Luân Hồi" : "Tân Thủ Cốt",
-      totalCrafted: player.lifeStats.itemsCrafted || 0,
-      maxGold: player.lifeStats.goldEarned || 0,
+      totalCrafted: player.lifeStats?.itemsCrafted || 0,
+      maxGold: player.lifeStats?.goldEarned || 0,
       totalRebirth: player.rebirthCount || 0
   };
 
@@ -60,7 +61,7 @@ export const TuDienKyLuc: React.FC<Props> = ({ player, equipped }) => {
                     </div>
                     <div className="w-px h-16 bg-white/10"></div>
                     <div className="flex flex-col items-center">
-                        <div className="text-5xl font-black text-amber-500 italic">{dinh_dang_so(player.lifeStats.monstersKilled)}</div>
+                        <div className="text-5xl font-black text-amber-500 italic">{dinh_dang_so(player.lifeStats?.monstersKilled || 0)}</div>
                         <div className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-2">Quái Đã Diệt</div>
                     </div>
                 </div>

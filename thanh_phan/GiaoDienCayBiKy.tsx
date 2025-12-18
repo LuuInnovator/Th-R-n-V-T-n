@@ -67,6 +67,7 @@ export const GiaoDienCayBiKy: React.FC<Props> = ({ player, onUpgrade }) => {
                                   currentLevel={player.skills[skill.id] || 0}
                                   skillPoints={player.skillPoints}
                                   playerLevel={player.level}
+                                  unlockedSkillIds={player.unlockedSkillIds} // Truyền danh sách mở khóa vào
                                   onUpgrade={onUpgrade}
                                 />
                             ))}
