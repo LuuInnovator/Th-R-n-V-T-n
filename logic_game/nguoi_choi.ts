@@ -10,7 +10,7 @@ export const THONG_KE_KIEP_MOI: LifeStats = {
 };
 
 export const NHAN_VAT_MAC_DINH: Player = {
-  characterClass: CharacterClass.None,
+  characterClass: CharacterClass.HeavySentinel, // Mặc định là Hộ Vệ để bắt đầu ngay
   level: 1,
   currentExp: 0,
   maxExp: 100,
@@ -32,36 +32,44 @@ export const NHAN_VAT_MAC_DINH: Player = {
   gameSpeed: 1,
   memoryGemPotential: 0,
   rebirthTalents: [],
-  lifeStats: THONG_KE_KIEP_MOI
+  lifeStats: THONG_KE_KIEP_MOI,
+  inventorySlots: 50
 };
 
 export const dungNguoiChoi = (themLog: (msg: string) => void) => {
   const [nguoiChoi, datNguoiChoi] = useState<Player>(NHAN_VAT_MAC_DINH);
 
+  const layCapDoLuanHoiYeuCau = useCallback(() => {
+    return 25 + (nguoiChoi.rebirthCount * 5);
+  }, [nguoiChoi.rebirthCount]);
+
   const thucHienLuanHoi = useCallback((thienPhuMoi?: string) => {
+    const capYeuCau = layCapDoLuanHoiYeuCau();
+    
     datNguoiChoi(prev => {
+      if (prev.level < capYeuCau) return prev;
+
       const epNhanDuoc = prev.level * 10;
       const talentsMoi = thienPhuMoi ? [...prev.rebirthTalents, thienPhuMoi] : prev.rebirthTalents;
       
-      themLog(`🌀 LUÂN HỒI THÀNH CÔNG! Nhận được ${epNhanDuoc} EP.`);
+      themLog(`🌀 LUÂN HỒI THÀNH CÔNG! Nhận được ${epNhanDuoc} EP. Cấp độ yêu cầu tiếp theo: ${25 + (prev.rebirthCount + 1) * 5}`);
       
       return {
         ...prev,
         level: 1,
         currentExp: 0,
         maxExp: 100,
-        gold: 0, // Mất vàng
-        statPoints: 10 + (prev.rebirthCount * 10), // Điểm khởi đầu tăng theo vòng lặp
+        gold: 0,
+        statPoints: 10 + (prev.rebirthCount * 10),
         stats: { strength: 1, dexterity: 1, intelligence: 1, vitality: 1, luck: 1 },
         rebirthCount: prev.rebirthCount + 1,
         eternalPoints: prev.eternalPoints + epNhanDuoc,
         rebirthTalents: talentsMoi,
-        lifeStats: { ...THONG_KE_KIEP_MOI } // Reset thống kê kiếp này
+        lifeStats: { ...THONG_KE_KIEP_MOI }
       };
     });
-  }, [themLog]);
+  }, [themLog, layCapDoLuanHoiYeuCau]);
 
-  // ... giữ các hàm datTocDoGame, nangCapBanVe, nhanEXP, congDiemTiemNang, muaNangCapVinhHang, nangCapKyNang cũ ...
   const datTocDoGame = useCallback((tocDo: number) => {
     datNguoiChoi(p => ({ ...p, gameSpeed: tocDo }));
     themLog(`⏩ Tốc độ: x${tocDo}`);
@@ -163,6 +171,6 @@ export const dungNguoiChoi = (themLog: (msg: string) => void) => {
   return { 
     nguoiChoi, datNguoiChoi, datTocDoGame, nangCapBanVe, 
     nhanEXP, congDiemTiemNang, muaNangCapVinhHang, nangCapKyNang,
-    thucHienLuanHoi
+    thucHienLuanHoi, layCapDoLuanHoiYeuCau
   };
 };

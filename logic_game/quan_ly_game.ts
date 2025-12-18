@@ -1,65 +1,92 @@
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
-import { 
-  Zone, Enemy, Player, CharacterClass, Equipment, Blueprint, 
-  EquipmentType, GemType, GemTier, EnchantmentType 
-} from '../kieu_du_lieu';
-import { CAC_VUNG_DAT, BAN_VE_KHOI_TAO, HE_SO_DO_HIEM } from '../hang_so';
-import { tinh_toan_chi_so_nhan_vat } from '../tien_ich/tinh_toan_chi_so';
-import { tao_id, thu_van_may, so_ngau_nhien } from '../tien_ich/tinh_toan';
-
-import { dungNhatKy } from './nhat_ky';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { dungNguoiChoi } from './nguoi_choi';
 import { dungKhoDo } from './kho_do';
 import { dungChienDau } from './chien_dau';
+import { dungNhatKy } from './nhat_ky';
 import { dungHeThong } from './he_thong';
+import { tinh_toan_chi_so_nhan_vat } from '../tien_ich/tinh_toan_chi_so';
+import { Blueprint, Equipment, EquipmentType, Rarity, GemType, GemTier, EnchantmentType } from '../kieu_du_lieu';
+import { HE_SO_DO_HIEM } from '../hang_so/do_hiem';
+import { tao_id, so_ngau_nhien, thu_van_may } from '../tien_ich/tinh_toan';
 
 export const dungQuanLyGame = () => {
-  const { nhatKy, themLog } = dungNhatKy();
+  const { nhatKy, themLog, xoaNhatKy } = dungNhatKy();
+  
   const { 
     nguoiChoi, datNguoiChoi, datTocDoGame, nangCapBanVe, 
     nhanEXP, congDiemTiemNang, muaNangCapVinhHang, nangCapKyNang,
-    thucHienLuanHoi
+    thucHienLuanHoi: luanHoiNguoiChoi, layCapDoLuanHoiYeuCau
   } = dungNguoiChoi(themLog);
-  
+
   const { 
-    danhSachTrangBi, datDanhSachTrangBi, khoNguyenLieu, datKhoNguyenLieu, doDangMac, 
+    danhSachTrangBi, khoNguyenLieu, doDangMac, 
     themNguyenLieu, macTrangBi, thaoTrangBi, banTrangBi, capNhatTrangBi,
-    donDepKhiLuanHoi 
+    datDanhSachTrangBi, datKhoNguyenLieu, donDepKhiLuanHoi, banNhieuTrangBi
   } = dungKhoDo(themLog);
 
   const [tabHienTai, datTabHienTai] = useState('chien_dau');
-  const [vungHienTai, datVungHienTai] = useState<Zone>(CAC_VUNG_DAT[0]);
-  const [quaiHienTai, datQuaiHienTai] = useState<Enemy | null>(null);
   const [hienBangChiSo, datHienBangChiSo] = useState(false);
+  const [vungHienTai, datVungHienTai] = useState({ id: 'z1', name: 'Rừng Khởi Nguyên', description: 'Nơi bắt đầu của mọi huyền thoại.', recommendedLevel: 1, materials: [] });
+  const [quaiHienTai, datQuaiHienTai] = useState<any>(null);
   const [dangTuDong, datDangTuDong] = useState(false);
 
-  const chiSoThucTe = useMemo(() => {
-    return tinh_toan_chi_so_nhan_vat(nguoiChoi, doDangMac as any, (v) => v);
-  }, [nguoiChoi, doDangMac]);
-
-  const handleLuanHoiTongThe = useCallback((thienPhuMoi?: string, legacyItemId?: string) => {
-      donDepKhiLuanHoi(legacyItemId);
-      thucHienLuanHoi(thienPhuMoi);
-      datTabHienTai('chien_dau');
-      datVungHienTai(CAC_VUNG_DAT[0]);
-      datQuaiHienTai(null);
-  }, [donDepKhiLuanHoi, thucHienLuanHoi]);
-
-  const hoiPhucHoanToan = useCallback(() => {
-    datNguoiChoi(p => ({ ...p, hp: chiSoThucTe.totalHp }));
-  }, [chiSoThucTe.totalHp, datNguoiChoi]);
+  // Tính toán chỉ số thực tế dựa trên trang bị và tiềm năng
+  const chiSoThucTe = useMemo(() => 
+    tinh_toan_chi_so_nhan_vat(nguoiChoi, doDangMac, (v) => v), 
+    [nguoiChoi, doDangMac]
+  );
 
   const { timQuai, tanCong } = dungChienDau(
     nguoiChoi, chiSoThucTe, vungHienTai, quaiHienTai, datQuaiHienTai,
     (hp) => datNguoiChoi(p => ({ ...p, hp })),
     nhanEXP,
-    (vang) => datNguoiChoi(p => ({ ...p, gold: p.gold + vang })),
+    (gold) => datNguoiChoi(p => ({ ...p, gold: p.gold + gold })),
     themNguyenLieu,
     themLog,
     dangTuDong,
-    hoiPhucHoanToan
+    () => datNguoiChoi(p => ({ ...p, hp: p.maxHp }))
   );
+
+  const { luuLocal, taiLocal, xuatFile, nhapFile } = dungHeThong(
+    nguoiChoi, datNguoiChoi, danhSachTrangBi, datDanhSachTrangBi,
+    khoNguyenLieu, datKhoNguyenLieu, themLog
+  );
+
+  const handleSocketGem = useCallback((gemType: GemType, gemTier: GemTier, item: Equipment) => {
+    themLog(`💎 Đã khảm ${gemType} vào ${item.name}`);
+    capNhatTrangBi(item.id, { 
+      socketedGems: [...item.socketedGems, { type: gemType, tier: gemTier }] 
+    });
+  }, [themLog, capNhatTrangBi]);
+
+  const handleAddSocket = useCallback((item: Equipment) => {
+    const cost = item.sockets === 0 ? 500 : (item.sockets === 1 ? 5000 : 50000);
+    if (nguoiChoi.gold < cost) {
+      themLog("❌ Không đủ vàng!");
+      return;
+    }
+    datNguoiChoi(p => ({ ...p, gold: p.gold - cost }));
+    capNhatTrangBi(item.id, { sockets: item.sockets + 1 });
+    themLog(`🛠️ Đã đục thêm lỗ cho ${item.name}`);
+  }, [nguoiChoi.gold, datNguoiChoi, capNhatTrangBi, themLog]);
+
+  const handleEnchant = useCallback((type: EnchantmentType, item: Equipment) => {
+    if (nguoiChoi.gold < 2000) {
+      themLog("❌ Không đủ vàng!");
+      return;
+    }
+    datNguoiChoi(p => ({ ...p, gold: p.gold - 2000 }));
+    capNhatTrangBi(item.id, { enchantment: type });
+    themLog(`✨ Đã phù phép ${type} cho ${item.name}`);
+  }, [nguoiChoi.gold, datNguoiChoi, capNhatTrangBi, themLog]);
+
+  const thucHienLuanHoi = useCallback((thienPhuMoi?: string, legacyItemId?: string) => {
+    luanHoiNguoiChoi(thienPhuMoi);
+    donDepKhiLuanHoi(legacyItemId);
+    datQuaiHienTai(null);
+    datDangTuDong(false);
+  }, [luanHoiNguoiChoi, donDepKhiLuanHoi]);
 
   const thucHienCheTac = useCallback((bp: Blueprint, dotNhiet: boolean) => {
     const duNL = bp.requiredMaterials.every(req => {
@@ -68,7 +95,7 @@ export const dungQuanLyGame = () => {
     });
 
     if (!duNL) {
-        themLog(`❌ Thiếu nguyên liệu!`);
+        themLog(`❌ Thiếu nguyên liệu chế tác!`);
         return;
     }
 
@@ -77,79 +104,67 @@ export const dungQuanLyGame = () => {
         return req ? { ...m, quantity: m.quantity - req.amount } : m;
     }));
 
-    if (dotNhiet && Math.random() < 0.90) {
-        themLog(`🔥 Đúc thất bại!`);
+    if (dotNhiet && Math.random() < 0.65) {
+        themLog(`🔥 PHÔI TAN CHẢY! Sức nóng cực đại đã phá hủy bản vẽ này.`);
         return;
     }
 
     const phamChat = thu_van_may(); 
-    const heSoPhamChat = HE_SO_DO_HIEM[phamChat] * (dotNhiet ? 1.4 : 1);
-    const bonusTienHoa = 1 + ((nguoiChoi.blueprintLevels[bp.id] || 0) * 0.1);
+    const heSoRarity = HE_SO_DO_HIEM[phamChat] * (dotNhiet ? 2.5 : 1);
+    const bonusTienHoa = 1 + ((nguoiChoi.blueprintLevels[bp.id] || 0) * 0.25);
     
+    const extraStats: any = {};
+    const chanceTable: Record<string, number> = { [Rarity.Rare]: 0.3, [Rarity.Epic]: 0.6, [Rarity.Legendary]: 0.8, [Rarity.Mythic]: 1, [Rarity.Cosmic]: 1 };
+    const numRolls = phamChat === Rarity.Cosmic ? 4 : (phamChat === Rarity.Mythic ? 3 : (phamChat === Rarity.Legendary ? 2 : 1));
+    
+    if (Math.random() < (chanceTable[phamChat] || 0)) {
+        const possibleStats = ['dodge', 'reflect', 'silence', 'stun', 'regen', 'lifesteal'];
+        for(let i = 0; i < numRolls; i++) {
+            const statName = possibleStats[Math.floor(Math.random() * possibleStats.length)];
+            const baseVal = statName === 'regen' ? (bp.reqLevel * 5) : (1.5 + Math.random() * 3);
+            extraStats[statName] = Number((baseVal * heSoRarity * (dotNhiet ? 1.5 : 1)).toFixed(1));
+        }
+    }
+
     const itemMoi: Equipment = {
         id: tao_id(),
-        name: `${bp.name} [${phamChat}]`,
+        name: `${bp.name}`,
         type: bp.resultType as any,
         rarity: phamChat,
         isEquipped: false,
-        value: Math.floor(50 * heSoPhamChat),
+        value: Math.floor(100 * heSoRarity * (bp.reqLevel / 5)),
         reqLevel: bp.reqLevel,
         stats: {
-            attack: bp.baseStats.maxAtk > 0 ? so_ngau_nhien(bp.baseStats.minAtk, bp.baseStats.maxAtk) * heSoPhamChat * bonusTienHoa : 0,
-            defense: bp.baseStats.maxDef > 0 ? so_ngau_nhien(bp.baseStats.minDef, bp.baseStats.maxDef) * heSoPhamChat * bonusTienHoa : 0,
-            hpBonus: bp.baseStats.maxHp && bp.baseStats.maxHp > 0 ? so_ngau_nhien(bp.baseStats.minHp || 0, bp.baseStats.maxHp) * heSoPhamChat * bonusTienHoa : 0,
+            attack: bp.baseStats.maxAtk > 0 ? so_ngau_nhien(bp.baseStats.minAtk, bp.baseStats.maxAtk) * heSoRarity * bonusTienHoa : 0,
+            defense: bp.baseStats.maxDef > 0 ? so_ngau_nhien(bp.baseStats.minDef, bp.baseStats.maxDef) * heSoRarity * bonusTienHoa : 0,
+            hpBonus: bp.baseStats.maxHp ? so_ngau_nhien(bp.baseStats.minHp || 0, bp.baseStats.maxHp) * heSoRarity * bonusTienHoa : 0,
+            ...extraStats
         },
-        sockets: Math.random() < 0.03 ? 1 : 0,
+        sockets: Math.random() < 0.15 ? 1 : 0,
         socketedGems: []
     };
 
-    datDanhSachTrangBi(prev => [...prev, itemMoi]);
-    themLog(`🔨 Đã đúc: ${itemMoi.name}`);
-  }, [khoNguyenLieu, datKhoNguyenLieu, nguoiChoi.blueprintLevels, datDanhSachTrangBi, themLog]);
+    datNguoiChoi(prev => ({
+        ...prev,
+        lifeStats: { ...prev.lifeStats, itemsCrafted: prev.lifeStats.itemsCrafted + 1 }
+    }));
 
-  const handleAddSocket = useCallback((item: Equipment) => {
-    const cost = 2000 * (item.sockets + 1) * (item.sockets + 1);
-    if (item.sockets >= 3 || nguoiChoi.gold < cost) return;
-    datNguoiChoi(p => ({ ...p, gold: p.gold - cost }));
-    capNhatTrangBi(item.id, { sockets: item.sockets + 1 });
-    themLog(`⚒️ Đã đục lỗ.`);
-  }, [nguoiChoi.gold, capNhatTrangBi, datNguoiChoi, themLog]);
-
-  const handleSocketGem = useCallback((gemType: GemType, gemTier: GemTier, item: Equipment) => {
-    if (item.socketedGems.length >= item.sockets) return;
-    const newGems = [...item.socketedGems, { type: gemType, tier: gemTier }];
-    capNhatTrangBi(item.id, { socketedGems: newGems });
-  }, [capNhatTrangBi]);
-
-  const handleEnchant = useCallback((type: EnchantmentType, item: Equipment) => {
-    const cost = 5000;
-    if (nguoiChoi.gold < cost) return;
-    datNguoiChoi(p => ({ ...p, gold: p.gold - cost }));
-    capNhatTrangBi(item.id, { enchantment: type });
-  }, [nguoiChoi.gold, capNhatTrangBi, datNguoiChoi]);
-
-  const { luuLocal, taiLocal, xuatFile, nhapFile } = dungHeThong(
-    nguoiChoi, datNguoiChoi, 
-    danhSachTrangBi, datDanhSachTrangBi,
-    khoNguyenLieu, datKhoNguyenLieu,
-    themLog
-  );
+    datDanhSachTrangBi(prev => [itemMoi, ...prev]);
+    themLog(`⚒️ LUYỆN KIM THÀNH CÔNG: [${phamChat}] ${itemMoi.name}`);
+  }, [khoNguyenLieu, datKhoNguyenLieu, nguoiChoi.blueprintLevels, datDanhSachTrangBi, themLog, datNguoiChoi, nguoiChoi.gold]);
 
   return {
     state: {
-      nguoiChoi, danhSachTrangBi, khoNguyenLieu, doDangMac,
-      tabHienTai, vungHienTai, quaiHienTai, hienBangChiSo, dangTuDong,
-      chiSoThucTe, nhatKy
+      nguoiChoi, chiSoThucTe, nhatKy, danhSachTrangBi, khoNguyenLieu, doDangMac,
+      tabHienTai, hienBangChiSo, vungHienTai, quaiHienTai, dangTuDong,
+      reqRebirthLevel: layCapDoLuanHoiYeuCau()
     },
     actions: {
-      datTabHienTai, datVungHienTai, datHienBangChiSo, datDangTuDong,
-      datTocDoGame, nangCapBanVe, congDiemTiemNang, muaNangCapVinhHang, nangCapKyNang,
-      macTrangBi, thaoTrangBi, banTrangBi, thucHienCheTac,
-      handleAddSocket, handleSocketGem, handleEnchant,
-      timQuai, tanCong,
-      luuLocal, taiLocal, xuatFile, nhapFile,
-      datNguoiChoi, 
-      thucHienLuanHoi: handleLuanHoiTongThe
+      datTabHienTai, datHienBangChiSo, datVungHienTai, datDangTuDong, datTocDoGame,
+      timQuai, tanCong, macTrangBi, thaoTrangBi, banTrangBi, banNhieuTrangBi,
+      thucHienCheTac, nangCapBanVe, handleSocketGem, handleAddSocket, handleEnchant,
+      thucHienLuanHoi, muaNangCapVinhHang, nangCapKyNang,
+      congDiemTiemNang, datNguoiChoi, luuLocal, taiLocal, xuatFile, nhapFile, xoaNhatKy
     }
   };
 };

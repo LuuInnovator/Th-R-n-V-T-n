@@ -1,18 +1,21 @@
 
 import React, { useState } from 'react';
-import { Zone, Blueprint } from '../kieu_du_lieu';
-import { Skull, Star, BookOpen } from 'lucide-react';
+import { Zone, Blueprint, Player } from '../kieu_du_lieu';
+import { Skull, Star, BookOpen, Trophy, History } from 'lucide-react';
 import { TuDienQuaiVat } from './co_thu/TuDienQuaiVat';
 import { TuDienThienPhu } from './co_thu/TuDienThienPhu';
 import { TuDienBiKy } from './co_thu/TuDienBiKy';
+import { TuDienKyLuc } from './co_thu/TuDienKyLuc';
 
 interface Props {
   vung_dat: Zone[];
   ban_ve: Blueprint[];
+  player: Player;
+  equipped?: any;
 }
 
-export const GiaoDienCoThu: React.FC<Props> = ({ vung_dat, ban_ve }) => {
-  const [tabHienTai, datTabHienTai] = useState<'quai_vat' | 'thien_phu' | 'bi_ky'>('quai_vat');
+export const GiaoDienCoThu: React.FC<Props> = ({ vung_dat, ban_ve, player, equipped }) => {
+  const [tabHienTai, datTabHienTai] = useState<'quai_vat' | 'thien_phu' | 'bi_ky' | 'ky_luc'>('quai_vat');
 
   return (
     <div className="h-full w-full flex flex-col bg-slate-950 overflow-hidden">
@@ -36,6 +39,12 @@ export const GiaoDienCoThu: React.FC<Props> = ({ vung_dat, ban_ve }) => {
             >
                 <BookOpen size={16} /> Bí Pháp
             </button>
+            <button 
+                onClick={() => datTabHienTai('ky_luc')}
+                className={`py-5 px-8 text-[10px] font-black uppercase tracking-[0.3em] border-b-2 transition-all flex items-center gap-3 whitespace-nowrap ${tabHienTai === 'ky_luc' ? 'border-emerald-500 text-emerald-400 bg-emerald-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+            >
+                <History size={16} /> Kỷ Lục Anh Hùng
+            </button>
           </div>
       </div>
 
@@ -43,6 +52,7 @@ export const GiaoDienCoThu: React.FC<Props> = ({ vung_dat, ban_ve }) => {
           {tabHienTai === 'quai_vat' && <TuDienQuaiVat zones={vung_dat} blueprints={ban_ve} />}
           {tabHienTai === 'thien_phu' && <TuDienThienPhu />}
           {tabHienTai === 'bi_ky' && <TuDienBiKy />}
+          {tabHienTai === 'ky_luc' && <TuDienKyLuc player={player} equipped={equipped} />}
       </div>
     </div>
   );

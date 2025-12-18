@@ -9,7 +9,6 @@ import { ThanhBen } from './thanh_phan/bo_khung/ThanhBen';
 import { ThanhDau } from './thanh_phan/bo_khung/ThanhDau';
 import { GiaoDienChinh } from './thanh_phan/GiaoDienChinh';
 import { BangChiSoNhanVat } from './thanh_phan/BangChiSoNhanVat';
-import { ChonHePhai } from './thanh_phan/ChonHePhai';
 
 const App: React.FC = () => {
   const { state, actions } = dungQuanLyGame();
@@ -32,6 +31,7 @@ const App: React.FC = () => {
       dangMac: state.doDangMac, 
       onMac: (item: any) => actions.macTrangBi(item, state.nguoiChoi.level),
       onSell: (item: any) => actions.banTrangBi(item, (v) => actions.datNguoiChoi(p => ({ ...p, gold: p.gold + v }))),
+      onSellMany: (ids: string[], onDone: any) => actions.banNhieuTrangBi(ids, (v) => actions.datNguoiChoi(p => ({ ...p, gold: p.gold + v }))),
       onSocketGem: actions.handleSocketGem,
       onAddSocket: actions.handleAddSocket,
       onEnchant: actions.handleEnchant,
@@ -45,22 +45,14 @@ const App: React.FC = () => {
       onUpgradeSkill: actions.nangCapKyNang
     },
     luanHoi: {
-      player: state.nguoiChoi, onRebirth: () => {}, 
-      canRebirth: state.nguoiChoi.level >= 50, onBuyUpgrade: actions.muaNangCapVinhHang
+      player: state.nguoiChoi, onRebirth: actions.thucHienLuanHoi, 
+      canRebirth: state.nguoiChoi.level >= state.reqRebirthLevel, onBuyUpgrade: actions.muaNangCapVinhHang
     },
     caiDat: { onLuu: () => actions.luuLocal(false), onTai: actions.taiLocal, onReset: () => { localStorage.clear(); window.location.reload(); }, onXuatFile: actions.xuatFile, onNhapFile: actions.nhapFile }
   };
 
-  const xuLyChonPhai = (cls: CharacterClass) => {
-    actions.datNguoiChoi(p => ({ ...p, characterClass: cls }));
-  };
-
   return (
     <div className="flex h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden">
-      {state.nguoiChoi.characterClass === CharacterClass.None && (
-          <ChonHePhai onSelect={xuLyChonPhai} />
-      )}
-
       <ThanhBen 
         player={{ ...state.nguoiChoi, attack: state.chiSoThucTe.totalAtk, defense: state.chiSoThucTe.totalDef, maxHp: state.chiSoThucTe.totalHp }} 
         activeTab={state.tabHienTai} setActiveTab={actions.datTabHienTai} 

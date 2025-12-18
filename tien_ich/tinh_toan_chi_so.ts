@@ -3,76 +3,77 @@ import { Player, Equipment, EquipmentType, CharacterClass, EternalUpgradeId } fr
 
 export const tinh_toan_chi_so_nhan_vat = (
   player: Player, 
-  equipped: Record<EquipmentType, Equipment | null>,
+  equipped: Record<string, Equipment | null>,
   getStatMultiplier: (val: number) => number 
 ) => {
   const stats = player.stats || { strength: 1, dexterity: 1, intelligence: 1, vitality: 1, luck: 1 };
   const rebirthCount = player.rebirthCount || 0;
   
-  // Nâng cấp vĩnh viễn: Bậc Thầy Đúc Rèn (+5% stats đồ chế tạo)
-  const craftMasterLevel = player.eternalUpgrades['nc_bac_thay_duc_ren'] || 0;
-  const craftBonus = 1 + (craftMasterLevel * 0.05);
+  // Buff vĩnh hằng
+  const latentPowerLevel = player.eternalUpgrades[EternalUpgradeId.LatentPower] || 0;
+  const globalMult = 1 + (latentPowerLevel * 0.35);
 
-  // Nâng cấp vĩnh viễn: Thể Chất Vô Định (Máu & Thủ)
-  const physiqueLevel = player.eternalUpgrades['nc_the_chat_vo_dinh'] || 0;
-  const physiqueBonus = 1 + (physiqueLevel * 0.1);
-
+  // Chỉ số cơ bản từ Tiềm năng
   let baseAtk = 1 + stats.strength * 15;
   let baseDef = 0 + stats.vitality * 4;
   let baseHp = 20 + stats.vitality * 120;
+
+  // Khởi tạo 6 chỉ số đặc biệt (từ Tiềm năng gốc)
+  let totalDodge = (stats.dexterity * 0.05) + (stats.luck * 0.02);
+  let totalReflect = (stats.vitality * 0.04);
+  let totalSilence = (stats.intelligence * 0.06);
+  let totalStun = (stats.strength * 0.03) + (stats.dexterity * 0.02);
+  let totalRegen = (stats.vitality * 2);
+  let totalLifesteal = (stats.strength * 0.02) + (stats.luck * 0.03);
 
   let equipmentAtk = 0;
   let equipmentDef = 0;
   let equipmentHp = 0;
 
-  const forgingLevel = player.eternalUpgrades[EternalUpgradeId.GodlyForging] || 0;
-  const forgingMult = 1 + (rebirthCount * (forgingLevel * 0.05));
-
+  // Cộng dồn từ trang bị
   Object.values(equipped).forEach(item => {
     if (item) {
-      // LOGIC LEGACY GEAR: Khóa sức mạnh nếu Level người chơi thấp hơn yêu cầu
-      // Sức mạnh sẽ mở dần theo tỷ lệ (Level hiện tại / Level yêu cầu)
-      let powerScale = 1.0;
-      if (player.level < item.reqLevel) {
-          powerScale = player.level / item.reqLevel;
-      }
+      // Scale sức mạnh trang bị nếu chưa đủ cấp (phạt chỉ số)
+      let scale = player.level < item.reqLevel ? Math.max(0.1, player.level / item.reqLevel) : 1.0;
+      
+      equipmentAtk += (item.stats.attack || 0) * scale;
+      equipmentDef += (item.stats.defense || 0) * scale;
+      equipmentHp += (item.stats.hpBonus || 0) * scale;
 
-      equipmentAtk += (item.stats.attack || 0) * forgingMult * craftBonus * powerScale;
-      equipmentDef += (item.stats.defense || 0) * forgingMult * craftBonus * powerScale;
-      equipmentHp += (item.stats.hpBonus || 0) * forgingMult * craftBonus * powerScale;
+      // Cộng dồn chỉ số đặc biệt từ đồ
+      totalDodge += (item.stats.dodge || 0) * scale;
+      totalReflect += (item.stats.reflect || 0) * scale;
+      totalSilence += (item.stats.silence || 0) * scale;
+      totalStun += (item.stats.stun || 0) * scale;
+      totalRegen += (item.stats.regen || 0) * scale;
+      totalLifesteal += (item.stats.lifesteal || 0) * scale;
     }
   });
 
-  let totalAtk = baseAtk + equipmentAtk;
-  let totalDef = (baseDef + equipmentDef) * physiqueBonus;
-  let totalHp = (baseHp + equipmentHp) * physiqueBonus;
+  let finalAtk = (baseAtk + equipmentAtk) * globalMult;
+  let finalDef = (baseDef + equipmentDef) * globalMult;
+  let finalHp = (baseHp + equipmentHp) * globalMult;
 
-  // Hệ số Phái
+  // Bonus Hệ phái
   if (player.characterClass === CharacterClass.HeavySentinel) {
-    totalDef *= 2.0;
-    totalHp *= 3.0;
+    finalDef *= 2.0;
+    finalHp *= 3.0;
   } else if (player.characterClass === CharacterClass.ShadowBlade) {
-    totalAtk *= 2.5;
+    finalAtk *= 2.5;
   }
 
-  // Thiên Phú Luân Hồi
-  const talents = player.rebirthTalents || [];
-  talents.forEach(t => {
-      if (t === 'tp_atk') totalAtk *= 1.1;
-      if (t === 'tp_gold') { /* Xử lý ở logic chiến đấu nhặt vàng */ }
-  });
-
-  const memoryMult = 1 + (player.memoryGemPotential * 0.01);
-  totalAtk *= memoryMult;
-  totalDef *= memoryMult;
-  totalHp *= memoryMult;
-
   return {
-    totalAtk: Math.floor(totalAtk),
-    totalDef: Math.floor(totalDef),
-    totalHp: Math.floor(totalHp),
-    critChance: (player.characterClass === CharacterClass.ShadowBlade ? 10 : 2) + (stats.dexterity * 0.05),
-    critDamage: 120 + (stats.luck * 0.5),
-    dropRateBonus: (player.characterClass === CharacterClass.AlchemistMage ? 0.5 : 0) + (stats.luck * 0.002) + (rebirthCount * 0.02) // Mắt thần cổ thư mặc định
+    totalAtk: Math.floor(finalAtk),
+    totalDef: Math.floor(finalDef),
+    totalHp: Math.floor(finalHp),
+    critChance: Math.min(80, (player.characterClass === CharacterClass.ShadowBlade ? 15 : 5) + (stats.dexterity * 0.05)),
+    
+    // 6 CHỈ SỐ CHIẾN ĐẤU (Giới hạn trần để tránh bất tử)
+    dodge: Math.min(75, totalDodge),
+    reflect: Math.min(60, totalReflect),
+    silence: Math.min(50, totalSilence),
+    stun: Math.min(50, totalStun),
+    regen: Math.floor(totalRegen + (finalHp * 0.01)), // Hồi phục cơ bản + 1% HP
+    lifesteal: Math.min(40, totalLifesteal)
   };
 };

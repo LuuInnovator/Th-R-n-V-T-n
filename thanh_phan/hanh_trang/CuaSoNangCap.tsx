@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Equipment, GemType, GemTier, EnchantmentType, Player } from '../../kieu_du_lieu';
 import { CHISO_NGOC, PHU_PHEP_STATS } from '../../hang_so';
@@ -95,16 +94,17 @@ export const CuaSoNangCap: React.FC<Props> = ({
                     <div className="space-y-4">
                         <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest border-b border-white/5 pb-2">Ngọc Đang Có</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {Object.values(GemType).map(type => (
+                            {/* Fix: Explicitly cast type to string and GemType to fix unknown type errors */}
+                            {(Object.values(GemType) as GemType[]).map(type => (
                                 <button 
-                                    key={type}
+                                    key={type as string}
                                     onClick={() => onSocketGem(type, GemTier.T1)}
                                     disabled={item.sockets <= item.socketedGems.length}
                                     className="p-4 bg-slate-950 rounded-2xl border border-white/5 flex items-center justify-between group hover:border-blue-500 transition-all disabled:opacity-20"
                                 >
                                     <div className="flex items-center gap-3">
                                         <GemIcon size={18} className="text-blue-400" />
-                                        <span className="text-[10px] font-black text-slate-200 uppercase">{type} [Cấp 1]</span>
+                                        <span className="text-[10px] font-black text-slate-200 uppercase">{type as string} [Cấp 1]</span>
                                     </div>
                                     <span className="text-[9px] font-black text-slate-500 uppercase">Khảm</span>
                                 </button>
